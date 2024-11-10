@@ -1,12 +1,12 @@
 import numpy as np
 
-from global_land_mask import globe
+# from global_land_mask import globe
 
 import random_land_points as rlp
 
 def centroid(best, second):
     x = (best[0]+second[0])/2
-    y = (best[0]+second[0])/2
+    y = (best[1]+second[1])/2
     return (x,y)
 
 # originally was reflection function, but can be used to move all points
@@ -18,29 +18,43 @@ def move_point(point_away, point_towards, factor):
     while in_water:
         print(point_towards)
         print(point_away)
-        # slope = (point_towards[0]-point_away[0])/(point_towards[1]-point_away[1])
+        slope = (point_towards[0]-point_away[0])/(point_towards[1]-point_away[1])
 
         lon = point_towards[0]+(point_towards[0]-point_away[0])*factor
         lat = point_towards[1]+(point_towards[1]-point_away[1])*factor
         
-        # if lon < -180:
-        #     lon = -180
-        # elif lon > 180:
-        #     lon = 180
+        if lon < -180:
+            print("lon < -180")
+            lon = -180
+            lat = (lon - point_towards[0])/slope+point_towards[1]
+            factor = abs((point_towards[0]-lon))/abs(point_towards[0]-point_away[0])
+        elif lon > 180:
+            print("lon > 180")
+            lon = 180
+            lat = (lon - point_towards[0])/slope+point_towards[1]
+            factor = abs((point_towards[0]-lon))/abs(point_towards[0]-point_away[0])
         
-        # if lat < -90:
-        #     lat = -90
-        # elif lat > 90:
-        #     lat = -60
+        if lat < -90:
+            print(" lat < -90")
+            lat = -90
+            lon = slope*(lat-point_towards[1])+point_towards[0]
+            factor = abs((point_towards[0]-lon))/abs(point_towards[0]-point_away[0])
+        elif lat > 90:
+            print("lat > 90")
+            lat = 90
+            lon = slope*(lat-point_towards[1])+point_towards[0]
+            factor = abs((point_towards[0]-lon))/abs(point_towards[0]-point_away[0])
 
         in_water = not(rlp.is_in(np.array([lon,lat]), continent = 'Antarctica')) # Check if in specified polygon? (duncan function?)
         if in_water: 
             factor = factor/2
             points_wrong.append((lon,lat))
+            print(points_wrong)
         counter +=1 
         if counter > 10:
             print("IT DIDN'T WORK")
             new = rlp.random_points('Antarctica')[0] # Get a random point on land in Antartica
+            print((new[0],new[1]))
             return (new[0],new[1])
 
     return (lon,lat)
@@ -76,6 +90,7 @@ def nelder_mead(points, func, limit):
 
         # first perform reflection
         bs_centroid = centroid(best, second)
+        print(bs_centroid)
         print("REFLECTION")
         temp = move_point(worst,bs_centroid,1)
         temp_val = func(temp)

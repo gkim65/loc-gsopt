@@ -2,11 +2,11 @@ import os
 
 import logging
 import datetime
-import httpx
+import httpx # TODO BRING THIS BACK!
 
 import numpy as np
-import streamlit as st
-import polars as pl
+# import streamlit as st
+# import polars as pl
 
 # Brahe Imports
 import brahe as bh
@@ -142,6 +142,9 @@ def parse_tle_file(filepath):
     return tle_records
 
 def get_tles():
+
+    if not os.path.exists(EPHEMERIS_PATH):
+        get_latest_celestrak_tles()
 
     # Check on time of last update
     last_update = get_last_modified_time_as_datetime(EPHEMERIS_PATH)

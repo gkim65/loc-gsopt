@@ -6,7 +6,7 @@ import brahe.access.access as ba
 
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.use('TkAgg')
+matplotlib.use('Agg')
 
 
 import math
@@ -17,9 +17,10 @@ def load_earth_data(filename):
     if not os.path.exists(filename):
         # Uncomment this line ONCE the data has been downloaded. Recomment it once it has been downloaded.
         print("Downloading latest earth orientation data...")
+        if not os.path.exists("data"):
+            os.makedirs("data")
         bh.utils.download_iers_bulletin_ab("./data")
         print("Download complete")
-
 
     # Load the latest Earth Orientation Data
     print("Loading the latest Earth Orientation Data")

@@ -37,9 +37,9 @@ satellites = satellites_from_constellation(constellation)
 
 ############################### STEP 2: Ground station generation ###############################
 
-stations = gs_json('data/groundstations/atlas.json')
+# stations = gs_json('data/groundstations/atlas.json')
 
-gs, counter, _,_ = rand_gs_on_land()
+# gs, counter, _,_ = rand_gs_on_land()
 
 
 ############################### STEP 3: Scenario Generation ###############################
@@ -55,13 +55,13 @@ for i in range(3):
 
 
 # Cost function, we should be able tochange this if needed?
-def cost_func_gap(new_gs, gs_list = [], satellites=satellites[0:3], epc_start = epc0, epc_end = epc10, plot = False):    
+def cost_func_gap(new_gs, gs_list = [], satellites=satellites[0:2], epc_start = epc0, epc_end = epc10, plot = False):    
     gs_list.append(return_bdm_gs(new_gs[0], new_gs[1]))
     _, _, gaps_seconds = compute_all_gaps_contacts(satellites, gs_list ,epc_start, epc_end, plot)
     return np.mean(gaps_seconds)
 
 print(points)
-plot_points = nelder_mead(points, cost_func_gap, 10)
+plot_points = nelder_mead(points, cost_func_gap, 5)
 print(plot_points)
 
 

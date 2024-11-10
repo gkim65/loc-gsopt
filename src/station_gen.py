@@ -1,7 +1,7 @@
 
 import json
 import numpy as np
-from global_land_mask import globe
+# from global_land_mask import globe
 
 # Brahe Imports
 import brahe.data_models as bdm
