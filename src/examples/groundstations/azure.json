@@ -1,0 +1,80 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -119.86,
+          47.24
+        ]
+      },
+      "properties": {
+        "name": "Quincy",
+        "provider": "Azure",
+        "frequency_bands": ["S", "X"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.40,
+          -33.96
+        ]
+      },
+      "properties": {
+        "name": "Longovilo",
+        "provider": "Azure",
+        "frequency_bands": ["S", "X"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          103.85,
+          1.28
+        ]
+      },
+      "properties": {
+        "name": "Singapore",
+        "provider": "Azure",
+        "frequency_bands": ["S", "X"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          28.20,
+          -26.14
+        ]
+      },
+      "properties": {
+        "name": "Johannesburg",
+        "provider": "Azure",
+        "frequency_bands": ["S", "X"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          17.14,
+          60.63
+        ]
+      },
+      "properties": {
+        "name": "Gavle",
+        "provider": "Azure",
+        "frequency_bands": ["S", "X"]
+      }
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import os.path
 # Brahe Imports
 import brahe as bh
 import brahe.access.access as ba
+import multiprocessing as mp
 
 import matplotlib.pyplot as plt
 import matplotlib
@@ -40,6 +41,49 @@ def gap_times(contacts, epc_start, epc_end):
     return gap_time_list
 
 def compute_all_gaps_contacts(satellites,ground_stations,epc_start,epc_end, plot):
+
+    if plot:
+        fig, ax = fig, ax =  plt.subplots(figsize=(20,7))
+    contacts_all = []
+    gaps_all = []
+
+    # for multiprocessing
+    tasks = []
+
+    for sat,id_sat in zip(satellites,range(len(satellites))):
+        for gs,id_gs in zip(ground_stations,range(len(ground_stations))):
+            tasks.append([sat,gs,epc_start,epc_end])
+
+    mpctx = mp.get_context('fork')
+    with mpctx.Pool(mp.cpu_count()) as pool:
+
+        results = pool.starmap(ba.find_location_accesses, tasks)
+
+        for contacts in results:
+            gaps = gap_times(contacts, epc_start.to_datetime(),epc_end.to_datetime())
+
+            if plot:
+                ax.broken_barh([(contacts[i].t_start,contacts[i].t_end-contacts[i].t_start) for i in range(len(contacts))], (id_sat+0.05 + 10*(id_gs-1), 0.85),facecolors='tab:blue')
+                ax.broken_barh([(gaps[i][0],gaps[i][1]-gaps[i][0]) for i in range(len(gaps))], (id_sat+0.05 + 10*(id_gs-1), 0.85),facecolors='tab:green')
+
+            for contact in contacts:
+                contacts_all.append(contact)
+            for gap in gaps:
+                gaps_all.append(gap)
+    
+    if plot:
+        plt.ylabel("different sat ids")
+        plt.xlabel("time period over a day")
+        plt.legend()
+        plt.show()
+
+    gaps_seconds = []
+    for gap_tuple in gaps_all:
+        gaps_seconds.append((gap_tuple[1]-gap_tuple[0]).total_seconds())
+
+    return contacts_all, gaps_all, gaps_seconds
+
+def compute_all_gaps_contacts_no_mp(satellites,ground_stations,epc_start,epc_end, plot):
 
     if plot:
         fig, ax = fig, ax =  plt.subplots(figsize=(20,7))

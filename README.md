@@ -1,3 +1,6 @@
 # loc-gsopt
 
-First test
+Ground station location optimizer. Currently in development.
+
+Example optimizer for nelder mead:
+![]()

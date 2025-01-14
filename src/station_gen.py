@@ -1,7 +1,7 @@
 
 import json
 import numpy as np
-# from global_land_mask import globe
+import random_land_points as rlp
 
 # Brahe Imports
 import brahe.data_models as bdm
@@ -23,16 +23,8 @@ def gs_json(provider_file):
 # TODO: this may not be needed anymore
 def rand_gs_on_land():
 
-    on_water = True
-    lat, long = 0,0
-    counter = 0
-    while on_water:
-        # generate random location coordinates
-        lat = np.random.uniform(-90, 90)
-        long = np.random.uniform(-180, 180)
-
-        on_water = globe.is_ocean(lat,long)
-        counter += 1
+    # Get a random point on land
+    point = rlp.random_points() # Point is [lon, lat]
 
     return bdm.Station(
             **{
@@ -43,10 +35,10 @@ def rand_gs_on_land():
                 "type": "Feature",
                 "geometry": {
                     "type": "Point",
-                    "coordinates": [long, lat] # ASK IF THIS IS RIGHT 
+                    "coordinates": point # ASK IF THIS IS RIGHT 
                 },
             }
-        ), counter, lat, long
+        )
 
 def return_bdm_gs(lon,lat):
     return bdm.Station(
