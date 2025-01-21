@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "brahe",
+    "brahe @ git+https://github.com/duncaneddy/brahe.git@master",
     "cartopy>=0.24.1",
     "geopandas>=1.0.1",
     "geopy>=2.4.1",
