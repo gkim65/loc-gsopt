@@ -107,3 +107,9 @@ TODOS:
 - running multiple nelder meads and checking best one
     - need to practice running on cluster instead
 - don't want to take points that are worse than the new one (need to check if random points are worse)
+
+
+# jan 20, 2025
+
+- several notes to duncan, rlp .australia for continent doesn;t work
+- also i'm not sure if 
