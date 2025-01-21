@@ -1,0 +1,20 @@
+[project]
+name = "loc-gsopt"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "brahe",
+    "cartopy>=0.24.1",
+    "geopandas>=1.0.1",
+    "geopy>=2.4.1",
+    "global-land-mask>=1.0.0",
+    "httpx>=0.28.1",
+    "matplotlib>=3.10.0",
+    "numpy<2.0.0",
+    "shapely>=2.0.6",
+]
+
+[tool.uv.sources]
+brahe = { git = "https://github.com/duncaneddy/brahe.git", rev = "master" }
