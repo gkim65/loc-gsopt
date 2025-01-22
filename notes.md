@@ -113,3 +113,49 @@ TODOS:
 
 - several notes to duncan, rlp .australia for continent doesn;t work
 - also i'm not sure if 
+
+# jan 21, 2025
+
+ 1093  git status
+ 1094  git add requirements.txt
+ 1095  git status
+ 1096  git add .gitignore
+ 1097  git status
+ 1098  git commit -m "trying to make it easier to make virtual environment"
+ 1099  git pus
+ 1100  git push
+ 1101  history
+ 1102  pip list
+ 1103  uv pip list
+
+
+ ****** notes for grace to make requirements.txt file (delete existing requriemetns.txt file before urnning these commands):
+
+```
+ pip-compile pyproject.toml --resolver=backtracking\n
+```
+
+ 1104  pip-compile pyproject.toml --resolver=backtracking\n
+ 1105  git status
+ 1106  git add -A
+ 1107  git commit -m "more dependencies updates"
+ 1108  git push
+
+###########################################################################
+ 1036  python hello.py
+ 1037  python hello.py
+ 1038  pip uninstall brahe\n
+ 1039  pip install git+https://github.com/duncaneddy/brahe.git@master\n
+ 1040  python hello.py
+ 1041  cd ..
+ 1042  deactivate
+ 1043  git clone https://github.com/gkim65/loc-gsopt.git
+ 1044  cd loc-gsopt
+ 1045  python -m venv .venv
+ 1046  source .venv/bin/activate
+ 1047  ls
+ 1048  pip install requirements.txt
+ 1049  pip install -r requirements.txt
+ 1050  python hello.py
+ 1051  python hello.py
+
