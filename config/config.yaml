@@ -1,0 +1,45 @@
+# Config files for problem setup and formulation
+# Can input the following:
+#     - Problem Scope
+#         - type of problem (free or teleport selection)
+#         - Solution method
+#         - of sites to select
+#     - Scenario Development:
+#         - previous sites & locations (if teleport problem)
+#         - Satellite list
+#         - List of candidate sites for teleports
+#         - start and end epochs 
+# Output of selected sites
+
+problem:
+  type: "free"
+  method: "nelder" # TODO: add options for other methods 
+                        # make sure you can only choose appropriate
+                        # methods for appropriate problem types
+  gs_num: 1
+  sat_num: 10 # just to not overload the solver
+
+
+scenario:
+  constellations: "ICEYE" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
+                          #'FLOCK', 'HAWK', 'CAPELLA', 'LEGION', 
+                          #'WORLDVIEW', 'GEOEYE', 'NUSAT'
+  teleport_sites:
+    # TODO: Need to add teleport functionality, list of sites to select
+  
+start_epoch:
+  year: 2024
+  month: 5
+  day: 20
+  hour: 0
+  minute: 0
+  second: 0
+
+end_epoch:
+  year: 2024
+  month: 5
+  day: 21
+  hour: 0
+  minute: 0
+  second: 0
+

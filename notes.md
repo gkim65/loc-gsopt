@@ -132,7 +132,7 @@ TODOS:
  ****** notes for grace to make requirements.txt file (delete existing requriemetns.txt file before urnning these commands):
 
 ```
- pip-compile pyproject.toml --resolver=backtracking\n
+ pip-compile pyproject.toml --resolver=backtracking
 ```
 
  1104  pip-compile pyproject.toml --resolver=backtracking\n

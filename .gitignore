@@ -4,3 +4,6 @@
 **/*.pyc
 /sandbox
 *.egg-info
+/.venv
+**/*.gif
+outputs
