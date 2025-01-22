@@ -61,7 +61,7 @@ def main(cfg: DictConfig):
             
             # Additional args for function
             gs_list = []
-            sat_list = satellites=satellites[0:10]
+            sat_list = satellites=satellites[0:cfg.problem.sat_num]
             land_geometries = land_data['geometry']
             plot = False
 

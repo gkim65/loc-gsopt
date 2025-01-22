@@ -5,10 +5,6 @@ Ground station location optimizer. Currently in development.
 Example optimizer for nelder mead:
 ![](https://github.com/gkim65/loc-gsopt/blob/main/gifs/example_figure.gif)
 
-## Using this Repository
-
-
-
 
 ## Instructions for installing dependencies and cloning this repository
 
@@ -36,3 +32,23 @@ Finally, just run this command to install all the required dependencies in your 
 ```
 pip install -r requirements.txt
 ```
+
+
+## Using this Repository
+
+Using the `hydra` config file manager, you can run files by running:
+
+```
+python src/main.py
+```
+
+You can run sweeps/perform parameter runs
+
+```
+python src/main.py --multirun problem.sat_num=1,5,10
+```
+
+or just change the parameters directly in `config\config.yaml`. 
+
+*NOTE: Example folder `ipynb` files, still in development* (They are runnable, but not fully cleaned up)
+
