@@ -18,7 +18,28 @@ def gs_json(provider_file):
 
     return stations
 
+def teleport_json(provider_file):
+    stations = []
 
+    stations_json = json.load(open(provider_file, 'r'))
+
+    for sta in stations_json:
+        stations.append(bdm.Station(
+            **{
+                "properties": {
+                    "constraints": bdm.AccessConstraints(elevation_min=0),
+                    "name": sta["name"],
+                },
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [sta['longitude'], sta['latitude']]
+                },
+            }
+        )
+        )
+
+    return stations
 
 # # TODO: this may not be needed anymore
 # def rand_gs_on_land():
