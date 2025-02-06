@@ -159,3 +159,10 @@ TODOS:
  1050  python hello.py
  1051  python hello.py
 
+
+# Feb 5, 2025
+
+- Need to check penalty things
+    - also the distnaces need to check that
+- also need to fix objective function
+- testing out different start points nelder mead

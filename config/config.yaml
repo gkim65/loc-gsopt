@@ -16,8 +16,9 @@ problem:
   method: "nelder" # TODO: add options for other methods 
                         # make sure you can only choose appropriate
                         # methods for appropriate problem types
-  gs_num: 1 # TODO: need to implement
-  sat_num: 10 # just to not overload the solver
+  objective: "minimize_gap" # TODO: add options for other methods 
+  gs_num: 3
+  sat_num: 10 # Start with 10, just to not overload the solver
 
 
 scenario:

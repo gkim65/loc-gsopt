@@ -1,8 +1,11 @@
 import brahe as bh
 from common.utils import load_earth_data #,compute_all_gaps_contacts, compute_earth_interior_angle
 from common.sat_gen import satellites_from_constellation
-from common.plotting import plot_gif
+from common.plotting import plot_gif,plot_img
 from methods.free_select.nelder_mead_scipy import nelder_mead_scipy
+
+# TODO: REmove DEBUGGING:
+from common.utils import compute_gaps_per_sat
 
 import numpy as np
 
@@ -51,10 +54,18 @@ def main(cfg: DictConfig):
     if cfg.problem.type == "free":
         if cfg.problem.method == "nelder":
             
-            nelder_mead_scipy(cfg,land_data,global_list_of_simplexes,epc_start,epc_end,satellites)
+            gs_list,  gs_list_plot, agg_list_of_simplexes = nelder_mead_scipy(cfg,land_data,global_list_of_simplexes,epc_start,epc_end,satellites)
 
-            plot_gif(global_list_of_simplexes)
-            print(global_list_of_simplexes)
+            for ind, simplexes in enumerate(agg_list_of_simplexes):
+                plot_gif(simplexes,"gs_"+str(ind+1)+".gif",gs_list=gs_list_plot[0:ind],ind=ind)
+
+            print("##############################")
+            print(gs_list_plot)
+            # print(agg_list_of_simplexes)
+            plot_img(gs_list_plot,"gs_all.png")
+
+            # DEBUGG:
+            compute_gaps_per_sat(satellites,gs_list_plot,epc_start,epc_end, True,"gap_times_chart.png")
 
 if __name__ == "__main__":
     main()
