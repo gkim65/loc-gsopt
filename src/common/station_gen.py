@@ -71,7 +71,7 @@ def return_bdm_gs(lon,lat):
                 "type": "Feature",
                 "geometry": {
                     "type": "Point",
-                    "coordinates": [lon, lat] # ASK IF THIS IS RIGHT 
+                    "coordinates": [lon, lat] 
                 },
             }
         )

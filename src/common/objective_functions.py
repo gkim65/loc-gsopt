@@ -2,8 +2,9 @@ from shapely.geometry import Point
 from geopy.distance import geodesic
 
 from common.station_gen import return_bdm_gs
-from common.utils import compute_all_gaps_contacts
+from common.utils import compute_gaps_per_sat
 
+from itertools import chain
 import numpy as np
 from global_land_mask import globe
 
@@ -52,16 +53,41 @@ def penalty(new_gs,land_geometries):
         return distance
     return 0
 
+# Additional penalty when we have close location in gs?
+def penalty_gs_all(new_gs,current_gs_list):
+    penalty_sum = 0
+    for current_gs in current_gs_list:
+        dist = geodesic((new_gs[1], new_gs[0]), (current_gs.geometry.coordinates[1], current_gs.geometry.coordinates[0])).meters
+        if dist < 2000:
+            penalty_sum += 2000 - dist
+    return penalty_sum
+
+
 ############################## Cost Functions ################################
 
-# TODO: delete plot argument
-def cost_func_gap(new_gs, gs_list, global_list_of_simplexes, satellites, epc_start, epc_end, land_geometries, plot = False):    
+def cost_func_gap(new_gs, gs_list, global_list_of_simplexes, satellites, epc_start, epc_end, land_geometries, verbose = False, plot = False):    
     
-    gs_list = [return_bdm_gs(new_gs[0], new_gs[1])] # FIX FOR LATER! TODO
-    global_list_of_simplexes.append([new_gs[0], new_gs[1]]) # CHECK IF IT WORKS TODO
+    temp_gs_list = gs_list.copy()
+    if not gs_list:
+        temp_gs_list = [return_bdm_gs(new_gs[0], new_gs[1])]
+    else:
+        temp_gs_list.append(return_bdm_gs(new_gs[0], new_gs[1]))
 
-    _, _, gaps_seconds = compute_all_gaps_contacts(satellites, gs_list ,epc_start, epc_end, plot)
+    global_list_of_simplexes.append([new_gs[0], new_gs[1]])
 
-    value = np.mean(gaps_seconds) + (penalty(new_gs,land_geometries)/1000)**2 # Put penalty/distance from land in kms
+    _, _, gaps_seconds = compute_gaps_per_sat(satellites, temp_gs_list ,epc_start, epc_end, plot)
 
+    # TODO: put in additional stats per satellite etc for mean, for now just flatten everything 
+    gaps_seconds_flattened = list(chain.from_iterable(gaps_seconds))
+
+    mean_gap_time = np.mean(gaps_seconds_flattened)
+    penalty_water = (penalty(new_gs,land_geometries)/10000)**2 # Put penalty/distance from land in 10 kms
+    penalty_close_gs = (penalty_gs_all(new_gs,gs_list))**2 # additional penalty being close to gs, in ms
+    value = mean_gap_time + penalty_water + penalty_close_gs
+
+    if verbose:
+        print("Current optimization value: ", value)
+        print("penalty_water: ", penalty_water)
+        print("penalty_close_gs: ", penalty_close_gs)
+    
     return value
