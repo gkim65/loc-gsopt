@@ -50,6 +50,11 @@ def main(cfg: DictConfig):
 
     satellites = satellites_from_constellation(cfg.scenario.constellations)
 
+    # print(cfg.scenario.constellations)
+    # print(len(satellites))
+    # for i in satellites:
+    #     print(i)
+
     # TODO: add other methods
     if cfg.problem.type == "free":
         if cfg.problem.method == "nelder":
@@ -65,7 +70,8 @@ def main(cfg: DictConfig):
             plot_img(gs_list_plot,"gs_all.png")
 
             # DEBUGG:
-            compute_gaps_per_sat(satellites,gs_list_plot,epc_start,epc_end, True,"gap_times_chart.png")
+            # compute_gaps_per_sat(satellites,gs_list_plot,epc_start,epc_end, True,"gap_times_chart.png")
+
 
 if __name__ == "__main__":
     main()

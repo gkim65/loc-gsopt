@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.optimize import minimize
-from common.objective_functions import cost_func_gap
+from common.objective_functions import cost_func
 from common.station_gen import return_bdm_gs
 
 
@@ -15,8 +15,8 @@ def nelder_mead_scipy(cfg,land_data,global_list_of_simplexes,epc_start,epc_end,s
         agg_list_of_simplexes = []
         sat_list = satellites[0:cfg.problem.sat_num]
         land_geometries = land_data['geometry']
-        verbose = True
-        plot = False
+        verbose = cfg.debug.verbose
+        plot = cfg.debug.plot
 
         for i in range(cfg.problem.gs_num):
         
@@ -38,17 +38,16 @@ def nelder_mead_scipy(cfg,land_data,global_list_of_simplexes,epc_start,epc_end,s
                 
                 print("STARTING TO PERFORM MINIMIZATION ON GS: "+str(i+1))
 
-                if cfg.problem.objective == "minimize_gap":
-                        # Perform the optimization using Nelder-Mead
-                        result = minimize(cost_func_gap, 
-                                        initial_guess, 
-                                        args = (gs_list, global_list_of_simplexes, sat_list, epc_start, epc_end, land_geometries, verbose, plot), 
-                                        method='Nelder-Mead',
-                                        options={'disp': True,
-                                                # 'fatol': 1e-6, # TODO: Doesn't work
-                                                'xatol': 0.1,
-                                                'initial_simplex': initial_simplex},
-                                        bounds = ((-180,180),(-90,90)))
+                # Perform the optimization using Nelder-Mead
+                result = minimize(cost_func, 
+                                initial_guess, 
+                                args = (gs_list, global_list_of_simplexes, sat_list, epc_start, epc_end, land_geometries, cfg, verbose, plot), 
+                                method='Nelder-Mead',
+                                options={'disp': True,
+                                        # 'fatol': 1e-6, # TODO: Doesn't work
+                                        'xatol': 0.1,
+                                        'initial_simplex': initial_simplex},
+                                bounds = ((-180,180),(-90,90)))
                         
                 print("GS FOUND, Location: "+str(result.x))
                 print(result)

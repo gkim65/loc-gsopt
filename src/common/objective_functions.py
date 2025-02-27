@@ -2,7 +2,7 @@ from shapely.geometry import Point
 from geopy.distance import geodesic
 
 from common.station_gen import return_bdm_gs
-from common.utils import compute_gaps_per_sat
+from common.utils import compute_gaps_per_sat, compute_contact_times
 
 from itertools import chain
 import numpy as np
@@ -54,36 +54,45 @@ def penalty(new_gs,land_geometries):
     return 0
 
 # Additional penalty when we have close location in gs?
-def penalty_gs_all(new_gs,current_gs_list):
+def penalty_gs_all(new_gs,current_gs_list, dist_penalty):
     penalty_sum = 0
     for current_gs in current_gs_list:
         dist = geodesic((new_gs[1], new_gs[0]), (current_gs.geometry.coordinates[1], current_gs.geometry.coordinates[0])).meters
-        if dist < 2000:
-            penalty_sum += 2000 - dist
+        if dist < dist_penalty:
+            penalty_sum += dist_penalty - dist
     return penalty_sum
 
 
 ############################## Cost Functions ################################
 
-def cost_func_gap(new_gs, gs_list, global_list_of_simplexes, satellites, epc_start, epc_end, land_geometries, verbose = False, plot = False):    
+def cost_func(new_gs, gs_list, global_list_of_simplexes, satellites, epc_start, epc_end, land_geometries, cfg, verbose = False, plot = False):    
     
+    # Make sure that all ground stations are set to only add onto the existing selected constellations
     temp_gs_list = gs_list.copy()
     if not gs_list:
         temp_gs_list = [return_bdm_gs(new_gs[0], new_gs[1])]
     else:
         temp_gs_list.append(return_bdm_gs(new_gs[0], new_gs[1]))
 
+    # For tracking purposes / Debugging / Plotting
     global_list_of_simplexes.append([new_gs[0], new_gs[1]])
 
-    _, _, gaps_seconds = compute_gaps_per_sat(satellites, temp_gs_list ,epc_start, epc_end, plot)
+    # Computing specific objective
+    if cfg.problem.objective == "minimize_gap":
+        _, _, gaps_seconds = compute_gaps_per_sat(satellites, temp_gs_list ,epc_start, epc_end, plot)
 
-    # TODO: put in additional stats per satellite etc for mean, for now just flatten everything 
-    gaps_seconds_flattened = list(chain.from_iterable(gaps_seconds))
+        # TODO: put in additional stats per satellite etc for mean, for now just flatten everything 
+        gaps_seconds_flattened = list(chain.from_iterable(gaps_seconds))
+        mean_gap_time = np.mean(gaps_seconds_flattened)
+        cost_func_val = mean_gap_time
 
-    mean_gap_time = np.mean(gaps_seconds_flattened)
+    if cfg.problem.objective == "maximize_contact_seconds":
+        contact_times, contact_times_seconds = compute_contact_times(satellites, temp_gs_list ,epc_start, epc_end, plot)
+        cost_func_val = 0 - (np.sum(contact_times_seconds))
+
     penalty_water = (penalty(new_gs,land_geometries)/10000)**2 # Put penalty/distance from land in 10 kms
-    penalty_close_gs = (penalty_gs_all(new_gs,gs_list))**2 # additional penalty being close to gs, in ms
-    value = mean_gap_time + penalty_water + penalty_close_gs
+    penalty_close_gs = (penalty_gs_all(new_gs,gs_list, cfg.constraints.dist_other_gs))**2 # additional penalty being close to gs, in ms
+    value = cost_func_val + penalty_water + penalty_close_gs
 
     if verbose:
         print("Current optimization value: ", value)
@@ -91,3 +100,4 @@ def cost_func_gap(new_gs, gs_list, global_list_of_simplexes, satellites, epc_sta
         print("penalty_close_gs: ", penalty_close_gs)
     
     return value
+

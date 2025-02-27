@@ -166,3 +166,23 @@ TODOS:
     - also the distnaces need to check that
 - also need to fix objective function
 - testing out different start points nelder mead
+
+# Feb 26, 2025
+### Free Select CODE LIST
+- need to check for how switching out coordinates gotta implement that at one point
+- then also compare with GA
+- each experiment set up with hydra
+- also set up other objective functions
+- set up also weights and biases
+    - TODO: put in additional stats per satellite etc for mean, for now just flatten everything 
+            - loc-gsopt/src/common/objective_functions.py
+            - theres a way to put in plot images
+- tmux? try to get this 
+    
+THINGS I DID:
+- did contact times objective function
+- added extra things into hydra
+
+NEXT THING: weights and biases set this up!!!!
+- then run experiments for some of the base cases
+- and try it on the server so it can just run in the background
