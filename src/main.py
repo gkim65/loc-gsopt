@@ -4,31 +4,46 @@ from common.sat_gen import satellites_from_constellation
 from common.plotting import plot_gif,plot_img
 from methods.free_select.nelder_mead_scipy import nelder_mead_scipy
 
-# TODO: REmove DEBUGGING:
-from common.utils import compute_gaps_per_sat
 
 import numpy as np
 
 # Hydra
 import hydra
 from omegaconf import DictConfig
+import omegaconf
+
+# WandB
+import wandb
 
 # Shape files
 import geopandas as gpd
 
 ################################### Global Variables ###################################
-# Usually global variables is bad practice, but more for plotting purposes :D
+# Usually global variables is bad practice, but just using it for land boundary dataset
 
 # Load land boundary dataset
 # using: https://www.naturalearthdata.com/downloads/10m-cultural-vectors/
 land_data = gpd.read_file("data/ne_10m_admin_0_countries.shp")  
 
-global_list_of_simplexes = [] # For plotting purposes
-
 ################################### Main Script ###################################
 
+# Bringing in Hydra configuration parameters
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def main(cfg: DictConfig):
+    
+    #Ensure unique project names every time
+    proj_name = cfg.problem.type+"_"+cfg.problem.method+"_"+cfg.problem.objective+"_"+str(cfg.problem.gs_num)+"_"+str(cfg.problem.sat_num)
+    scenario_name = cfg.scenario.constellations
+    constraints_name = str(cfg.constraints.dist_other_gs)
+
+
+    run = wandb.init(entity=cfg.wandb.entity, project=proj_name+"="+scenario_name+"="+constraints_name)
+
+    config_dict = omegaconf.OmegaConf.to_container(
+        cfg, resolve=True, throw_on_missing=True
+    )
+    print(type(config_dict), config_dict)
+    wandb.config.update(config_dict, allow_val_change=True)
 
     # Setting up start and end epochs
     epc_start = bh.Epoch(cfg.start_epoch.year, 
@@ -50,27 +65,21 @@ def main(cfg: DictConfig):
 
     satellites = satellites_from_constellation(cfg.scenario.constellations)
 
-    # print(cfg.scenario.constellations)
-    # print(len(satellites))
-    # for i in satellites:
-    #     print(i)
-
     # TODO: add other methods
     if cfg.problem.type == "free":
         if cfg.problem.method == "nelder":
             
-            gs_list,  gs_list_plot, agg_list_of_simplexes = nelder_mead_scipy(cfg,land_data,global_list_of_simplexes,epc_start,epc_end,satellites)
+            gs_list,  gs_list_plot = nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites) # agg_list_of_simplexes
 
-            for ind, simplexes in enumerate(agg_list_of_simplexes):
-                plot_gif(simplexes,"gs_"+str(ind+1)+".gif",gs_list=gs_list_plot[0:ind],ind=ind)
+            if cfg.debug.verbose:
+                print("##############################")
+                print(gs_list_plot)
+                plot_img(gs_list_plot,"gs_all.png")
 
-            print("##############################")
-            print(gs_list_plot)
-            # print(agg_list_of_simplexes)
-            plot_img(gs_list_plot,"gs_all.png")
+            run.summary["gs_list"] = gs_list_plot 
+        
+    run.finish()
 
-            # DEBUGG:
-            # compute_gaps_per_sat(satellites,gs_list_plot,epc_start,epc_end, True,"gap_times_chart.png")
 
 
 if __name__ == "__main__":

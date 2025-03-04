@@ -8,6 +8,9 @@ from itertools import chain
 import numpy as np
 from global_land_mask import globe
 
+#  WandB
+import wandb
+
 ############################## Helper Functions ################################
 
 def calculate_distance_to_land(point, land_geometries):
@@ -65,7 +68,7 @@ def penalty_gs_all(new_gs,current_gs_list, dist_penalty):
 
 ############################## Cost Functions ################################
 
-def cost_func(new_gs, gs_list, global_list_of_simplexes, satellites, epc_start, epc_end, land_geometries, cfg, verbose = False, plot = False):    
+def cost_func(new_gs, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, i, verbose = False, plot = False):    
     
     # Make sure that all ground stations are set to only add onto the existing selected constellations
     temp_gs_list = gs_list.copy()
@@ -73,9 +76,6 @@ def cost_func(new_gs, gs_list, global_list_of_simplexes, satellites, epc_start, 
         temp_gs_list = [return_bdm_gs(new_gs[0], new_gs[1])]
     else:
         temp_gs_list.append(return_bdm_gs(new_gs[0], new_gs[1]))
-
-    # For tracking purposes / Debugging / Plotting
-    global_list_of_simplexes.append([new_gs[0], new_gs[1]])
 
     # Computing specific objective
     if cfg.problem.objective == "minimize_gap":
@@ -94,6 +94,11 @@ def cost_func(new_gs, gs_list, global_list_of_simplexes, satellites, epc_start, 
     penalty_close_gs = (penalty_gs_all(new_gs,gs_list, cfg.constraints.dist_other_gs))**2 # additional penalty being close to gs, in ms
     value = cost_func_val + penalty_water + penalty_close_gs
 
+    wandb.log({"Obj_func_value": value,
+               "penalty_water": penalty_water,
+                "penalty_close_gs": penalty_close_gs,
+                 "log_of_simplexes_lon"+str(i): new_gs[0],
+                 "log_of_simplexes_lat"+str(i):new_gs[1]})
     if verbose:
         print("Current optimization value: ", value)
         print("penalty_water: ", penalty_water)

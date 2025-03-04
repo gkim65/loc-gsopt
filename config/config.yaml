@@ -11,6 +11,9 @@
 #         - start and end epochs 
 # Output of selected sites
 
+wandb:
+  entity: "loc_gsopt"
+
 problem:
   type: "free"
   method: "nelder" # TODO: add options for other methods 
@@ -18,12 +21,12 @@ problem:
                         # methods for appropriate problem types
   objective: "maximize_contact_seconds" # "minimize_gap" # TODO: add options for other methods
                             # "maximize_contact_seconds" 
-  gs_num: 3
-  sat_num: 10 # Start with 10, just to not overload the solver
+  gs_num: 2
+  sat_num: 1 # Start with 10, just to not overload the solver
 
 
 scenario:
-  constellations: "ICEYE" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
+  constellations: "CAPELLA" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
                           #'FLOCK', 'HAWK', 'CAPELLA', 'LEGION', 
                           #'WORLDVIEW', 'GEOEYE', 'NUSAT'
   teleport_sites:

@@ -1,0 +1,15 @@
+{"time":"2025-03-03T16:54:45.176651-08:00","level":"INFO","msg":"stream: starting","core version":"0.19.7","symlink path":"/Users/gracekim/Documents/School_Everything_and_LEARNING/Stanford/Githubs/loc-gsopt/wandb/run-20250303_165445-zfswjbo2/logs/debug-core.log"}
+{"time":"2025-03-03T16:54:45.282752-08:00","level":"INFO","msg":"created new stream","id":"zfswjbo2"}
+{"time":"2025-03-03T16:54:45.282829-08:00","level":"INFO","msg":"stream: started","id":"zfswjbo2"}
+{"time":"2025-03-03T16:54:45.282841-08:00","level":"INFO","msg":"handler: started","stream_id":"zfswjbo2"}
+{"time":"2025-03-03T16:54:45.282853-08:00","level":"INFO","msg":"sender: started","stream_id":"zfswjbo2"}
+{"time":"2025-03-03T16:54:45.282872-08:00","level":"INFO","msg":"writer: Do: started","stream_id":"zfswjbo2"}
+{"time":"2025-03-03T16:54:45.519646-08:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-03-03T16:54:54.379175-08:00","level":"INFO","msg":"stream: closing","id":"zfswjbo2"}
+{"time":"2025-03-03T16:54:54.379202-08:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-03-03T16:54:54.379646-08:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-03-03T16:54:55.033655-08:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-03-03T16:54:55.170186-08:00","level":"INFO","msg":"sender: closed","stream_id":"zfswjbo2"}
+{"time":"2025-03-03T16:54:55.170206-08:00","level":"INFO","msg":"handler: closed","stream_id":"zfswjbo2"}
+{"time":"2025-03-03T16:54:55.170179-08:00","level":"INFO","msg":"writer: Close: closed","stream_id":"zfswjbo2"}
+{"time":"2025-03-03T16:54:55.170826-08:00","level":"INFO","msg":"stream: closed","id":"zfswjbo2"}

@@ -186,3 +186,18 @@ THINGS I DID:
 NEXT THING: weights and biases set this up!!!!
 - then run experiments for some of the base cases
 - and try it on the server so it can just run in the background
+
+
+# March 3, 2025
+TODO: Find best initial simplex to start, may need to change based on continents
+
+`loc-gsopt/src/methods/free_select/nelder_mead_scipy.py`
+
+initial_simplex =  np.array([[-30, -60],[-100, -60],[-30, -90]])
+initial_simplex =  np.array([[-180, -90],[180, 0],[-180, 90]])
+
+initial_simplex = np.array([
+        [-60, -85],  # Point 1 (near the Caribbean)
+        [151.2093, -33.8688],  # Point 2 (Sydney, Australia)
+        [-153.67891140271288, 55.17076207063536]  # Point 3 (near Alaska)
+        ])

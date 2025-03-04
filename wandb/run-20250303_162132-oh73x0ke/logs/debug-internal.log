@@ -1,0 +1,16 @@
+{"time":"2025-03-03T16:21:32.186336-08:00","level":"INFO","msg":"stream: starting","core version":"0.19.7","symlink path":"/Users/gracekim/Documents/School_Everything_and_LEARNING/Stanford/Githubs/loc-gsopt/wandb/run-20250303_162132-oh73x0ke/logs/debug-core.log"}
+{"time":"2025-03-03T16:21:32.296965-08:00","level":"INFO","msg":"created new stream","id":"oh73x0ke"}
+{"time":"2025-03-03T16:21:32.297035-08:00","level":"INFO","msg":"stream: started","id":"oh73x0ke"}
+{"time":"2025-03-03T16:21:32.297312-08:00","level":"INFO","msg":"writer: Do: started","stream_id":"oh73x0ke"}
+{"time":"2025-03-03T16:21:32.297349-08:00","level":"INFO","msg":"handler: started","stream_id":"oh73x0ke"}
+{"time":"2025-03-03T16:21:32.297537-08:00","level":"INFO","msg":"sender: started","stream_id":"oh73x0ke"}
+{"time":"2025-03-03T16:21:32.505524-08:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-03-03T16:22:59.528042-08:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-03-03T16:22:59.528474-08:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-03-03T16:23:00.079506-08:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-03-03T16:23:00.248692-08:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-03-03T16:23:01.259544-08:00","level":"INFO","msg":"stream: closing","id":"oh73x0ke"}
+{"time":"2025-03-03T16:23:01.259641-08:00","level":"INFO","msg":"writer: Close: closed","stream_id":"oh73x0ke"}
+{"time":"2025-03-03T16:23:01.25973-08:00","level":"INFO","msg":"sender: closed","stream_id":"oh73x0ke"}
+{"time":"2025-03-03T16:23:01.259971-08:00","level":"INFO","msg":"handler: closed","stream_id":"oh73x0ke"}
+{"time":"2025-03-03T16:23:01.259991-08:00","level":"INFO","msg":"stream: closed","id":"oh73x0ke"}

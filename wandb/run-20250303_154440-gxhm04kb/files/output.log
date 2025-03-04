@@ -1,0 +1,195 @@
+<class 'dict'> {'wandb': {'entity': 'loc_gsopt'}, 'problem': {'type': 'free', 'method': 'nelder', 'objective': 'maximize_contact_seconds', 'gs_num': 1, 'sat_num': 1}, 'scenario': {'constellations': 'ICEYE', 'teleport_sites': None}, 'constraints': {'dist_other_gs': 500000}, 'start_epoch': {'year': 2024, 'month': 5, 'day': 20, 'hour': 0, 'minute': 0, 'second': 0}, 'end_epoch': {'year': 2024, 'month': 5, 'day': 21, 'hour': 0, 'minute': 0, 'second': 0}, 'debug': {'verbose': True, 'plot': False}}
+Loading the latest Earth Orientation Data
+[2025-03-03 15:44:40,417][root][INFO] - Last TLE update: 2025-03-03T15:34:12.741660
+[2025-03-03 15:44:40,417][root][INFO] - TLE data is 0 days old. TLE data is up to date.
+[[ -60.          -85.        ]
+ [ 151.2093      -33.8688    ]
+ [-153.6789114    55.17076207]]
+STARTING TO PERFORM MINIMIZATION ON GS: 1
+Current optimization value:  -11340.316774
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -2722.0349109999997
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -4274.78751255643
+penalty_water:  190.13863444357068
+penalty_close_gs:  0
+Current optimization value:  230.17668051867122
+penalty_water:  2674.674970518671
+penalty_close_gs:  0
+Current optimization value:  -2658.4606940000003
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  14027.173181924976
+penalty_water:  16530.442834924976
+penalty_close_gs:  0
+Current optimization value:  1110.7147024031792
+penalty_water:  6759.838847403179
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Current optimization value:  -11505.714112
+penalty_water:  0.0
+penalty_close_gs:  0
+Optimization terminated successfully.
+         Current function value: -11505.714112
+         Iterations: 16
+         Function evaluations: 56
+GS FOUND, Location: [ 92.4441057 -90.       ]
+       message: Optimization terminated successfully.
+       success: True
+        status: 0
+           fun: -11505.714112
+             x: [ 9.244e+01 -9.000e+01]
+           nit: 16
+          nfev: 56
+ final_simplex: (array([[ 9.244e+01, -9.000e+01],
+                       [ 9.239e+01, -9.000e+01],
+                       [ 9.244e+01, -9.000e+01]]), array([-1.151e+04, -1.151e+04, -1.151e+04]))
+##############################
+[[92.44410570135645, -90.0]]
+[[[-60.0, -85.0], [151.2093, -33.8688], [-153.67891140271288, 55.17076207063536], [-180.0, 4.0395620706353625], [22.184922149321785, -24.39170948234116], [-106.83945570135644, -14.914618964682319], [45.60465000000001, -59.4344], [92.44410570135645, -90.0], [180.0, -90.0], [-13.160544298643558, -90.0], [139.2835614027129, -90.0], [89.46267105203466, -90.0], [-10.179109649321774, -90.0], [64.55222587669556, -90.0], [39.641780701356446, -90.0], [90.95338837669556, -90.0], [41.132498026017345, -90.0], [78.498165789026, -90.0], [66.04294320135645, -90.0], [91.698747039026, -90.0], [66.7883018636869, -90.0], [85.47113574519122, -90.0], [79.24352445135645, -90.0], [92.07142637019123, -90.0], [79.61620378252167, -90.0], [88.95762072327383, -90.0], [85.84381507635645, -90.0], [92.25776603577384, -90.0], [86.03015474193904, -90.0], [90.70086321231514, -90.0], [89.14396038885644, -90.0], [92.35093586856514, -90.0], [89.23713022164775, -90.0], [91.5724844568358, -90.0], [90.79403304510645, -90.0], [92.39752078496079, -90.0], [90.84061796150209, -90.0], [92.00829507909611, -90.0], [91.61906937323144, -90.0], [92.42081324315862, -90.0], [91.64236183142927, -90.0], [92.22620039022628, -90.0], [92.03158753729394, -90.0], [92.43245947225753, -90.0], [92.04323376639286, -90.0], [92.33515304579137, -90.0], [92.2378466193252, -90.0], [92.43828258680699, -90.0], [92.24366973387467, -90.0], [92.38962937357391, -90.0], [92.34097616034083, -90.0], [92.44119414408172, -90.0], [92.34388771761556, -90.0], [92.41686753746518, -90.0], [92.39254093084864, -90.0], [92.44264992271908, -90.0]]]
+[[92.44410570135645, -90.0]]

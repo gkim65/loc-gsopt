@@ -3,16 +3,19 @@ from scipy.optimize import minimize
 from common.objective_functions import cost_func
 from common.station_gen import return_bdm_gs
 
+#  WandB
+import wandb
+import copy
+
 
 # TODO: add the cyclic coordinate descent part
-def nelder_mead_scipy(cfg,land_data,global_list_of_simplexes,epc_start,epc_end,satellites):
+def nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites):
         
 
         # Setup args for minimize function
         gs_list = []
         gs_list_plot = []
         
-        agg_list_of_simplexes = []
         sat_list = satellites[0:cfg.problem.sat_num]
         land_geometries = land_data['geometry']
         verbose = cfg.debug.verbose
@@ -41,7 +44,7 @@ def nelder_mead_scipy(cfg,land_data,global_list_of_simplexes,epc_start,epc_end,s
                 # Perform the optimization using Nelder-Mead
                 result = minimize(cost_func, 
                                 initial_guess, 
-                                args = (gs_list, global_list_of_simplexes, sat_list, epc_start, epc_end, land_geometries, cfg, verbose, plot), 
+                                args = (gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, verbose, plot), 
                                 method='Nelder-Mead',
                                 options={'disp': True,
                                         # 'fatol': 1e-6, # TODO: Doesn't work
@@ -51,12 +54,9 @@ def nelder_mead_scipy(cfg,land_data,global_list_of_simplexes,epc_start,epc_end,s
                         
                 print("GS FOUND, Location: "+str(result.x))
                 print(result)
-
-                agg_list_of_simplexes.append(global_list_of_simplexes.copy())
-                global_list_of_simplexes.clear()
                 gs_list.append(return_bdm_gs(result.x[0], result.x[1]))
                 gs_list_plot.append([result.x[0], result.x[1]])
                 
-        return gs_list, gs_list_plot, agg_list_of_simplexes
+        return gs_list, gs_list_plot #, agg_list_of_simplexes
 
 

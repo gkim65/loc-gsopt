@@ -1,0 +1,10 @@
+Error executing job with overrides: []
+Traceback (most recent call last):
+  File "/Users/gracekim/Documents/School_Everything_and_LEARNING/Stanford/Githubs/loc-gsopt/src/main.py", line 42, in main
+    run.config = omegaconf.OmegaConf.to_container(
+    ^^^^^^^^^^
+  File "/Users/gracekim/Documents/School_Everything_and_LEARNING/Stanford/Githubs/loc-gsopt/.venv/lib/python3.11/site-packages/wandb/sdk/wandb_run.py", line 772, in __setattr__
+    super().__setattr__(attr, value)
+AttributeError: property 'config' of 'Run' object has no setter
+
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.

@@ -15,6 +15,7 @@ dependencies = [
     "matplotlib>=3.10.0",
     "numpy>=1.26.4",
     "shapely>=2.0.6",
+    "wandb>=0.19.7",
 ]
 
 [tool.uv.sources]
