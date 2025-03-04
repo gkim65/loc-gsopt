@@ -64,3 +64,17 @@ or just change the parameters directly in `config\config.yaml`.
 
 *NOTE: Example folder `ipynb` files, still in development* (They are runnable, but not fully cleaned up)
 
+
+### To run `.sh` script:
+
+Add any of the python commands you want to run, then make sure to run in the terminal (with the correct .venv environment activated:)
+```
+chmod +x run_scripts.sh
+```
+
+and run the script:
+```
+./run_scripts.sh
+```
+
+
