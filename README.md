@@ -33,6 +33,18 @@ Finally, just run this command to install all the required dependencies in your 
 pip install -r requirements.txt
 ```
 
+### If using `uv`:
+
+Create a new virtual environment with uv on a Mac inside the git folder, and install dependencies
+
+```
+uv venv
+source .venv/bin/activate 
+uv sync
+```
+
+
+
 
 ## Using this Repository
 

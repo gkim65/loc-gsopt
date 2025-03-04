@@ -29,6 +29,7 @@ scenario:
   constellations: "CAPELLA" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
                           #'FLOCK', 'HAWK', 'CAPELLA', 'LEGION', 
                           #'WORLDVIEW', 'GEOEYE', 'NUSAT'
+  start_simplex: 1 # can be 0-6
   teleport_sites:
     # TODO: Need to add teleport functionality, list of sites to select
   

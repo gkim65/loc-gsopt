@@ -201,3 +201,16 @@ initial_simplex = np.array([
         [151.2093, -33.8688],  # Point 2 (Sydney, Australia)
         [-153.67891140271288, 55.17076207063536]  # Point 3 (near Alaska)
         ])
+
+
+
+THINGS I DID:
+- set up most of weights and biases
+- figured out how to run on the server
+- trying out most of the initial simplex locations
+
+
+NEED TO DO:
+- Need to run for longer than 1 day!!!
+- then run experiments for some of the base cases
+
