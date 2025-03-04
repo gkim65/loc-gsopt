@@ -188,6 +188,7 @@ NEXT THING: weights and biases set this up!!!!
 - and try it on the server so it can just run in the background
 
 
+
 # March 3, 2025
 TODO: Find best initial simplex to start, may need to change based on continents
 
@@ -208,9 +209,10 @@ THINGS I DID:
 - set up most of weights and biases
 - figured out how to run on the server
 - trying out most of the initial simplex locations
+    - tmux session is currently running :D
+
 
 
 NEED TO DO:
 - Need to run for longer than 1 day!!!
 - then run experiments for some of the base cases
-
