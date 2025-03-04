@@ -9,4 +9,4 @@
 **/*.png
 outputs
 multirun
-/wandb/*
+/wandb
