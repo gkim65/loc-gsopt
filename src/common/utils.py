@@ -7,6 +7,8 @@ import multiprocessing as mp
 
 import matplotlib.pyplot as plt
 import matplotlib
+
+from itertools import chain
 matplotlib.use('Agg')
 
 
@@ -140,6 +142,69 @@ def compute_gaps_per_sat(satellites,ground_stations,epc_start,epc_end, plot,titl
         plt.savefig(title)
         
     return all_contacts, all_gaps, all_gaps_secs
+
+
+# for full data downlink / full number of contact times maximizing this
+def compute_contact_times(satellites,ground_stations,epc_start,epc_end, plot,title="contact_times_chart.png"):
+
+    # plot boolean used for any plotting function
+    if plot:
+        fig, ax = fig, ax =  plt.subplots(figsize=(20,15))
+        len_gs = len(ground_stations)+2
+
+    # setup of output saving
+    all_contacts = []
+
+    # Group tasks by satellite for multiprocessing
+    grouped_tasks = []
+    for sat in satellites:
+        sat_tasks = []
+        for gs in ground_stations:
+            sat_tasks.append([sat, gs, epc_start, epc_end])
+        grouped_tasks.append(sat_tasks)
+
+    # Complete the multi processing of getting location accesses for all satellite tasks
+    mpctx = mp.get_context('fork')
+    with mpctx.Pool(mp.cpu_count()) as pool:
+        all_results = []
+        for sat_tasks in grouped_tasks:
+            sat_results = pool.starmap(ba.find_location_accesses, sat_tasks)
+            all_results.append(sat_results)
+
+    # For all contacts on satellites, condense into one large list
+    # Also useful for plotting
+    for id_gs,sat_result in enumerate(all_results):
+        all_contacts_sat = []
+        for id_sat,contacts in enumerate(sat_result):
+            
+            # Plotting per satellite and gs contact windows
+            if plot:
+                ax.broken_barh([(contacts[i].t_start,contacts[i].t_end-contacts[i].t_start) for i in range(len(contacts))], (id_sat+0.05 + len_gs*(id_gs-1), 0.85),facecolors='tab:blue',label = "contacts")
+
+            # Condense contacts
+            for contact in contacts:
+                all_contacts_sat.append(contact)
+
+                # I don't think I need this:
+                # if plot:
+                #     ax.broken_barh([(contacts[i].t_start,contacts[i].t_end-contacts[i].t_start) for i in range(len(contacts))], (-1+0.05 + len_gs*(id_gs-1), 0.85),facecolors='tab:purple')
+
+        # Saving all satellite outputs into full constellation outputs
+        all_contacts.append(all_contacts_sat)
+    
+    all_contacts_flattened = list(chain.from_iterable(all_contacts))
+
+    # Plotting
+    if plot:
+        # ax.broken_barh([(all_gap_times[i][0],all_gap_times[i][1]-all_gap_times[i][0]) for i in range(len(all_gap_times))], (-1.9, 0.85),facecolors='tab:green',label = "gaptimes")
+        plt.ylabel("Different Satellite groups, With Contact / Gap Times per Ground station")
+        plt.xlabel("Time period over a day")
+        # plt.legend()
+        plt.savefig(title)
+
+    contact_times_seconds = [(contact.t_end - contact.t_start).total_seconds() for contact in all_contacts_flattened]
+        
+    return all_contacts, contact_times_seconds
 
 
 def compute_earth_interior_angle(ele=0.0, alt=525):
