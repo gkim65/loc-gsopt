@@ -1,9 +1,27 @@
 import brahe as bh
+import brahe.data_models as bdm
 from common.utils import load_earth_data #,compute_all_gaps_contacts, compute_earth_interior_angle
 from common.sat_gen import satellites_from_constellation
 from common.plotting import plot_gif,plot_img
 from methods.free_select.nelder_mead_scipy import nelder_mead_scipy
+from methods.teleport.ILP import data_downlink_ilp, gap_time_ilp, max_contact_ilp
+from common.plotting import plot_contact_windows
+###Vedant's imports
+# Standard imports
+import sys
+import os
+from itertools import groupby
 
+# Add the path to the folder containing the module
+module_path = os.path.abspath(os.path.join('..'))
+if module_path not in sys.path:
+    sys.path.append(module_path)
+
+# Required imports
+from common.sat_gen import make_tle
+from common.station_gen import teleport_json
+from common.utils import load_earth_data, gap_times_condense
+#####
 
 import numpy as np
 
@@ -64,6 +82,10 @@ def main(cfg: DictConfig):
     load_earth_data('data/iau2000A_finals_ab.txt')
 
     satellites = satellites_from_constellation(cfg.scenario.constellations)
+    
+    #temporary single satellite for testing:
+    sat1 = satellites[0]
+
 
     # TODO: add other methods
     if cfg.problem.type == "free":
@@ -77,7 +99,34 @@ def main(cfg: DictConfig):
                 plot_img(gs_list_plot,"gs_all.png")
 
             run.summary["gs_list"] = gs_list_plot 
+
+
+    elif cfg.problem.type == "teleport":
+        #Load ground stations from JSON file
+        ground_stations = teleport_json('data/teleport_locations.json')[0:cfg.problem.teleport_num]
+        print(f"Loaded {len(ground_stations)} ground stations")
         
+        if cfg.problem.objective == "data_downlink":
+            selected_stations, total_data, station_contacts = data_downlink_ilp(ground_stations, sat1, epc_start, epc_end, cfg.problem.gs_num)
+            run.summary["selected_stations"] = selected_stations #list of selected stations
+            run.summary["total_data"] = total_data #float of total data downlinked
+        
+        if cfg.problem.objective == "gap_optimization":
+            selected_stations, station_contacts, all_gap_times = gap_time_ilp(ground_stations, sat1, epc_start, epc_end, cfg.problem.gs_num)
+            run.summary["selected_stations"] = selected_stations #list of selected stations
+            run.summary["all_gap_times"] = all_gap_times #list of gap times
+        
+        if cfg.problem.objective == "max_contacts":
+            selected_stations, station_contacts, contact_count = max_contact_ilp(ground_stations, sat1, epc_start, epc_end, cfg.problem.gs_num)
+            run.summary["selected_stations"] = selected_stations #list of selected stations
+            run.summary["contact_count"] = contact_count  #float of contact counts
+
+        artifact = wandb.Artifact("station_contacts", type="json")     
+        run.log_artifact(artifact)  
+        
+        if cfg.debug.plot == True:
+            plot_contact_windows(selected_stations, station_contacts)
+    
     run.finish()
 
 

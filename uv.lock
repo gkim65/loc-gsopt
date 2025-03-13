@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.12' and sys_platform == 'linux'",
@@ -543,6 +544,7 @@ dependencies = [
     { name = "hydra-core" },
     { name = "matplotlib" },
     { name = "numpy" },
+    { name = "pyomo" },
     { name = "shapely" },
     { name = "wandb" },
 ]
@@ -558,6 +560,7 @@ requires-dist = [
     { name = "hydra-core", specifier = ">=1.3.2" },
     { name = "matplotlib", specifier = ">=3.10.0" },
     { name = "numpy", specifier = ">=1.26.4" },
+    { name = "pyomo", specifier = ">=6.9.1" },
     { name = "shapely", specifier = ">=2.0.6" },
     { name = "wandb", specifier = ">=0.19.7" },
 ]
@@ -778,6 +781,15 @@ wheels = [
 ]
 
 [[package]]
+name = "ply"
+version = "3.11"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e5/69/882ee5c9d017149285cab114ebeab373308ef0f874fcdac9beb90e0ac4da/ply-3.11.tar.gz", hash = "sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3", size = 159130 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a3/58/35da89ee790598a0700ea49b2a66594140f44dec458c07e8e3d4979137fc/ply-3.11-py2.py3-none-any.whl", hash = "sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce", size = 49567 },
+]
+
+[[package]]
 name = "protobuf"
 version = "5.29.3"
 source = { registry = "https://pypi.org/simple" }
@@ -920,6 +932,30 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/25/ac/ca483bec408b59c54f7129b0244cc9de21d8461aefe89ece7bd74ad33807/pyogrio-0.10.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:cea0187fcc2d574e52af8cfab041fa0a7ad71d5ef6b94b49a3f3d2a04534a27e", size = 23048830 },
     { url = "https://files.pythonhosted.org/packages/d7/3e/c35f2d8dad95b24e568c468f09ff60fb61945065465e0ec7868400596566/pyogrio-0.10.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:7c02b207ea8cf09c501ea3e95d29152781a00d3c32267286bc36fa457c332205", size = 23996873 },
     { url = "https://files.pythonhosted.org/packages/27/5d/0deb16d228362a097ee3258d0a887c9c0add4b9678bb4847b08a241e124d/pyogrio-0.10.0-cp313-cp313-win_amd64.whl", hash = "sha256:02e54bcfb305af75f829044b0045f74de31b77c2d6546f7aaf96822066147848", size = 16158260 },
+]
+
+[[package]]
+name = "pyomo"
+version = "6.9.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ply" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ad/99/5c7a7b59a691480dbb3f45107ebc1cc3b07b6cd7eed529caa55cb704f3fe/pyomo-6.9.1.tar.gz", hash = "sha256:ccb85fa4b03450c32614a939c6830d073a7ce79461b12b0f1e7809db96ae86de", size = 2903808 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e2/7b/99786651fe005f80cea0c151367b1b866ea593d87ebc44a888e353d869b1/pyomo-6.9.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:6815512c9cf4680519f83827a3cea14035b567a8b5e5242efaa8271788bbd3f8", size = 4079302 },
+    { url = "https://files.pythonhosted.org/packages/43/44/3608c8449fad874f0d5eecb3023032e89ff19ddb01bdbfa1a463ea98c227/pyomo-6.9.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:4bc59e6ba69c4cdded560646a01b7fbbd0f7f02cef5cd4f6639828c9eba907f8", size = 4072949 },
+    { url = "https://files.pythonhosted.org/packages/b6/e0/9111fcd93f3ef6590bee4696f9d0fb8749ce50ba60cf517d0efd0f78e95b/pyomo-6.9.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a512d9e1da174704a72c0549df65dc9ce415e2faa9f29c55aa16c867fac22f66", size = 4138209 },
+    { url = "https://files.pythonhosted.org/packages/56/eb/8099c255385cfcc94d787861ee2a3f17614544d3f2552a37b477692c09b6/pyomo-6.9.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f39a3b7ca8fc00ba920a5cb62c6a33ae1876c9fc260acaec89cbab9c7fd9d3cc", size = 4157286 },
+    { url = "https://files.pythonhosted.org/packages/1c/ab/77b3a6d9f5b6490264fef847b3da910e7f358d0b58ffcdf1e09d86b6d588/pyomo-6.9.1-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:8be3172f50387d0c6c85eb3009c20dc459f595526a8b2265288df58153b64dd6", size = 4081889 },
+    { url = "https://files.pythonhosted.org/packages/d0/a8/9ac99d2dc30c4a9cccaca9220e78a738bfaad8a630c4323a3f28983ab1f4/pyomo-6.9.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:0516d61c6f675f466e4d179e8d556aeef0ac705860aa81fac73e2232ff42f628", size = 4072691 },
+    { url = "https://files.pythonhosted.org/packages/4c/46/31028b0eb8eb3b87cc804eba7bb0e9283025058bfc6e47db2203ad0beb67/pyomo-6.9.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f0785771938c5ccd0eb0eac7cbf0d72f1a216392786b891fcb097ee29b2dbb46", size = 4135025 },
+    { url = "https://files.pythonhosted.org/packages/ba/5b/a76f3f16da7d7836de95ef2eacc9b25d125e24fb8c33b5985090c672e840/pyomo-6.9.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1d08319ad543e98474221b67bc67c5a7331c47d553d733ea1f9302854a2020a3", size = 4156351 },
+    { url = "https://files.pythonhosted.org/packages/31/bb/c823a4172bb738de8230244456e818e34e1281269e1bc70cbeade5cc2288/pyomo-6.9.1-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:c6f7ad1228718430d393d2bcdeb61566e0b410f23cde95b7d656e14c52d930bb", size = 4082073 },
+    { url = "https://files.pythonhosted.org/packages/54/8d/34847af9bf9be9c2fc76491b8a926cf76d8ae01e097c9ba753286844adfe/pyomo-6.9.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:8287f2670ef6c6018e4e160847e182c3e2b4b184bfbc3b4c2f92956f473fe798", size = 4072876 },
+    { url = "https://files.pythonhosted.org/packages/97/cf/2d830173e1e74b73845ab5c22572c924d54f1980192fb7fd1fca4977633b/pyomo-6.9.1-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:75bab1a8d7d12b9c5aa72b19c11a71edc58418287ffbd7000811c5c9b7cd8506", size = 4134917 },
+    { url = "https://files.pythonhosted.org/packages/f9/b0/7ffc41a4b7b0cef22b3933051e2664fdaa1836a01f8b3fac15f88222c4ef/pyomo-6.9.1-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3cfb434a22a55d1b97c14d094d44178d64766b62ef1914b2b0dc1b05e62fe378", size = 4156402 },
+    { url = "https://files.pythonhosted.org/packages/8e/ec/ba3970bd68b7588eb21b1a0d3ec2815d4662a74a323f026eda6f8416d4c9/pyomo-6.9.1-py3-none-any.whl", hash = "sha256:bd5149341335e68172c3b610b8b4180f21bc7b65daa4f3218028fc9437dd4e8f", size = 3748021 },
 ]
 
 [[package]]
