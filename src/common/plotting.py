@@ -9,7 +9,7 @@ import cartopy.crs as ccrs
 import cartopy.geodesic
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-
+from common.utils import compute_gaps_per_sat
 import warnings
 # Suppress Cartopy's CRS approximation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -134,3 +134,10 @@ def plot_contact_windows(selected_stations, station_contacts, name="contacts.png
     plt.grid(True)
     plt.show()
     plt.savefig(name)
+    return fig
+
+def plot_gap_times(satellites, ground_stations, epc_start, epc_end, plot, title="gap_times_chart.png"):
+    if plot:
+        _,_,gap_secs = compute_gaps_per_sat(satellites,ground_stations,epc_start,epc_end, plot,title)
+        plt.savefig(title)
+        return title

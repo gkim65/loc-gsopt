@@ -4,13 +4,15 @@ from common.utils import load_earth_data #,compute_all_gaps_contacts, compute_ea
 from common.sat_gen import satellites_from_constellation
 from common.plotting import plot_gif,plot_img
 from methods.free_select.nelder_mead_scipy import nelder_mead_scipy
-from methods.teleport.ILP import data_downlink_ilp, gap_time_ilp, max_contact_ilp
-from common.plotting import plot_contact_windows
+from methods.teleport.ILP import ILP_Model
+from common.plotting import plot_contact_windows, plot_gap_times
 ###Vedant's imports
 # Standard imports
 import sys
 import os
 from itertools import groupby
+import pyomo.environ as pyo
+import pyomo.kernel as pk
 
 # Add the path to the folder containing the module
 module_path = os.path.abspath(os.path.join('..'))
@@ -81,10 +83,7 @@ def main(cfg: DictConfig):
     # Make sure to load in earth inertial data every start time!
     load_earth_data('data/iau2000A_finals_ab.txt')
 
-    satellites = satellites_from_constellation(cfg.scenario.constellations)
-    
-    #temporary single satellite for testing:
-    sat1 = satellites[0]
+    satellites = satellites_from_constellation(cfg.scenario.constellations)[0:cfg.problem.sat_num]
 
 
     # TODO: add other methods
@@ -105,28 +104,34 @@ def main(cfg: DictConfig):
         #Load ground stations from JSON file
         ground_stations = teleport_json('data/teleport_locations.json')[0:cfg.problem.teleport_num]
         print(f"Loaded {len(ground_stations)} ground stations")
+
+        ilp_model = ILP_Model(ground_stations, satellites, epc_start, epc_end, cfg.problem.gs_num)
         
         if cfg.problem.objective == "data_downlink":
-            selected_stations, total_data, station_contacts = data_downlink_ilp(ground_stations, sat1, epc_start, epc_end, cfg.problem.gs_num)
-            run.summary["selected_stations"] = selected_stations #list of selected stations
-            run.summary["total_data"] = total_data #float of total data downlinked
+            selected_stations, station_contacts, output_data = ilp_model.data_downlink_ilp()
+            #output data is total data downlinked
         
         if cfg.problem.objective == "gap_optimization":
-            selected_stations, station_contacts, all_gap_times = gap_time_ilp(ground_stations, sat1, epc_start, epc_end, cfg.problem.gs_num)
-            run.summary["selected_stations"] = selected_stations #list of selected stations
-            run.summary["all_gap_times"] = all_gap_times #list of gap times
+            selected_stations, station_contacts, all_gap_times = ilp_model.gap_time_ilp()
+            #output data is gap times
         
         if cfg.problem.objective == "max_contacts":
-            selected_stations, station_contacts, contact_count = max_contact_ilp(ground_stations, sat1, epc_start, epc_end, cfg.problem.gs_num)
-            run.summary["selected_stations"] = selected_stations #list of selected stations
-            run.summary["contact_count"] = contact_count  #float of contact counts
-
+            selected_stations, station_contacts, output_data = ilp_model.max_contact_ilp()
+            #output data is contact count
+        
+        run.summary["selected_stations"] = selected_stations
+        run.summary["output_data"] = output_data
+        run.summary["lat, long"] = [[gs.geometry.coordinates[0], gs.geometry.coordinates[1]] for gs in [ground_stations[i] for i in selected_stations]]
+        run.summary["gs_list"] = [station_contacts[i]['name'] for i in selected_stations]
         artifact = wandb.Artifact("station_contacts", type="json")     
         run.log_artifact(artifact)  
         
         if cfg.debug.plot == True:
-            plot_contact_windows(selected_stations, station_contacts)
-    
+            # Get the actual ground station objects for the selected stations
+            selected_gs = [ground_stations[i] for i in selected_stations]
+            
+            figure = wandb.Image(plot_gap_times(satellites, selected_gs, epc_start, epc_end, cfg.debug.plot))
+            run.log({"gap_times": figure})
     run.finish()
 
 

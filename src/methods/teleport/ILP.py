@@ -25,233 +25,213 @@ import json
 import pyomo.environ as pyo
 import pyomo.kernel as pk
 
+class ILP_Model:
+    def __init__(self, ground_stations, satellites, epc0, epc1, max_stations):
+        self.ground_stations = ground_stations
+        self.satellites = satellites
+        self.epc0 = epc0
+        self.epc1 = epc1
+        self.max_stations = max_stations
 
+        #Initialize model
+        self.model = pk.block()
+        with open('data/teleport_locations.json', 'r') as f:
+            self.stations_data = json.load(f)
 
-def data_downlink_ilp(ground_stations, sat1, epc0, epc1, max_stations):
-    model = pk.block()
-    # Load original station data from JSON
-    with open('data/teleport_locations.json', 'r') as f:
-        stations_data = json.load(f)
+        self.station_contacts = {}
+        self.model.x = pk.variable_dict()
+                # Create binary variables for station selection
+        for i in range(len(self.ground_stations)):
+            self.model.x[i] = pk.variable(domain=pk.Binary)
 
-    # Get contacts for each station
-    station_contacts = {}
-    data_rate = 10  # Mbps (example value)
-    for i, station in enumerate(ground_stations):
-        contacts = ba.find_location_accesses(sat1, station, epc0, epc1)
-        # Calculate data volume for each contact
-        data_volumes = [(contact.t_end - contact.t_start).total_seconds() * data_rate for contact in contacts]
-        station_contacts[i] = {
-            'contacts': contacts,
-            'station': station,
-            'name': stations_data[i]['name'],  # Get name from original JSON
-            'data_volumes': data_volumes,
-            'total_data': sum(data_volumes)
-        }
+        # Create constraints list
+        self.model.constraints = pk.constraint_list()
 
-    # Create binary variables for station selection
-    model.x = pk.variable_dict()
-    for i in range(len(ground_stations)):
-        model.x[i] = pk.variable(domain=pk.Binary)
+        # Constraint for exact number of stations
+        self.model.constraints.append(pk.constraint(sum(self.model.x.values()) == self.max_stations))
 
-    # Create constraints list
-    model.constraints = pk.constraint_list()
-
-    # Constraint for exact number of stations
-    MAX_STATIONS = max_stations
-    model.constraints.append(pk.constraint(sum(model.x.values()) == MAX_STATIONS))
-
-    # Create variable for total data volume
-    model.total_data = pk.variable(domain=pk.NonNegativeReals)
-
-    # Calculate total data volume expression
-    total_data_expr = sum(station_contacts[i]['total_data'] * model.x[i] for i in range(len(ground_stations)))
-
-    # Set total data constraint
-    model.constraints.append(pk.constraint(model.total_data == total_data_expr))
-
-    # Create and attach objective to model - maximize total data
-    model.obj = pk.objective(model.total_data, sense=pk.maximize)
-
-    # Create solver using SolverFactory
-    from pyomo.opt import SolverFactory
-    solver = SolverFactory('gurobi')
-
-    # Solve
-    solver.solve(model)
-
-    # Print results
-    selected_stations = []
-    total_data = 0
-    print("\nSelected stations and their data volumes:")
-    for i in model.x:
-        if model.x[i].value > 0.5:
-            selected_stations.append(i)
-            station_data = station_contacts[i]['total_data']
-            total_data += station_data
-            
-    return selected_stations, total_data, station_contacts
-
-
-def gap_time_ilp(ground_stations, sat1, epc0, epc1, max_stations):
-    model = pk.block()
-    MAX_STATIONS = max_stations
-    # Load original station data from JSON
-    with open('data/teleport_locations.json', 'r') as f:
-        stations_data = json.load(f)
-
-    # Get contacts for each station
-    station_contacts = {}
-    for i, station in enumerate(ground_stations):
-        contacts = ba.find_location_accesses(sat1, station, epc0, epc1)
-        station_contacts[i] = {
-            'contacts': contacts,
-            'station': station,
-            'name': stations_data[i]['name']  # Get name from original JSON
-        }
-    # Create binary variables for station selection using kernel interface
-    model.x = pk.variable_dict()
-    for i in range(len(ground_stations)):
-        model.x[i] = pk.variable(domain=pk.Binary)
-
-    # Create constraints list
-    model.constraints = pk.constraint_list()
-
-    # Constraint for exact number of stations
-    model.constraints.append(pk.constraint(sum(model.x.values()) == MAX_STATIONS))
-
-    # Create variable for total gap time
-    model.total_gap = pk.variable(domain=pk.NonNegativeReals)
-
-    # Create variables for all possible combinations of stations
-    from itertools import combinations
-    station_combinations = list(combinations(range(len(ground_stations)), MAX_STATIONS))
-    # Binary variable for each combination
-    model.combo_vars = pk.variable_dict()
-    for combo in station_combinations:
-        model.combo_vars[combo] = pk.variable(domain=pk.Binary)
-
-    # Only one combination can be selected
-    model.constraints.append(pk.constraint(sum(model.combo_vars.values()) == 1))
-
-    # Link station selection variables with combination variables
-    for combo in station_combinations:
-        # If combo is selected, corresponding stations must be selected
-        for i in combo:
-            model.constraints.append(pk.constraint(model.x[i] >= model.combo_vars[combo]))
-        # If all stations in combo are selected, combo must be selected
-        model.constraints.append(
-            pk.constraint(sum(model.x[i] for i in combo) - MAX_STATIONS * model.combo_vars[combo] <= MAX_STATIONS - 1)
-        )
-
-    # Calculate total gap time for each combination using gap_times_condense
-    total_gap_expr = 0
-    for combo in station_combinations:
-        # Collect all contacts for this combination
-        combo_contacts = []
-        for station_id in combo:
-            combo_contacts.extend(station_contacts[station_id]['contacts'])
         
-        # Use gap_times_condense to calculate gaps
-        _, gaps_seconds = gap_times_condense(combo_contacts, epc0.to_datetime(), epc1.to_datetime())
-        combo_gap = sum(gaps_seconds)
-        
-        # Add this combination's contribution to total gap
-        total_gap_expr += combo_gap * model.combo_vars[combo]
 
-    # Set total gap constraint
-    model.constraints.append(pk.constraint(model.total_gap == total_gap_expr))
+    def data_downlink_ilp(self):
 
-    # Create and attach objective to model
-    model.obj = pk.objective(model.total_gap, sense=pk.minimize)
+        data_rate = 10  # Mbps (example value)
+        for i, station in enumerate(self.ground_stations):
+            #Calculate data volumes for each contact
+            self.station_contacts[i] = {
+                'contacts': [],
+                'station': station,
+                'name': self.stations_data[i]['name'],  # Get name from original JSON
+                'data_volumes': [],
+                'total_data': 0
+            }
 
-    # Create solver using SolverFactory
-    from pyomo.opt import SolverFactory
-    solver = SolverFactory('gurobi')
-
-    # Solve
-    solver.solve(model)
-
-    # Print results
-    selected_stations = []
-    for i in model.x:
-        if model.x[i].value > 0.5:
-            selected_stations.append(i)
-
-    # Calculate and print actual gaps using gap_times_condense
-    selected_contacts = []
-    for station_id in selected_stations:
-        selected_contacts.extend(station_contacts[station_id]['contacts'])
-
-
-    all_gap_times, gaps_seconds = gap_times_condense(selected_contacts, epc0.to_datetime(), epc1.to_datetime())
-    print("\nGaps between merged contacts:")
-    for i, gap_time in enumerate(gaps_seconds):
-        print(f"Gap {i+1}: {gap_time:.2f} seconds")
-
-    print(f"\nTotal gap time: {sum(gaps_seconds):.2f} seconds")
-    print([station_contacts[i]['name'] for i in selected_stations])
-    return selected_stations, station_contacts, all_gap_times
-
-def max_contact_ilp(ground_stations, sat1, epc0, epc1, max_stations):
-    model = pk.block()
-    # Load original station data from JSON
-    with open('data/teleport_locations.json', 'r') as f:
-        stations_data = json.load(f)
-
-    # Get contacts for each station
-    station_contacts = {}
-    for i, station in enumerate(ground_stations):
-        contacts = ba.find_location_accesses(sat1, station, epc0, epc1)
-        print(f"Station {i} has {len(contacts)} contacts")
-        # Calculate data volume for each contact
-        station_contacts[i] = {
-            'contacts': contacts,
-            'station': station,
-            'name': stations_data[i]['name']  # Get name from original JSON
-        }
-
-    # Create binary variables for station selection
-    model.x = pk.variable_dict()
-    for i in range(len(ground_stations)):
-        model.x[i] = pk.variable(domain=pk.Binary)
-
-    # Create constraints list
-    model.constraints = pk.constraint_list()
-
-    # Constraint for exact number of stations
-    MAX_STATIONS = max_stations
-    model.constraints.append(pk.constraint(sum(model.x.values()) == MAX_STATIONS))
-
-    # Create variable for total data volume
-    model.total_contacts = pk.variable(domain=pk.NonNegativeReals)
-
-    # Calculate total data volume expression
-    total_contacts_expr = sum(len(station_contacts[i]['contacts']) * model.x[i] for i in range(len(ground_stations)))
-
-    # Set total data constraint
-    model.constraints.append(pk.constraint(model.total_contacts == total_contacts_expr))
-
-    # Create and attach objective to model - maximize total data
-    model.obj = pk.objective(model.total_contacts, sense=pk.maximize)
-
-    # Create solver using SolverFactory
-    from pyomo.opt import SolverFactory
-    solver = SolverFactory('gurobi')
-
-    # Solve
-    solver.solve(model)
-
-    # Print results
-    selected_stations = []
-    total_contacts = 0
-    print("\nSelected stations and their number of contacts:")
-    for i in model.x:
-        if model.x[i].value > 0.5:
-            selected_stations.append(i)
-            station_data = len(station_contacts[i]['contacts'])
-            total_contacts += station_data
-            print(f"Station {i} ({station_contacts[i]['name']}): {station_data:.2f} Contacts")
+            for sat in self.satellites:
+                contacts = ba.find_location_accesses(sat, station, self.epc0, self.epc1)
+                data_volumes = [(contact.t_end - contact.t_start).total_seconds() * data_rate for contact in contacts]
+                self.station_contacts[i]['contacts'].extend(contacts)
+                self.station_contacts[i]['data_volumes'].extend(data_volumes)
+            self.station_contacts[i]['total_data'] += sum(data_volumes)
             
-    print(f"\nTotal number of contacts: {total_contacts:.2f} Contacts")
-    print([station_contacts[i]['name'] for i in selected_stations])
-    return selected_stations, station_contacts, total_contacts
+
+
+
+        # Create variable for total data volume
+        self.model.total_data = pk.variable(domain=pk.NonNegativeReals)
+
+        # Calculate total data volume expression
+        total_data_expr = sum(self.station_contacts[i]['total_data'] * self.model.x[i] for i in range(len(self.ground_stations)))
+
+        # Set total data constraint
+        self.model.constraints.append(pk.constraint(self.model.total_data == total_data_expr))
+
+        # Create and attach objective to model - maximize total data
+        self.model.obj = pk.objective(self.model.total_data, sense=pk.maximize)
+
+        self.solve()
+        #Handle output
+        selected_stations = []
+        total_data = 0
+        print("\nSelected stations and their data volumes:")
+        for i in self.model.x:
+            if self.model.x[i].value > 0.5:
+                selected_stations.append(i)
+                station_data = self.station_contacts[i]['total_data']
+                total_data += station_data
+                
+        return selected_stations, self.station_contacts, total_data
+
+
+    def solve(self):
+        # Create solver using SolverFactory
+        from pyomo.opt import SolverFactory
+        solver = SolverFactory('gurobi')
+
+        # Solve
+        solver.solve(self.model)
+
+        
+
+
+    def gap_time_ilp(self):
+
+        # Get contacts for each station
+
+        for i, station in enumerate(self.ground_stations):
+            contacts = ba.find_location_accesses(self.sat1, station, self.epc0, self.epc1)
+            self.station_contacts[i] = {
+                'contacts': contacts,
+                'station': station,
+                'name': self.stations_data[i]['name']  # Get name from original JSON
+            }
+
+
+
+
+
+        # Create variable for total gap time
+        self.model.total_gap = pk.variable(domain=pk.NonNegativeReals)
+
+        # Create variables for all possible combinations of stations
+        from itertools import combinations
+        station_combinations = list(combinations(range(len(self.ground_stations)), self.max_stations))
+        # Binary variable for each combination
+        self.model.combo_vars = pk.variable_dict()
+        for combo in station_combinations:
+            self.model.combo_vars[combo] = pk.variable(domain=pk.Binary)
+
+        # Only one combination can be selected
+        self.model.constraints.append(pk.constraint(sum(self.model.combo_vars.values()) == 1))
+
+        # Link station selection variables with combination variables
+        for combo in station_combinations:
+            # If combo is selected, corresponding stations must be selected
+            for i in combo:
+                self.model.constraints.append(pk.constraint(self.model.x[i] >= self.model.combo_vars[combo]))
+            # If all stations in combo are selected, combo must be selected
+            self.model.constraints.append(
+                pk.constraint(sum(self.model.x[i] for i in combo) - self.max_stations * self.model.combo_vars[combo] <= self.max_stations - 1)
+            )
+
+        # Calculate total gap time for each combination using gap_times_condense
+        total_gap_expr = 0
+        for combo in station_combinations:
+            # Collect all contacts for this combination
+            combo_contacts = []
+            for station_id in combo:
+                combo_contacts.extend(self.station_contacts[station_id]['contacts'])
+            
+            # Use gap_times_condense to calculate gaps
+            _, gaps_seconds = gap_times_condense(combo_contacts, self.epc0.to_datetime(), self.epc1.to_datetime())
+            combo_gap = sum(gaps_seconds)
+            
+            # Add this combination's contribution to total gap
+            total_gap_expr += combo_gap * self.model.combo_vars[combo]
+
+        # Set total gap constraint
+        self.model.constraints.append(pk.constraint(self.model.total_gap == total_gap_expr))
+
+        # Create and attach objective to model
+        self.model.obj = pk.objective(self.model.total_gap, sense=pk.minimize)
+
+        self.solve()
+
+        # Print results
+        selected_stations = []
+        for i in self.model.x:
+            if self.model.x[i].value > 0.5:
+                selected_stations.append(i)
+
+        # Calculate and print actual gaps using gap_times_condense
+        selected_contacts = []
+        for station_id in selected_stations:
+            selected_contacts.extend(self.station_contacts[station_id]['contacts'])
+
+
+        all_gap_times, gaps_seconds = gap_times_condense(selected_contacts, self.epc0.to_datetime(), self.epc1.to_datetime())
+        print("\nGaps between merged contacts:")
+        for i, gap_time in enumerate(gaps_seconds):
+            print(f"Gap {i+1}: {gap_time:.2f} seconds")
+
+        print(f"\nTotal gap time: {sum(gaps_seconds):.2f} seconds")
+        print([self.station_contacts[i]['name'] for i in selected_stations])
+        return selected_stations, self.station_contacts, all_gap_times
+
+    def max_contact_ilp(self):
+
+        # Get contacts for each station
+        for i, station in enumerate(self.ground_stations):
+            self.station_contacts[i] = {
+                'contacts': [],
+                'station': station,
+                'name': self.stations_data[i]['name']  # Get name from original JSON
+            }
+            for sat in self.satellites:
+                contacts = ba.find_location_accesses(sat, station, self.epc0, self.epc1)
+                self.station_contacts[i]['contacts'].extend(contacts)
+
+        # Create binary variables for station selection
+        
+        self.model.total_contacts = pk.variable(domain=pk.NonNegativeReals)
+
+        total_contacts_expr = sum(len(self.station_contacts[i]['contacts']) * self.model.x[i] for i in range(len(self.ground_stations)))
+
+        self.model.constraints.append(pk.constraint(self.model.total_contacts == total_contacts_expr))
+
+        self.model.obj = pk.objective(self.model.total_contacts, sense=pk.maximize)
+
+        self.solve()
+
+        # Handle output
+        selected_stations = []
+        total_contacts = 0
+        print("\nSelected stations and their number of contacts:")
+        for i in self.model.x:
+            if self.model.x[i].value > 0.5:
+                selected_stations.append(i)
+                station_data = len(self.station_contacts[i]['contacts'])
+                total_contacts += station_data
+                print(f"Station {i} ({self.station_contacts[i]['name']}): {station_data:.2f} Contacts")
+                
+        print(f"\nTotal number of contacts: {total_contacts:.2f} Contacts")
+        print([self.station_contacts[i]['name'] for i in selected_stations])
+        return selected_stations, self.station_contacts, total_contacts
