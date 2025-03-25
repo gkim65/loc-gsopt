@@ -20,8 +20,8 @@ problem:
   method: "nelder" # TODO: add options for other methods 
                         # make sure you can only choose appropriate
                         # methods for appropriate problem types
-  objective: "max_contacts" #data_downlink, gap_optimization, max_contacts
-  gs_num: 5
+  objective: "gap_optimization" #data_downlink, gap_optimization, max_contacts
+  gs_num: 3
   teleport_num: 10
   sat_num: 3 # Start with 10, just to not overload the solver
 

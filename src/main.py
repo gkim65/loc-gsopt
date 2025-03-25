@@ -112,7 +112,7 @@ def main(cfg: DictConfig):
             #output data is total data downlinked
         
         if cfg.problem.objective == "gap_optimization":
-            selected_stations, station_contacts, all_gap_times = ilp_model.gap_time_ilp()
+            selected_stations, station_contacts, output_data = ilp_model.gap_time_ilp()
             #output data is gap times
         
         if cfg.problem.objective == "max_contacts":

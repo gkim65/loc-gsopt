@@ -117,16 +117,17 @@ class ILP_Model:
         # Get contacts for each station
 
         for i, station in enumerate(self.ground_stations):
-            contacts = ba.find_location_accesses(self.sat1, station, self.epc0, self.epc1)
             self.station_contacts[i] = {
-                'contacts': contacts,
+                'contacts': [],
                 'station': station,
                 'name': self.stations_data[i]['name']  # Get name from original JSON
             }
 
+            for sat in self.satellites:
+                contacts = ba.find_location_accesses(sat, station, self.epc0, self.epc1)
+                self.station_contacts[i]['contacts'].extend(contacts)
 
-
-
+        
 
         # Create variable for total gap time
         self.model.total_gap = pk.variable(domain=pk.NonNegativeReals)
@@ -157,13 +158,17 @@ class ILP_Model:
         for combo in station_combinations:
             # Collect all contacts for this combination
             combo_contacts = []
-            for station_id in combo:
-                combo_contacts.extend(self.station_contacts[station_id]['contacts'])
-            
-            # Use gap_times_condense to calculate gaps
-            _, gaps_seconds = gap_times_condense(combo_contacts, self.epc0.to_datetime(), self.epc1.to_datetime())
-            combo_gap = sum(gaps_seconds)
-            
+            for sat in self.satellites:
+                combo_gap = 0
+                for station_id in combo:
+                    contacts = ba.find_location_accesses(sat, self.station_contacts[station_id]['station'], self.epc0, self.epc1)
+                    combo_contacts.extend(contacts)
+                
+                # Use gap_times_condense to calculate gaps
+                _, gaps_seconds = gap_times_condense(combo_contacts, self.epc0.to_datetime(), self.epc1.to_datetime())
+                combo_gap += sum(gaps_seconds)
+
+                
             # Add this combination's contribution to total gap
             total_gap_expr += combo_gap * self.model.combo_vars[combo]
 
