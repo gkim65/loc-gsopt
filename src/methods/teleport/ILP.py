@@ -53,6 +53,8 @@ class ILP_Model:
         
 
     def data_downlink_ilp(self):
+        # Initialize empty list to store all contacts
+        all_contacts = []
 
         for i, station in enumerate(self.ground_stations):
             #Calculate data volumes for each contact
@@ -68,46 +70,62 @@ class ILP_Model:
                 data_volumes = [(contact.t_end - contact.t_start).total_seconds() * self.data_rate for contact in contacts]
                 self.station_contacts[i]['contacts'].extend(contacts)
                 self.station_contacts[i]['data_volumes'].extend(data_volumes)
-            self.station_contacts[i]['total_data'] += sum(data_volumes)
+                all_contacts.extend(contacts)  # Add contacts to master list
+            self.station_contacts[i]['total_data'] += sum(self.station_contacts[i]['data_volumes'])
             
+        # Create binary variables for each contact
+        self.model.contact_vars = pk.variable_dict()
         contacts_order = {
-            str(contact.id):i
-            for i, contact in enumerate(contacts)
+            str(contact.id): i 
+            for i, contact in enumerate(all_contacts)
         }
+        for contact in all_contacts:
+            self.model.contact_vars[contacts_order[str(contact.id)]] = pk.variable(domain=pk.Binary)
         
-        contacts_sorted_by_station = sorted(contacts, key=lambda cn: cn.station_id)
+        # Add constraints for overlapping contacts at each station
+        contacts_sorted_by_station = sorted(all_contacts, key=lambda cn: cn.station_id)
         for station_id, station_contacts in groupby(contacts_sorted_by_station, lambda cn: cn.station_id):
-
-            # Convert groupby object to a sorted list (groupby creates an iterator)
             station_contacts = sorted(list(station_contacts), key=lambda cn: cn.t_start)
             
-            #Test all pairs of contacts to check for overlap
             for x, y in combinations(station_contacts, 2):
                 if x.t_start <= y.t_end and y.t_start <= x.t_end:
-                    self.model.constraints.append(pk.constraint(self.model.x[contacts_order[str(x.id)]] + self.model.x[contacts_order[str(y.id)]] <= 1))
+                    expr = self.model.contact_vars[contacts_order[str(x.id)]] + self.model.contact_vars[contacts_order[str(y.id)]]
+                    self.model.constraints.append(pk.constraint(expr <= 1))
         
-        contacts_sorted_by_satellite = sorted(contacts, key=lambda cn: cn.spacecraft_id)
+        # Add constraints for overlapping contacts at each satellite
+        contacts_sorted_by_satellite = sorted(all_contacts, key=lambda cn: cn.spacecraft_id)
         for sat_id, satellite_contacts in groupby(contacts_sorted_by_satellite, lambda cn: cn.spacecraft_id):
-
-            # Convert groupby object to a sorted list
             satellite_contacts = sorted(list(satellite_contacts), key=lambda cn: cn.t_start)
             
             for x, y in combinations(satellite_contacts, 2):
                 if x.t_start <= y.t_end and y.t_start <= x.t_end:
-                    self.model.constraints.append(pk.constraint(self.model.x[contacts_order[str(x.id)]] + self.model.x[contacts_order[str(y.id)]] <= 1))
+                    expr = self.model.contact_vars[contacts_order[str(x.id)]] + self.model.contact_vars[contacts_order[str(y.id)]]
+                    self.model.constraints.append(pk.constraint(expr <= 1))
         
-        for cn in contacts:
-            if cn.t_duration <= 180:
-                self.model.constraints.append(self.model.x[contacts_order[str(cn.id)]] == 0)
-        
-
-
+        # Add constraints for minimum contact duration
+        for contact in all_contacts:
+            if contact.t_duration <= 180:  # Contacts must be longer than 3 minutes
+                self.model.constraints.append(
+                    pk.constraint(self.model.contact_vars[contacts_order[str(contact.id)]] == 0)
+                )
 
         # Create variable for total data volume
         self.model.total_data = pk.variable(domain=pk.NonNegativeReals)
 
+        # Link contact variables with station selection
+        for contact in all_contacts:
+            station_idx = next(i for i, station in enumerate(self.ground_stations) 
+                             if station.id == contact.station_id)
+            self.model.constraints.append(
+                pk.constraint(self.model.contact_vars[contacts_order[str(contact.id)]] <= self.model.x[station_idx])
+            )
+
         # Calculate total data volume expression
-        total_data_expr = sum(self.station_contacts[i]['total_data'] * self.model.x[i] for i in range(len(self.ground_stations)))
+        total_data_expr = sum(
+            self.model.contact_vars[contacts_order[str(contact.id)]] * 
+            contact.t_duration * self.data_rate 
+            for contact in all_contacts
+        )
         
         # Set total data constraint
         self.model.constraints.append(pk.constraint(self.model.total_data == total_data_expr))
@@ -116,6 +134,7 @@ class ILP_Model:
         self.model.obj = pk.objective(self.model.total_data, sense=pk.maximize)
 
         self.solve()
+        
         #Handle output
         selected_stations = []
         total_data = 0

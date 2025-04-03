@@ -22,7 +22,7 @@ problem:
                         # methods for appropriate problem types
   objective: "data_downlink" #data_downlink, gap_optimization, max_contacts
   gs_num: 5
-  teleport_num: 10
+  teleport_num: 500
   sat_num: 5 # Start with 10, just to not overload the solver
   data_rate: 10 # Mbps
 
