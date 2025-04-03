@@ -2,7 +2,7 @@
 # Standard imports
 import sys
 import os
-from itertools import groupby
+from itertools import groupby, combinations
 
 # Add the path to the folder containing the module
 module_path = os.path.abspath(os.path.join('..'))
@@ -26,13 +26,13 @@ import pyomo.environ as pyo
 import pyomo.kernel as pk
 
 class ILP_Model:
-    def __init__(self, ground_stations, satellites, epc0, epc1, max_stations):
+    def __init__(self, ground_stations, satellites, epc0, epc1, max_stations, data_rate=10):
         self.ground_stations = ground_stations
         self.satellites = satellites
         self.epc0 = epc0
         self.epc1 = epc1
         self.max_stations = max_stations
-
+        self.data_rate = data_rate
         #Initialize model
         self.model = pk.block()
         with open('data/teleport_locations.json', 'r') as f:
@@ -54,7 +54,6 @@ class ILP_Model:
 
     def data_downlink_ilp(self):
 
-        data_rate = 10  # Mbps (example value)
         for i, station in enumerate(self.ground_stations):
             #Calculate data volumes for each contact
             self.station_contacts[i] = {
@@ -64,14 +63,43 @@ class ILP_Model:
                 'data_volumes': [],
                 'total_data': 0
             }
-
             for sat in self.satellites:
-                contacts = ba.find_location_accesses(sat, station, self.epc0, self.epc1)
-                data_volumes = [(contact.t_end - contact.t_start).total_seconds() * data_rate for contact in contacts]
+                contacts = ba.find_location_accesses(sat, station, self.epc0, self.epc1)                    
+                data_volumes = [(contact.t_end - contact.t_start).total_seconds() * self.data_rate for contact in contacts]
                 self.station_contacts[i]['contacts'].extend(contacts)
                 self.station_contacts[i]['data_volumes'].extend(data_volumes)
             self.station_contacts[i]['total_data'] += sum(data_volumes)
             
+        contacts_order = {
+            str(contact.id):i
+            for i, contact in enumerate(contacts)
+        }
+        
+        contacts_sorted_by_station = sorted(contacts, key=lambda cn: cn.station_id)
+        for station_id, station_contacts in groupby(contacts_sorted_by_station, lambda cn: cn.station_id):
+
+            # Convert groupby object to a sorted list (groupby creates an iterator)
+            station_contacts = sorted(list(station_contacts), key=lambda cn: cn.t_start)
+            
+            #Test all pairs of contacts to check for overlap
+            for x, y in combinations(station_contacts, 2):
+                if x.t_start <= y.t_end and y.t_start <= x.t_end:
+                    self.model.constraints.append(pk.constraint(self.model.x[contacts_order[str(x.id)]] + self.model.x[contacts_order[str(y.id)]] <= 1))
+        
+        contacts_sorted_by_satellite = sorted(contacts, key=lambda cn: cn.spacecraft_id)
+        for sat_id, satellite_contacts in groupby(contacts_sorted_by_satellite, lambda cn: cn.spacecraft_id):
+
+            # Convert groupby object to a sorted list
+            satellite_contacts = sorted(list(satellite_contacts), key=lambda cn: cn.t_start)
+            
+            for x, y in combinations(satellite_contacts, 2):
+                if x.t_start <= y.t_end and y.t_start <= x.t_end:
+                    self.model.constraints.append(pk.constraint(self.model.x[contacts_order[str(x.id)]] + self.model.x[contacts_order[str(y.id)]] <= 1))
+        
+        for cn in contacts:
+            if cn.t_duration <= 180:
+                self.model.constraints.append(self.model.x[contacts_order[str(cn.id)]] == 0)
+        
 
 
 
@@ -80,7 +108,7 @@ class ILP_Model:
 
         # Calculate total data volume expression
         total_data_expr = sum(self.station_contacts[i]['total_data'] * self.model.x[i] for i in range(len(self.ground_stations)))
-
+        
         # Set total data constraint
         self.model.constraints.append(pk.constraint(self.model.total_data == total_data_expr))
 
@@ -133,7 +161,6 @@ class ILP_Model:
         self.model.total_gap = pk.variable(domain=pk.NonNegativeReals)
 
         # Create variables for all possible combinations of stations
-        from itertools import combinations
         station_combinations = list(combinations(range(len(self.ground_stations)), self.max_stations))
         # Binary variable for each combination
         self.model.combo_vars = pk.variable_dict()

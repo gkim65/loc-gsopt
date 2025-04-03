@@ -105,7 +105,7 @@ def main(cfg: DictConfig):
         ground_stations = teleport_json('data/teleport_locations.json')[0:cfg.problem.teleport_num]
         print(f"Loaded {len(ground_stations)} ground stations")
 
-        ilp_model = ILP_Model(ground_stations, satellites, epc_start, epc_end, cfg.problem.gs_num)
+        ilp_model = ILP_Model(ground_stations, satellites, epc_start, epc_end, cfg.problem.gs_num, data_rate=cfg.problem.data_rate)
         
         if cfg.problem.objective == "data_downlink":
             selected_stations, station_contacts, output_data = ilp_model.data_downlink_ilp()

@@ -27,7 +27,7 @@ def teleport_json(provider_file):
         stations.append(bdm.Station(
             **{
                 "properties": {
-                    "constraints": bdm.AccessConstraints(elevation_min=0),
+                    "constraints": bdm.AccessConstraints(elevation_min=10),
                     "name": sta["name"],
                 },
                 "type": "Feature",
