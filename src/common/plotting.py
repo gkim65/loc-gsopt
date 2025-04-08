@@ -90,3 +90,4 @@ def plot_img(gs_list,name="example.png"):
     animate("", fig, gs_list,"Full Ground Station Selection")
 
     plt.savefig(name)
+    return fig

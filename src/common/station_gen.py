@@ -61,17 +61,17 @@ def teleport_json(provider_file):
 #             }
 #         )
 
-def return_bdm_gs(lon,lat):
+def return_bdm_gs(lon,lat,elevation=10):
     return bdm.Station(
             **{
                 "properties": {
-                    "constraints": bdm.AccessConstraints(elevation_min=0),
+                    "constraints": bdm.AccessConstraints(elevation_min=elevation),
                     "name": "change_this",
                 },
                 "type": "Feature",
                 "geometry": {
                     "type": "Point",
-                    "coordinates": [lon, lat] 
+                    "coordinates": [lon, lat, 0] 
                 },
             }
         )

@@ -2,7 +2,7 @@ from shapely.geometry import Point
 from geopy.distance import geodesic
 
 from common.station_gen import return_bdm_gs
-from common.utils import compute_gaps_per_sat, compute_contact_times
+from common.utils import compute_gaps_per_sat, compute_contact_times, mp_compute_contact_times, contactExclusion
 
 from itertools import chain
 import numpy as np
@@ -68,7 +68,7 @@ def penalty_gs_all(new_gs,current_gs_list, dist_penalty):
 
 ############################## Cost Functions ################################
 
-def cost_func(new_gs, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, i, verbose = False, plot = False):    
+def cost_func(new_gs, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og, verbose = False, plot = False):    
     
     # Make sure that all ground stations are set to only add onto the existing selected constellations
     temp_gs_list = gs_list.copy()
@@ -86,19 +86,33 @@ def cost_func(new_gs, gs_list, satellites, epc_start, epc_end, land_geometries, 
         mean_gap_time = np.mean(gaps_seconds_flattened)
         cost_func_val = mean_gap_time
 
-    if cfg.problem.objective == "maximize_contact_seconds":
-        contact_times, contact_times_seconds = compute_contact_times(satellites, temp_gs_list ,epc_start, epc_end, plot)
-        cost_func_val = 0 - (np.sum(contact_times_seconds))
+    if cfg.problem.objective == "maximize_num_contacts":
+        # all_contacts, _ = mp_compute_contact_times(satellites, [return_bdm_gs(new_gs[0], new_gs[1])] ,epc_start, epc_end, plot)
+        # selected_contacts, _ = contactExclusion(all_contacts+gs_contacts_og,cfg)
+        # print(len(all_contacts+gs_contacts_og))
+        # cost_func_val = 0 - len(selected_contacts)*100
+        contact_times, contact_times_seconds = mp_compute_contact_times(satellites, temp_gs_list ,epc_start, epc_end, plot)
+        cost_func_val = 0 - len(contact_times)*100
+ 
+    if cfg.problem.objective == "data_downlink":
+        # contact_times, contact_times_seconds = mp_compute_contact_times(satellites, temp_gs_list ,epc_start, epc_end, plot)
+        # cost_func_val = 0 - (np.sum(contact_times_seconds))
+        all_contacts, _ = mp_compute_contact_times(satellites, [return_bdm_gs(new_gs[0], new_gs[1])] ,epc_start, epc_end, plot)
+        _, contacts_exclusion_secs = contactExclusion(all_contacts+ gs_contacts_og,cfg)
+        cost_func_val = 0 - (np.sum(contacts_exclusion_secs))
+        print(len(contacts_exclusion_secs))
 
-    penalty_water = (penalty(new_gs,land_geometries)/10000)**2 # Put penalty/distance from land in 10 kms
+
+    penalty_water = (penalty(new_gs,land_geometries)/1000)**2 # Put penalty/distance from land in 10 kms
     penalty_close_gs = (penalty_gs_all(new_gs,gs_list, cfg.constraints.dist_other_gs))**2 # additional penalty being close to gs, in ms
     value = cost_func_val + penalty_water + penalty_close_gs
 
-    wandb.log({"Obj_func_value": value,
-               "penalty_water": penalty_water,
-                "penalty_close_gs": penalty_close_gs,
-                 "log_of_simplexes_lon"+str(i): new_gs[0],
-                 "log_of_simplexes_lat"+str(i):new_gs[1]})
+    if cfg.debug.wandb:
+        wandb.log({"Obj_func_value": value,
+                "penalty_water": penalty_water,
+                    "penalty_close_gs": penalty_close_gs,
+                    "log_of_simplexes_lon"+str(i): new_gs[0],
+                    "log_of_simplexes_lat"+str(i):new_gs[1]})
     if verbose:
         print("Current optimization value: ", value)
         print("penalty_water: ", penalty_water)

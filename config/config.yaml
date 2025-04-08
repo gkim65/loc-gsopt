@@ -19,39 +19,42 @@ problem:
   method: "nelder" # TODO: add options for other methods 
                         # make sure you can only choose appropriate
                         # methods for appropriate problem types
-  objective: "maximize_contact_seconds" # "minimize_gap" # TODO: add options for other methods
-                            # "maximize_contact_seconds" 
-  gs_num: 2
-  sat_num: 1 # Start with 10, just to not overload the solver
+  objective: "data_downlink" # "minimize_gap" # TODO: add options for other methods
+                            # "data_downlink"
+                            # "maximize_num_contacts"
+  gs_num: 5
+  sat_num: 6 # Start with 10, just to not overload the solver
 
 
 scenario:
   constellations: "CAPELLA" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
                           #'FLOCK', 'HAWK', 'CAPELLA', 'LEGION', 
                           #'WORLDVIEW', 'GEOEYE', 'NUSAT'
-  start_simplex: 1 # can be 0-6
+  start_simplex: 3 # can be 0-6, random
+  datarate: 1200000000.0 # Data Rate [bps], for now, just set to this for all satellites and ground stations
   teleport_sites:
     # TODO: Need to add teleport functionality, list of sites to select
   
 constraints:
-  dist_other_gs: 500000 # 500 km
+  dist_other_gs: 3000000 # 3000 km for elevation min of around 10
 
 start_epoch:
-  year: 2024
-  month: 5
-  day: 20
-  hour: 0
-  minute: 0
-  second: 0
+  year: 2025
+  month: 4
+  day: 1
+  hour: 17
+  minute: 23
+  second: 40.69
 
 end_epoch:
-  year: 2024
-  month: 5
-  day: 21
-  hour: 0
-  minute: 0
-  second: 0
+  year: 2025
+  month: 4
+  day: 8
+  hour: 17
+  minute: 23
+  second: 40.69
 
 debug:
   verbose: True
-  plot: False
+  plot: False # TODO: maybe i don't need anymroe? or check
+  wandb: True

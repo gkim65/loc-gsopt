@@ -2,19 +2,21 @@ import numpy as np
 from scipy.optimize import minimize
 from common.objective_functions import cost_func
 from common.station_gen import return_bdm_gs
+from common.utils import mp_compute_contact_times
 
 #  WandB
 import wandb
 import copy
 
 
-# TODO: add the cyclic coordinate descent part
+# TODO: add the cyclic coordinate descent part (May not include in this paper)
 def nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites):
         
 
         # Setup args for minimize function
         gs_list = []
         gs_list_plot = []
+        gs_contacts_og = []
         
         sat_list = satellites[0:cfg.problem.sat_num]
         land_geometries = land_data['geometry']
@@ -76,11 +78,12 @@ def nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites):
                 # Perform the optimization using Nelder-Mead
                 result = minimize(cost_func, 
                                 initial_guess, 
-                                args = (gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, verbose, plot), 
+                                args = (gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og, verbose, plot), 
                                 method='Nelder-Mead',
                                 options={'disp': True,
                                         # 'fatol': 1e-6, # TODO: Doesn't work
-                                        'xatol': 0.1,
+                                        # 'xatol': 3, # this might be too much! # TODO: Doesn't work
+                                        'maxiter': 25, # this might be too little!
                                         'initial_simplex': initial_simplex_list[cfg.scenario.start_simplex]},
                                 bounds = ((-180,180),(-90,90)))
                         
@@ -88,6 +91,10 @@ def nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites):
                 print(result)
                 gs_list.append(return_bdm_gs(result.x[0], result.x[1]))
                 gs_list_plot.append([result.x[0], result.x[1]])
+
+                # try to minimize number of contacts to compute:
+                contacts_og, _ = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, plot)
+                gs_contacts_og = contacts_og
                 
         return gs_list, gs_list_plot 
 
