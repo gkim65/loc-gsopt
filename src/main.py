@@ -102,7 +102,7 @@ def main(cfg: DictConfig):
 
     elif cfg.problem.type == "teleport":
         #Load ground stations from JSON file
-        ground_stations = teleport_json('data/teleport_locations.json')[0:cfg.problem.teleport_num]
+        ground_stations = teleport_json('data/test_teleports.json')[0:cfg.problem.teleport_num]
         print(f"Loaded {len(ground_stations)} ground stations")
 
         ilp_model = ILP_Model(ground_stations, satellites, epc_start, epc_end, cfg.problem.gs_num, data_rate=cfg.problem.data_rate)
@@ -121,7 +121,7 @@ def main(cfg: DictConfig):
         
         run.summary["selected_stations"] = selected_stations
         run.summary["output_data"] = output_data
-        run.summary["lat, long"] = [[gs.geometry.coordinates[0], gs.geometry.coordinates[1]] for gs in [ground_stations[i] for i in selected_stations]]
+        run.summary["lat_long"] = [[gs.geometry.coordinates[0], gs.geometry.coordinates[1]] for gs in [ground_stations[i] for i in selected_stations]]
         run.summary["gs_list"] = [station_contacts[i]['name'] for i in selected_stations]
         artifact = wandb.Artifact("station_contacts", type="json")     
         run.log_artifact(artifact)  

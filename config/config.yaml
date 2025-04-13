@@ -20,14 +20,14 @@ problem:
   method: "nelder" # TODO: add options for other methods 
                         # make sure you can only choose appropriate
                         # methods for appropriate problem types
-  objective: "data_downlink" #data_downlink, gap_optimization, max_contacts
+  objective: "max_contacts" #data_downlink, gap_optimization, max_contacts
   gs_num: 5
-  teleport_num: 500
-  sat_num: 5 # Start with 10, just to not overload the solver
-  data_rate: 10 # Mbps
+  teleport_num: 10
+  sat_num: 2 # Start with 10, just to not overload the solver
+  data_rate: 1200000000 # bps
 
 scenario:
-  constellations: "ICEYE" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
+  constellations: "CAPELLA" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
                           #'FLOCK', 'HAWK', 'CAPELLA', 'LEGION', 
                           #'WORLDVIEW', 'GEOEYE', 'NUSAT'
   start_simplex: 1 # can be 0-6
@@ -38,20 +38,20 @@ constraints:
   dist_other_gs: 500000 # 500 km
 
 start_epoch:
-  year: 2024
-  month: 5
-  day: 20
-  hour: 0
-  minute: 0
-  second: 0
+  year: 2025
+  month: 4
+  day: 1
+  hour: 17
+  minute: 23
+  second: 40.69
 
 end_epoch:
-  year: 2024
-  month: 5
-  day: 21
-  hour: 0
-  minute: 0
-  second: 0
+  year: 2025
+  month: 4
+  day: 2
+  hour: 17
+  minute: 23
+  second: 40.69
 
 debug:
   verbose: True
