@@ -35,7 +35,7 @@ class ILP_Model:
         self.data_rate = data_rate
         #Initialize model
         self.model = pk.block()
-        with open('data/teleport_locations.json', 'r') as f:
+        with open('data/test_teleports.json', 'r') as f:
             self.stations_data = json.load(f)
 
         self.station_contacts = {}
@@ -123,6 +123,7 @@ class ILP_Model:
         
         
         
+        
 
         # Calculate total data volume expression
         total_data_expr = sum(
@@ -147,6 +148,7 @@ class ILP_Model:
         for i in self.model.contact_vars:
             if self.model.contact_vars[i].value > 0.5:
                 selected_contacts.append(all_contacts[i])
+        print("contacts", len(selected_contacts))
 
         for i in self.model.x:
             if self.model.x[i].value > 0.5:
@@ -169,122 +171,93 @@ class ILP_Model:
         solver.solve(self.model)
 
         
-
-
     def gap_time_ilp(self):
-        # Initialize empty list to store all contacts
-        all_contacts = []
-
-        for i, station in enumerate(self.ground_stations):
-            self.station_contacts[i] = {
-                'contacts': [],
-                'station': station,
-                'name': self.stations_data[i]['name']  # Get name from original JSON
-            }
-            for sat in self.satellites:
-                contacts = ba.find_location_accesses(sat, station, self.epc0, self.epc1)
-                self.station_contacts[i]['contacts'].extend(contacts)
-                all_contacts.extend(contacts)
-
-        # Create binary variables for each contact
-        self.model.contact_vars = pk.variable_dict()
-        contacts_order = {
-            str(contact.id): i 
-            for i, contact in enumerate(all_contacts)
-        }
-        for contact in all_contacts:
-            self.model.contact_vars[contacts_order[str(contact.id)]] = pk.variable(domain=pk.Binary)
-        
-        # Add constraints for overlapping contacts at each station
-        contacts_sorted_by_station = sorted(all_contacts, key=lambda cn: cn.station_id)
-        for station_id, station_contacts in groupby(contacts_sorted_by_station, lambda cn: cn.station_id):
-            station_contacts = sorted(list(station_contacts), key=lambda cn: cn.t_start)
-            
-            for x, y in combinations(station_contacts, 2):
-                if x.t_start <= y.t_end and y.t_start <= x.t_end:
-                    expr = self.model.contact_vars[contacts_order[str(x.id)]] + self.model.contact_vars[contacts_order[str(y.id)]]
-                    self.model.constraints.append(pk.constraint(expr <= 1))
-        
-        # Add constraints for overlapping contacts at each satellite
-        contacts_sorted_by_satellite = sorted(all_contacts, key=lambda cn: cn.spacecraft_id)
-        for sat_id, satellite_contacts in groupby(contacts_sorted_by_satellite, lambda cn: cn.spacecraft_id):
-            satellite_contacts = sorted(list(satellite_contacts), key=lambda cn: cn.t_start)
-            
-            for x, y in combinations(satellite_contacts, 2):
-                if x.t_start <= y.t_end and y.t_start <= x.t_end:
-                    expr = self.model.contact_vars[contacts_order[str(x.id)]] + self.model.contact_vars[contacts_order[str(y.id)]]
-                    self.model.constraints.append(pk.constraint(expr <= 1))
-        
-        # Add constraints for minimum contact duration
-        for contact in all_contacts:
-            if contact.t_duration < 180:  # Contacts must be longer than 3 minutes
-                self.model.constraints.append(
-                    pk.constraint(self.model.contact_vars[contacts_order[str(contact.id)]] == 0)
-                )
-
-        # Link contact variables with station selection
-        for contact in all_contacts:
-            station_idx = next(i for i, station in enumerate(self.ground_stations) 
-                             if station.id == contact.station_id)
-            self.model.constraints.append(
-                pk.constraint(self.model.contact_vars[contacts_order[str(contact.id)]] <= self.model.x[station_idx])
-            )
-
-        # Create variable for total gap time
-        self.model.total_gap = pk.variable(domain=pk.NonNegativeReals)
-
-        # First solve the model to select stations
-        self.solve()
-
-        # Now get selected contacts after solving
-        selected_contacts = []
-        for i in self.model.contact_vars:
-            if self.model.contact_vars[i].value > 0.5:
-                selected_contacts.append(all_contacts[i])
-
-        # Calculate gaps based on selected contacts
-        if len(selected_contacts) > 0:
-            all_gap_times, gaps_seconds = gap_times_condense(selected_contacts, self.epc0.to_datetime(), self.epc1.to_datetime())
-            total_gap_expr = sum(gaps_seconds)
-        else:
-            # If no contacts selected, set a large gap penalty
-            total_gap_expr = (self.epc1.to_datetime() - self.epc0.to_datetime()).total_seconds()
-            all_gap_times = []
-            gaps_seconds = [total_gap_expr]
-
-        # Set total gap constraint and objective
-        self.model.constraints.append(pk.constraint(self.model.total_gap == total_gap_expr))
-        self.model.obj = pk.objective(self.model.total_gap, sense=pk.minimize)
-
-        # Solve again with the gap objective
-        self.solve()
-
-        # Handle output
-        selected_stations = []
-        selected_contacts = []
-        for i in self.model.contact_vars:
-            if self.model.contact_vars[i].value > 0.5:
-                selected_contacts.append(all_contacts[i])
-
-        for i in self.model.x:
-            if self.model.x[i].value > 0.5:
-                selected_stations.append(i)
-
-        # Recalculate gaps for final output
-        if len(selected_contacts) > 0:
-            all_gap_times, gaps_seconds = gap_times_condense(selected_contacts, self.epc0.to_datetime(), self.epc1.to_datetime())
-        else:
-            all_gap_times = []
-            gaps_seconds = [(self.epc1.to_datetime() - self.epc0.to_datetime()).total_seconds()]
-
-        print("\nGaps between merged contacts:")
-        for i, gap_time in enumerate(gaps_seconds):
-            print(f"Gap {i+1}: {gap_time:.2f} seconds")
-
-        print(f"\nTotal gap time: {sum(gaps_seconds):.2f} seconds")
-        print([self.station_contacts[i]['name'] for i in selected_stations])
-        
-        return selected_stations, self.station_contacts, all_gap_times
+ 
+         # Get contacts for each station
+ 
+         for i, station in enumerate(self.ground_stations):
+             self.station_contacts[i] = {
+                 'contacts': [],
+                 'station': station,
+                 'name': self.stations_data[i]['name']  # Get name from original JSON
+             }
+ 
+             for sat in self.satellites:
+                 contacts = ba.find_location_accesses(sat, station, self.epc0, self.epc1)
+                 self.station_contacts[i]['contacts'].extend(contacts)
+ 
+ 
+ 
+         # Create variable for total gap time
+         self.model.total_gap = pk.variable(domain=pk.NonNegativeReals)
+ 
+         # Create variables for all possible combinations of stations
+         station_combinations = list(combinations(range(len(self.ground_stations)), self.max_stations))
+         # Binary variable for each combination
+         self.model.combo_vars = pk.variable_dict()
+         for combo in station_combinations:
+             self.model.combo_vars[combo] = pk.variable(domain=pk.Binary)
+ 
+         # Only one combination can be selected
+         self.model.constraints.append(pk.constraint(sum(self.model.combo_vars.values()) == 1))
+ 
+         # Link station selection variables with combination variables
+         for combo in station_combinations:
+             # If combo is selected, corresponding stations must be selected
+             for i in combo:
+                 self.model.constraints.append(pk.constraint(self.model.x[i] >= self.model.combo_vars[combo]))
+             # If all stations in combo are selected, combo must be selected
+             self.model.constraints.append(
+                 pk.constraint(sum(self.model.x[i] for i in combo) - self.max_stations * self.model.combo_vars[combo] <= self.max_stations - 1)
+             )
+ 
+         # Calculate total gap time for each combination using gap_times_condense
+         total_gap_expr = 0
+         for combo in station_combinations:
+             # Collect all contacts for this combination
+             combo_contacts = []
+             for sat in self.satellites:
+                 combo_gap = 0
+                 for station_id in combo:
+                     contacts = ba.find_location_accesses(sat, self.station_contacts[station_id]['station'], self.epc0, self.epc1)
+                     combo_contacts.extend(contacts)
+ 
+                 # Use gap_times_condense to calculate gaps
+                 _, gaps_seconds = gap_times_condense(combo_contacts, self.epc0.to_datetime(), self.epc1.to_datetime())
+                 combo_gap += sum(gaps_seconds)
+ 
+ 
+             # Add this combination's contribution to total gap
+             total_gap_expr += combo_gap * self.model.combo_vars[combo]
+ 
+         # Set total gap constraint
+         self.model.constraints.append(pk.constraint(self.model.total_gap == total_gap_expr))
+ 
+         # Create and attach objective to model
+         self.model.obj = pk.objective(self.model.total_gap, sense=pk.minimize)
+ 
+         self.solve()
+ 
+         # Print results
+         selected_stations = []
+         for i in self.model.x:
+             if self.model.x[i].value > 0.5:
+                 selected_stations.append(i)
+ 
+         # Calculate and print actual gaps using gap_times_condense
+         selected_contacts = []
+         for station_id in selected_stations:
+             selected_contacts.extend(self.station_contacts[station_id]['contacts'])
+ 
+ 
+         all_gap_times, gaps_seconds = gap_times_condense(selected_contacts, self.epc0.to_datetime(), self.epc1.to_datetime())
+         print("\nGaps between merged contacts:")
+         for i, gap_time in enumerate(gaps_seconds):
+             print(f"Gap {i+1}: {gap_time:.2f} seconds")
+ 
+         print(f"\nTotal gap time: {sum(gaps_seconds):.2f} seconds")
+         print([self.station_contacts[i]['name'] for i in selected_stations])
+         return selected_stations, self.station_contacts, all_gap_times
 
     def max_contact_ilp(self):
         # Initialize empty list to store all contacts
