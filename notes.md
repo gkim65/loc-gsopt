@@ -286,8 +286,28 @@ results
 # april 7, 2025
 
 - we can find the best set of points to start from from 100? generated random points and select the best three to do our coordinate starts from???
+- ok the starting simplex thing isn't really beneficial lol
+- but, we do have better working nelder mead... in some cases
+i do want to try running the basinhoppin
+and also try running with no penalty on going next to other ground statoins, this would help prove the antenna argument
+
 
 also more plots
 - converging times
 - TO DO: put in additional stats per satellite etc for mean, for now just flatten everything 
     - loc-gsopt/src/common/objective_functions.py
+
+
+# april 8 2025
+Have been working really hard to try and find a good simplex starter for nelder mead (for that novelty aspect!), to be honest that is still in the works (but might have a breakthrough soon? will let you know)
+
+part of the issues I've been having is that the nelder mead solver kept getting stuck at the poles (which also was why different random seeds had such different answers at times), but I actually figured out a way to get around this by converting the lat long coordinates to a unit sphere so that the poles is better accounted for
+
+And its consistently? (I need to test this more robustly, but so far yes!!) doing better than ksat, but is showing pretty similar results which is really exciting! I think the method definitely is doing better
+
+# april 10, 2025
+need to add in the windows plot from vedant's code!
+
+# april 16, 2025
+added automatic don't update the txt files
+added seeded

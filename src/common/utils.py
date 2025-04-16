@@ -7,6 +7,7 @@ import multiprocessing as mp
 
 import matplotlib.pyplot as plt
 import matplotlib
+import numpy as np
 
 from itertools import chain
 matplotlib.use('Agg')
@@ -18,21 +19,41 @@ from pyomo.environ import *
 from itertools import combinations, groupby
 import pyomo.kernel as pk
 
-def load_earth_data(filename):
+def load_earth_data(filename, download):
     # Here we can download the latest Earth orientation data and load it.
 
     if not os.path.exists(filename):
-        # Uncomment this line ONCE the data has been downloaded. Recomment it once it has been downloaded.
-        print("Downloading latest earth orientation data...")
-        if not os.path.exists("data"):
-            os.makedirs("data")
-        bh.utils.download_iers_bulletin_ab("./data")
-        print("Download complete")
+        if download:
+            # Uncomment this line ONCE the data has been downloaded. Recomment it once it has been downloaded.
+            print("Downloading latest earth orientation data...")
+            if not os.path.exists("data"):
+                os.makedirs("data")
+            bh.utils.download_iers_bulletin_ab("./data")
+            print("Download complete")
 
     # Load the latest Earth Orientation Data
     print("Loading the latest Earth Orientation Data")
     bh.EOP.load(filename)
 
+
+def xyz_to_latlon(xyz):
+    xyz = xyz / np.linalg.norm(xyz)
+    x, y, z = xyz
+    lat_rad = np.arcsin(z)  # sin(lat) = z
+    lon_rad = np.arctan2(y, x)
+    lat_deg = np.degrees(lat_rad)
+    lon_deg = np.degrees(lon_rad)
+    return np.array([lat_deg, lon_deg])
+
+
+
+def latlon_to_xyz(lat_deg, lon_deg):
+    lat_rad = np.radians(lat_deg)
+    lon_rad = np.radians(lon_deg)
+    x = np.cos(lat_rad) * np.cos(lon_rad)
+    y = np.cos(lat_rad) * np.sin(lon_rad)
+    z = np.sin(lat_rad)
+    return np.array([x, y, z])
 
 # More for getting gap times between one specific contact task, like one satellite to gs
 # Using for plotting for now, may not need this for computations

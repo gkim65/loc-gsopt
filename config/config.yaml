@@ -22,12 +22,12 @@ problem:
   objective: "data_downlink" # "minimize_gap" # TODO: add options for other methods
                             # "data_downlink"
                             # "maximize_num_contacts"
-  gs_num: 5
-  sat_num: 6 # Start with 10, just to not overload the solver
+  gs_num: 10
+  sat_num: 1 # Start with 10, just to not overload the solver
 
 
 scenario:
-  constellations: "CAPELLA" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
+  constellations: "UMBRA" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
                           #'FLOCK', 'HAWK', 'CAPELLA', 'LEGION', 
                           #'WORLDVIEW', 'GEOEYE', 'NUSAT'
   start_simplex: 3 # can be 0-6, random
@@ -49,7 +49,7 @@ start_epoch:
 end_epoch:
   year: 2025
   month: 4
-  day: 8
+  day: 2 #8
   hour: 17
   minute: 23
   second: 40.69
@@ -58,3 +58,5 @@ debug:
   verbose: True
   plot: False # TODO: maybe i don't need anymroe? or check
   wandb: True
+  txtUpdate: False
+  randseed: 0

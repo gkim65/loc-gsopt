@@ -2,11 +2,97 @@ import numpy as np
 from scipy.optimize import minimize
 from common.objective_functions import cost_func
 from common.station_gen import return_bdm_gs
-from common.utils import mp_compute_contact_times
+from common.utils import mp_compute_contact_times, xyz_to_latlon, latlon_to_xyz
 
 #  WandB
 import wandb
 import copy
+
+# simplex selection
+import random
+from itertools import combinations
+from shapely.geometry import Point, Polygon
+
+def points_in_triangle_shapely(gs_list, comb):
+    for p in gs_list:
+        triangle = Polygon(comb)
+        point = Point(p)
+        if triangle.contains(point) or triangle.touches(point):
+            return True
+    return False
+
+
+# Step 2: Calculate the area of triangles formed by each combination of 3 points
+def triangle_area(p1, p2, p3):
+        # Shoelace formula to calculate area of triangle
+        return abs(p1[0]*(p2[1] - p3[1]) + p2[0]*(p3[1] - p1[1]) + p3[0]*(p1[1] - p2[1])) / 2
+
+def planar_quad_area(points):
+    """
+    Compute the area of a quadrilateral in 2D using the shoelace formula.
+    `points` should be a 4x2 numpy array or list of 4 (x, y) tuples.
+    """
+    points = np.array(points)
+    x = points[:, 0]
+    y = points[:, 1]
+    # Wrap around to first point
+    x_next = np.roll(x, -1)
+    y_next = np.roll(y, -1)
+    area = 0.5 * np.abs(np.dot(x, y_next) - np.dot(y, x_next))
+    return area
+
+def simplex_rand():
+
+def simplex_select(gs_list):
+
+        # try out 40 different starting points 
+        lats = np.concatenate([np.random.uniform(-70, -50, 10),
+                        np.random.uniform(50, 70, 10),
+                        np.random.uniform(-50, 50, 10),
+                        np.random.uniform(-50, 50, 10)])
+
+        lons = np.concatenate([np.random.uniform(-160, 160, 10),
+                        np.random.uniform(-160, 160, 10),
+                        np.random.uniform(-160, -140, 10),
+                        np.random.uniform(140, 160, 10)])
+
+
+        # Stack latitudes and longitudes together
+        all_points = np.column_stack([lats, lons])
+
+
+        # Find the triangle with the largest area
+        max_area = 0
+        best_triangle = None
+
+        # Generate all combinations of 3 points on the convex hull
+        for comb in combinations(all_points, 4):
+                if not points_in_triangle_shapely(gs_list, comb):
+                        # area = triangle_area(comb[0], comb[1], comb[2])
+                        area = planar_quad_area(comb)
+                        if area > max_area:
+                                max_area = area
+                                best_triangle = comb #np.array([comb[0], comb[1], comb[2]])
+        
+        # this lets me choose a gs as one of the points of the rectangle
+        # for gs in gs_list:
+        #         # Remove gs from gs_list for this   iteration
+        #         other_gs = [pt for pt in gs_list if not np.allclose(pt, gs)]
+
+        #         for pair in combinations(all_points, 2):
+        #                 triangle = np.array([gs, pair[0], pair[1]])
+        #                 print(points_in_triangle_shapely(other_gs, triangle))
+        #                 # Check that other gs points aren't inside the triangle
+        #                 if not points_in_triangle_shapely(other_gs, triangle):
+        #                         area = triangle_area(triangle[0], triangle[1], triangle[2])
+        #                         if area > max_area:
+        #                                 max_area = area
+        #                                 best_triangle = triangle
+
+        print(best_triangle)
+
+        return best_triangle
+
 
 
 # TODO: add the cyclic coordinate descent part (May not include in this paper)
@@ -28,8 +114,11 @@ def nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites):
                 # Initial guess for the coordinates (x, y) 
                 # Overridden currently by initial simplex
                 initial_guess = np.array([-30, -60])
+                initial_guess = np.array([-0.41244896,  0.6765351 ,  0.61007058])
 
                 # TODO: Find best initial simplex to start, may need to change based on continents
+
+                initial_simplex = simplex_select(gs_list_plot)
                 # initial_simplex =  np.array([[-30, -60],[-100, -60],[-30, -90]])
                 # initial_simplex =  np.array([[-180, -90],[180, 0],[-180, 90]])
                 
@@ -75,26 +164,52 @@ def nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites):
                 
                 print("STARTING TO PERFORM MINIMIZATION ON GS: "+str(i+1))
 
-                # Perform the optimization using Nelder-Mead
+                # array = np.array(initial_simplex)
+                print(initial_simplex)
+                simplex = []
+                for p in initial_simplex:
+                       simplex.append(latlon_to_xyz(p[1], p[0]))
+                print(simplex)
+                # # Perform the optimization using Nelder-Mead
                 result = minimize(cost_func, 
                                 initial_guess, 
                                 args = (gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og, verbose, plot), 
                                 method='Nelder-Mead',
                                 options={'disp': True,
-                                        # 'fatol': 1e-6, # TODO: Doesn't work
-                                        # 'xatol': 3, # this might be too much! # TODO: Doesn't work
-                                        'maxiter': 25, # this might be too little!
-                                        'initial_simplex': initial_simplex_list[cfg.scenario.start_simplex]},
-                                bounds = ((-180,180),(-90,90)))
+                                        'xtol': 1,     # x tolerance
+                                        'ftol': 1,     # function tolerance
+                                         'initial_simplex': np.array(simplex)},) # initial_simplex_list[cfg.scenario.start_simplex]},
+                                #bounds = ((-180,180),(-90,90)))
+                # ,
+                #                          'disp': True,
+                #                         'fatol': 1, # TODO: Doesn't work
+                #                         'xatol': 1e-2, # this might be too much! # TODO: Doesn't work
+                #                         # 'maxiter': 35, # this might be too little!
+                #                         }, # TODO: initial_simplex_list[cfg.scenario.start_simplex]},
+                #                 ) #bounds = ((-180,180),(-90,90)))
+
+                # result = minimize(
+                #                 cost_func,
+                #                 initial_guess,
+                #                 args=(gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og, verbose, plot), 
+                #                 method='Powell',
+                #                 bounds=[(-180, 180), (-90, 90)],
+                #                 options={
+                #                         'disp': True,
+                #                         'xtol': 1e-3,     # x tolerance
+                #                         'ftol': 1e-6,     # function tolerance
+                #                         'maxiter': 100
+                #                 }
+                #                 )
                         
                 print("GS FOUND, Location: "+str(result.x))
-                print(result)
-                gs_list.append(return_bdm_gs(result.x[0], result.x[1]))
-                gs_list_plot.append([result.x[0], result.x[1]])
+                coord = xyz_to_latlon(result.x)
+                gs_list.append(return_bdm_gs(coord[1], coord[0]))
+                gs_list_plot.append([coord[1], coord[0]])
 
                 # try to minimize number of contacts to compute:
-                contacts_og, _ = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, plot)
-                gs_contacts_og = contacts_og
+                contacts_og, contacts_sec = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, plot)
+                gs_contacts_og = contacts_sec#contacts_og
                 
         return gs_list, gs_list_plot 
 

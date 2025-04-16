@@ -2,7 +2,7 @@ from shapely.geometry import Point
 from geopy.distance import geodesic
 
 from common.station_gen import return_bdm_gs
-from common.utils import compute_gaps_per_sat, compute_contact_times, mp_compute_contact_times, contactExclusion
+from common.utils import compute_gaps_per_sat, compute_contact_times, mp_compute_contact_times, contactExclusion, xyz_to_latlon
 
 from itertools import chain
 import numpy as np
@@ -68,8 +68,16 @@ def penalty_gs_all(new_gs,current_gs_list, dist_penalty):
 
 ############################## Cost Functions ################################
 
-def cost_func(new_gs, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og, verbose = False, plot = False):    
+
+def cost_func(x, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og, verbose = False, plot = False):    
+
+    # Normalize input to unit vector
+    x_unit = x / np.linalg.norm(x)
     
+    # Convert to lat/lon
+    lat_deg, lon_deg = xyz_to_latlon(x_unit)
+    new_gs = [lon_deg,lat_deg]
+    print(new_gs)
     # Make sure that all ground stations are set to only add onto the existing selected constellations
     temp_gs_list = gs_list.copy()
     if not gs_list:
@@ -97,10 +105,10 @@ def cost_func(new_gs, gs_list, satellites, epc_start, epc_end, land_geometries, 
     if cfg.problem.objective == "data_downlink":
         # contact_times, contact_times_seconds = mp_compute_contact_times(satellites, temp_gs_list ,epc_start, epc_end, plot)
         # cost_func_val = 0 - (np.sum(contact_times_seconds))
-        all_contacts, _ = mp_compute_contact_times(satellites, [return_bdm_gs(new_gs[0], new_gs[1])] ,epc_start, epc_end, plot)
-        _, contacts_exclusion_secs = contactExclusion(all_contacts+ gs_contacts_og,cfg)
-        cost_func_val = 0 - (np.sum(contacts_exclusion_secs))
-        print(len(contacts_exclusion_secs))
+        all_contacts, contacts_sec = mp_compute_contact_times(satellites, [return_bdm_gs(new_gs[0], new_gs[1])] ,epc_start, epc_end, plot)
+        # _, contacts_exclusion_secs = contactExclusion(all_contacts+ gs_contacts_og,cfg)
+        cost_func_val = 0 - (np.sum(contacts_sec)+ np.sum(gs_contacts_og))
+        print(len(contacts_sec))
 
 
     penalty_water = (penalty(new_gs,land_geometries)/1000)**2 # Put penalty/distance from land in 10 kms

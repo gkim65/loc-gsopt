@@ -31,6 +31,7 @@ land_data = gpd.read_file("data/ne_10m_admin_0_countries.shp")
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def main(cfg: DictConfig):
     
+    ########## Configuration files: ##########
     #Ensure unique project names every time
     proj_name = cfg.problem.type+"_"+cfg.problem.method+"_"+cfg.problem.objective+"_"+str(cfg.problem.gs_num)+"_"+str(cfg.problem.sat_num)
     scenario_name = cfg.scenario.constellations
@@ -42,9 +43,13 @@ def main(cfg: DictConfig):
     config_dict = omegaconf.OmegaConf.to_container(
         cfg, resolve=True, throw_on_missing=True
     )
+
     print(type(config_dict), config_dict)
+
     if cfg.debug.wandb:
         wandb.config.update(config_dict, allow_val_change=True)
+
+    ########## Initial Scenario Setup: ##########
 
     # Setting up start and end epochs
     epc_start = bh.Epoch(cfg.start_epoch.year, 
@@ -61,10 +66,13 @@ def main(cfg: DictConfig):
                          cfg.end_epoch.minute, 
                          cfg.end_epoch.second) 
     
+    # Set random seed
+    np.random.seed(cfg.debug.randseed)
+    
     # Make sure to load in earth inertial data every start time!
-    load_earth_data('data/iau2000A_finals_ab.txt')
+    load_earth_data('data/iau2000A_finals_ab.txt',cfg.debug.txtUpdate)
 
-    satellites = satellites_from_constellation(cfg.scenario.constellations)
+    satellites = satellites_from_constellation(cfg.scenario.constellations, cfg.debug.txtUpdate)
 
     # TODO: add other methods
     if cfg.problem.type == "free":
@@ -91,6 +99,9 @@ def main(cfg: DictConfig):
                 run.summary["contact_num"] = len(contacts_exclusion_secs) 
                 run.summary["seconds"] = np.sum(contacts_exclusion_secs)
                 run.summary["data_downlink"] = np.sum(contacts_exclusion_secs)*cfg.scenario.datarate
+
+                wandb.save("data/*")
+
 
                 # TODO: Should we only run this when plotting?
                 figure = wandb.Image(plot_img(gs_list_plot,f"gs_all.png"))
