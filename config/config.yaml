@@ -21,9 +21,6 @@ problem:
                         # make sure you can only choose appropriate
                         # methods for appropriate problem types
   objective: "gap_optimization" #data_downlink, gap_optimization, max_contacts
-                            # "minimize_gap" # TODO: add options for other methods
-                            # "data_downlink"
-                            # "maximize_num_contacts"
   gs_num: 5
   teleport_num: 10
   sat_num: 1 # Start with 10, just to not overload the solver

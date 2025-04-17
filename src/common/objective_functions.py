@@ -86,7 +86,7 @@ def cost_func(x, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, 
         temp_gs_list.append(return_bdm_gs(new_gs[0], new_gs[1]))
 
     # Computing specific objective
-    if cfg.problem.objective == "minimize_gap":
+    if cfg.problem.objective == "gap_optimization":
         _, _, gaps_seconds = compute_gaps_per_sat(satellites, temp_gs_list ,epc_start, epc_end, plot)
 
         # TODO: put in additional stats per satellite etc for mean, for now just flatten everything 
@@ -94,7 +94,7 @@ def cost_func(x, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, 
         mean_gap_time = np.mean(gaps_seconds_flattened)
         cost_func_val = mean_gap_time
 
-    if cfg.problem.objective == "maximize_num_contacts":
+    if cfg.problem.objective == "max_contacts":
         all_contacts, _ = mp_compute_contact_times(satellites, [return_bdm_gs(new_gs[0], new_gs[1])] ,epc_start, epc_end, False)
         cost_func_val = 0 - len(all_contacts)*100 # TODO: do we just multiply by a diff num?
  
