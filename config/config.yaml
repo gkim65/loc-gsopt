@@ -21,21 +21,25 @@ problem:
                         # make sure you can only choose appropriate
                         # methods for appropriate problem types
   objective: "gap_optimization" #data_downlink, gap_optimization, max_contacts
+                            # "minimize_gap" # TODO: add options for other methods
+                            # "data_downlink"
+                            # "maximize_num_contacts"
   gs_num: 5
   teleport_num: 10
   sat_num: 1 # Start with 10, just to not overload the solver
   data_rate: 1200000000 # bps
 
 scenario:
-  constellations: "ICEYE" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
+  constellations: "UMBRA" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
                           #'FLOCK', 'HAWK', 'CAPELLA', 'LEGION', 
                           #'WORLDVIEW', 'GEOEYE', 'NUSAT'
-  start_simplex: 1 # can be 0-6
+  start_simplex: 3 # can be 0-6, random
+  datarate: 1200000000.0 # Data Rate [bps], for now, just set to this for all satellites and ground stations
   teleport_sites:
     # TODO: Need to add teleport functionality, list of sites to select
   
 constraints:
-  dist_other_gs: 500000 # 500 km
+  dist_other_gs: 3000000 # 3000 km for elevation min of around 10
 
 start_epoch:
   year: 2025
@@ -48,11 +52,14 @@ start_epoch:
 end_epoch:
   year: 2025
   month: 4
-  day: 3
+  day: 2 #8
   hour: 17
   minute: 23
   second: 40.69
 
 debug:
   verbose: True
-  plot: True
+  plot: False # TODO: maybe i don't need anymroe? or check
+  wandb: True
+  txtUpdate: False
+  randseed: 0
