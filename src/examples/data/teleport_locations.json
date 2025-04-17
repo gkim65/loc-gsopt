@@ -2051,8 +2051,8 @@
   },
   {
     "name": "ABS Port Moresby Teleport",
-    "latitude": 147.2596443,
-    "longitude": -9.4042153,
+    "latitude": -9.4042153,
+    "longitude": 147.2596443,
     "region": "Asia-Pacific\n",
     "country": "Papua New Guinea",
     "metro_area": "Port Moresby",

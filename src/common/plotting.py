@@ -9,7 +9,7 @@ import cartopy.crs as ccrs
 import cartopy.geodesic
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-
+from common.utils import compute_gaps_per_sat
 import warnings
 # Suppress Cartopy's CRS approximation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -90,4 +90,55 @@ def plot_img(gs_list,name="example.png"):
     animate("", fig, gs_list,"Full Ground Station Selection")
 
     plt.savefig(name)
+
+def plot_contact_windows(selected_stations, station_contacts, name="contacts.png"):
+    # Create visualization
+    fig, ax = plt.subplots(figsize=(20,7))
+
+    # Plot contacts for individual selected stations
+    for idx, station_id in enumerate(selected_stations):
+        contacts = station_contacts[station_id]['contacts']
+        station_name = station_contacts[station_id]['name']
+        ax.broken_barh([(contact.t_start, contact.t_end-contact.t_start) 
+                        for contact in contacts],
+                        (idx + 1, 0.8),  # Shifted up by 1 to make room for combined view
+                        facecolors=f'C{idx}',
+                        alpha=0.6,
+                        label=f'Station {station_id}')
+
+    # Plot combined contacts at the bottom
+    selected_contacts = []
+    for station_id in selected_stations:
+        selected_contacts.extend(station_contacts[station_id]['contacts'])
+
+    # Sort contacts by start time
+    sorted_contacts = sorted(selected_contacts, key=lambda x: x.t_start)
+
+    # Plot the actual contact windows for combined view
+    ax.broken_barh([(contact.t_start, contact.t_end-contact.t_start) 
+                    for contact in sorted_contacts],
+                    (0, 0.8),  # At the bottom
+                    facecolors='tab:blue',  # Single solid color
+                    alpha=0.8,
+                    label='Combined Coverage')
+
+    # Update y-axis ticks with station ID and name
+    ax.set_yticks([0.4] + [i + 1.4 for i in range(len(selected_stations))])
+    ax.set_yticklabels(['Combined'] + [f'Station {sid} - {station_contacts[sid]["name"]}' 
+                                    for sid in selected_stations])
+
+    plt.ylabel("Ground Stations")
+    plt.xlabel("Time")
+    plt.title("Contact Windows for Selected Ground Stations")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+    plt.savefig(name)
+    return fig
+
+def plot_gap_times(satellites, ground_stations, epc_start, epc_end, plot, title="gap_times_chart.png"):
+    if plot:
+        _,_,gap_secs = compute_gaps_per_sat(satellites,ground_stations,epc_start,epc_end, plot,title)
+        plt.savefig(title)
+        return title
     return fig

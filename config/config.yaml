@@ -15,16 +15,19 @@ wandb:
   entity: "loc_gsopt"
 
 problem:
-  type: "free"
+  #type: "free"
+  type: "teleport"
   method: "nelder" # TODO: add options for other methods 
                         # make sure you can only choose appropriate
                         # methods for appropriate problem types
-  objective: "data_downlink" # "minimize_gap" # TODO: add options for other methods
+  objective: "gap_optimization" #data_downlink, gap_optimization, max_contacts
+                            # "minimize_gap" # TODO: add options for other methods
                             # "data_downlink"
                             # "maximize_num_contacts"
-  gs_num: 10
+  gs_num: 5
+  teleport_num: 10
   sat_num: 1 # Start with 10, just to not overload the solver
-
+  data_rate: 1200000000 # bps
 
 scenario:
   constellations: "UMBRA" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
