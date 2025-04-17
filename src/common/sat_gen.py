@@ -2,7 +2,7 @@ import os
 
 import logging
 import datetime
-import httpx # TODO BRING THIS BACK!
+import httpx 
 
 import numpy as np
 # import streamlit as st
@@ -141,7 +141,7 @@ def parse_tle_file(filepath):
 
     return tle_records
 
-def get_tles():
+def get_tles(download):
 
     if not os.path.exists(EPHEMERIS_PATH):
         get_latest_celestrak_tles()
@@ -151,20 +151,22 @@ def get_tles():
 
     logger.info(f'Last TLE update: {last_update.isoformat()}')
 
-    # If the file is older than 1 day, download the latest TLE data
-    if (datetime.datetime.now() - last_update).days > 1:
-        logger.info(f'TLE data is {(datetime.datetime.now() - last_update).days} days old. Updating...')
-        get_latest_celestrak_tles()
-    else:
-        logger.info(f'TLE data is {(datetime.datetime.now() - last_update).days} days old. TLE data is up to date.')
+
+    if download:
+        # If the file is older than 1 day, download the latest TLE data
+        if (datetime.datetime.now() - last_update).days > 1:
+            logger.info(f'TLE data is {(datetime.datetime.now() - last_update).days} days old. Updating...')
+            get_latest_celestrak_tles()
+        else:
+            logger.info(f'TLE data is {(datetime.datetime.now() - last_update).days} days old. TLE data is up to date.')
 
     # Parse the TLE file and return the records
     return parse_tle_file(EPHEMERIS_PATH)
 
-def satellites_from_constellation(constellation: str):
+def satellites_from_constellation(constellation: str, download):
 
     # Load the TLE data
-    tle_data = get_tles()
+    tle_data = get_tles(download)
 
     # Filter the TLE data for the specified constellation
     constellation_tles = [tle for tle in tle_data if constellation.upper() in tle['object_name']]

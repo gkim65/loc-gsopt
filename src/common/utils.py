@@ -7,6 +7,7 @@ import multiprocessing as mp
 
 import matplotlib.pyplot as plt
 import matplotlib
+import numpy as np
 
 from itertools import chain
 matplotlib.use('Agg')
@@ -14,21 +15,45 @@ matplotlib.use('Agg')
 
 import math
 
-def load_earth_data(filename):
+from pyomo.environ import *
+from itertools import combinations, groupby
+import pyomo.kernel as pk
+
+def load_earth_data(filename, download):
     # Here we can download the latest Earth orientation data and load it.
 
     if not os.path.exists(filename):
-        # Uncomment this line ONCE the data has been downloaded. Recomment it once it has been downloaded.
-        print("Downloading latest earth orientation data...")
-        if not os.path.exists("data"):
-            os.makedirs("data")
-        bh.utils.download_iers_bulletin_ab("./data")
-        print("Download complete")
+        if download:
+            # Uncomment this line ONCE the data has been downloaded. Recomment it once it has been downloaded.
+            print("Downloading latest earth orientation data...")
+            if not os.path.exists("data"):
+                os.makedirs("data")
+            bh.utils.download_iers_bulletin_ab("./data")
+            print("Download complete")
 
     # Load the latest Earth Orientation Data
     print("Loading the latest Earth Orientation Data")
     bh.EOP.load(filename)
 
+
+def xyz_to_latlon(xyz):
+    xyz = xyz / np.linalg.norm(xyz)
+    x, y, z = xyz
+    lat_rad = np.arcsin(z)  # sin(lat) = z
+    lon_rad = np.arctan2(y, x)
+    lat_deg = np.degrees(lat_rad)
+    lon_deg = np.degrees(lon_rad)
+    return np.array([lat_deg, lon_deg])
+
+
+
+def latlon_to_xyz(lat_deg, lon_deg):
+    lat_rad = np.radians(lat_deg)
+    lon_rad = np.radians(lon_deg)
+    x = np.cos(lat_rad) * np.cos(lon_rad)
+    y = np.cos(lat_rad) * np.sin(lon_rad)
+    z = np.sin(lat_rad)
+    return np.array([x, y, z])
 
 # More for getting gap times between one specific contact task, like one satellite to gs
 # Using for plotting for now, may not need this for computations
@@ -144,6 +169,150 @@ def compute_gaps_per_sat(satellites,ground_stations,epc_start,epc_end, plot,titl
     return all_contacts, all_gaps, all_gaps_secs
 
 
+
+def contactExclusion(contacts):
+
+
+    time_horizon = max(contact.t_end for contact in contacts)
+    satellites = set(contact.spacecraft_id for contact in contacts)
+    stations = set(contact.station_id for contact in contacts)
+
+    model = ConcreteModel()
+
+    # Decision variables: x[c] = 1 if contact c is selected, 0 otherwise
+    model.x = Var(range(len(contacts)), within=Binary)
+
+    # Objective: Maximize total scheduled duration
+    model.obj = Objective(expr=sum(model.x[c] * (contacts[c].t_end - contacts[c].t_start).total_seconds() for c in range(len(contacts))), sense=maximize)
+
+    # Constraint: Only one satellite-ground station pair at each time step
+    model.time_constraints = ConstraintList()
+    for t in range(time_horizon + 1):
+        for gs in stations:
+            model.time_constraints.add(
+                sum(model.x[c] for c in range(len(contacts)) if contacts[c][1] >= t >= contacts[c][0] and contacts[c][3] == gs) <= 1
+            )
+        for sat in satellites:
+            model.time_constraints.add(
+                sum(model.x[c] for c in range(len(contacts)) if contacts[c][1] >= t >= contacts[c][0] and contacts[c][2] == sat) <= 1
+            )
+
+    # Solve
+    solver = SolverFactory('glpk')
+    solver.solve(model)
+
+    # Print selected contacts
+    selected_contacts = [contacts[c] for c in range(len(contacts)) if value(model.x[c]) > 0.5]
+    contact_times_seconds = [(contact.t_end - contact.t_start).total_seconds() for contact in selected_contacts]
+
+
+def contactExclusion(contacts, cfg):
+    """
+    Solves the contact exclusion problem using a pairwise overlap constraint approach.
+    """
+
+    model = ConcreteModel()
+
+    # to call contacts in the correct order 
+    contacts_order = {
+        str(contact.id):i
+        for i, contact in enumerate(contacts)
+    }
+
+
+    # Decision variables: x[c] = 1 if contact c is selected, 0 otherwise
+    model.x = Var(range(len(contacts)), within=Binary)
+
+
+    if cfg.problem.objective == "maximize_num_contacts":
+        # Objective: Maximize total scheduled duration
+        model.obj = Objective(
+            expr=sum(model.x[i] for i in range(len(contacts))), 
+            sense=maximize
+        )
+
+ 
+    if cfg.problem.objective == "data_downlink":
+        # Objective: Maximize total scheduled duration
+        model.obj = Objective(
+            expr=sum(model.x[i] * contact.t_duration 
+                    for i, contact in enumerate(contacts)), 
+            sense=maximize
+        )
+
+    # Constraint list to ensure no overlapping contacts
+    model.constraints = ConstraintList()
+
+    # Ensure that no two overlapping contacts for the same station are selected
+    contacts_sorted_by_station = sorted(contacts, key=lambda cn: cn.station_id)
+
+    for station_id, station_contacts in groupby(contacts_sorted_by_station, lambda cn: cn.station_id):
+
+        # Convert groupby object to a sorted list (groupby creates an iterator)
+        station_contacts = sorted(list(station_contacts), key=lambda cn: cn.t_start)
+
+        # Test all pairs of contacts to check for overlap
+        for x, y in combinations(station_contacts, 2):
+            if x.t_start <= y.t_end and y.t_start <= x.t_end:
+                model.constraints.add(model.x[contacts_order[str(x.id)]] + model.x[contacts_order[str(y.id)]] <= 1)
+
+    # Ensure that no two overlapping contacts for the same satellite are selected
+    contacts_sorted_by_satellite = sorted(contacts, key=lambda cn: cn.spacecraft_id)
+
+    for sat_id, satellite_contacts in groupby(contacts_sorted_by_satellite, lambda cn: cn.spacecraft_id):
+
+        # Convert groupby object to a sorted list
+        satellite_contacts = sorted(list(satellite_contacts), key=lambda cn: cn.t_start)
+
+        # Test all pairs of contacts to check for overlap
+        for x, y in combinations(satellite_contacts, 2):
+            if x.t_start <= y.t_end and y.t_start <= x.t_end:
+                model.constraints.add(model.x[contacts_order[str(x.id)]] + model.x[contacts_order[str(y.id)]] <= 1)
+
+    # miminum duration constraint
+    for cn in contacts:
+        if cn.t_duration <= 180:
+            # Force all contacts with duration less than the minimum to be zero
+            model.constraints.add(model.x[contacts_order[str(cn.id)]] == 0)
+
+    # Solve the model
+    solver = SolverFactory('cbc')
+    solver.solve(model)
+
+    # Extract selected contacts
+    selected_contacts = [contact for i, contact in enumerate(contacts) if value(model.x[i]) > 0.75]
+    contact_times_seconds = [(contact.t_end - contact.t_start).total_seconds() for contact in selected_contacts]
+
+    return selected_contacts, contact_times_seconds
+
+# TODO: take out plot
+# speed up contact multiprocessing
+def mp_compute_contact_times(satellites,ground_stations,epc_start,epc_end, plot,title="contact_times_chart.png"):
+
+    all_contacts = []
+
+    # Group tasks for multiprocessing
+    tasks = []
+    for gs in ground_stations:
+        for sat in satellites:
+            tasks.append([sat, gs, epc_start, epc_end])
+
+    # Complete the multi processing of getting location accesses for all satellite tasks
+    mpctx = mp.get_context('fork')
+    with mpctx.Pool(mp.cpu_count()) as pool:
+        all_results = pool.starmap(ba.find_location_accesses, tasks)
+
+    for id_sat,contacts in enumerate(all_results):
+        # Condense contacts
+        if contacts:
+            for contact in contacts:
+                all_contacts.append(contact)
+    
+    # all_contacts_flattened = list(chain.from_iterable(all_contacts))
+    contact_times_seconds = [(contact.t_end - contact.t_start).total_seconds() for contact in all_contacts]
+        
+    return all_contacts, contact_times_seconds
+
 # for full data downlink / full number of contact times maximizing this
 def compute_contact_times(satellites,ground_stations,epc_start,epc_end, plot,title="contact_times_chart.png"):
 
@@ -230,10 +399,7 @@ def compute_earth_interior_angle(ele=0.0, alt=525):
     return lam
 
 
-######################### TODO: OUTDATEED #########################
-
-
-# TODO FIX AND TAKE OUT REDUNDANCIES!
+######################### OUTDATED, used in some ipynb files #########################
 def compute_all_gaps_contacts(satellites,ground_stations,epc_start,epc_end, plot,title="gap_times_chart.png"):
 
     if plot:

@@ -1,5 +1,5 @@
 import brahe as bh
-from common.utils import load_earth_data #,compute_all_gaps_contacts, compute_earth_interior_angle
+from common.utils import load_earth_data,mp_compute_contact_times,contactExclusion # compute_earth_interior_angle
 from common.sat_gen import satellites_from_constellation
 from common.plotting import plot_gif,plot_img
 from methods.free_select.nelder_mead_scipy import nelder_mead_scipy
@@ -31,19 +31,27 @@ land_data = gpd.read_file("data/ne_10m_admin_0_countries.shp")
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def main(cfg: DictConfig):
     
+    ########## Configuration files: ##########
     #Ensure unique project names every time
     proj_name = cfg.problem.type+"_"+cfg.problem.method+"_"+cfg.problem.objective+"_"+str(cfg.problem.gs_num)+"_"+str(cfg.problem.sat_num)
     scenario_name = cfg.scenario.constellations
     constraints_name = str(cfg.constraints.dist_other_gs)
 
-
-    run = wandb.init(entity=cfg.wandb.entity, project=proj_name+"="+scenario_name+"="+constraints_name)
+    if cfg.debug.wandb:
+        run = wandb.init(entity=cfg.wandb.entity, project=proj_name+"="+scenario_name+"="+constraints_name)
 
     config_dict = omegaconf.OmegaConf.to_container(
         cfg, resolve=True, throw_on_missing=True
     )
-    print(type(config_dict), config_dict)
-    wandb.config.update(config_dict, allow_val_change=True)
+
+
+    if cfg.debug.verbose:  
+        print(type(config_dict), config_dict)
+
+    if cfg.debug.wandb:
+        wandb.config.update(config_dict, allow_val_change=True)
+
+    ########## Initial Scenario Setup: ##########
 
     # Setting up start and end epochs
     epc_start = bh.Epoch(cfg.start_epoch.year, 
@@ -60,10 +68,16 @@ def main(cfg: DictConfig):
                          cfg.end_epoch.minute, 
                          cfg.end_epoch.second) 
     
+    # Set random seed
+    np.random.seed(cfg.debug.randseed)
+    
     # Make sure to load in earth inertial data every start time!
-    load_earth_data('data/iau2000A_finals_ab.txt')
+    load_earth_data('data/iau2000A_finals_ab.txt',cfg.debug.txtUpdate)
 
-    satellites = satellites_from_constellation(cfg.scenario.constellations)
+    satellites = satellites_from_constellation(cfg.scenario.constellations, cfg.debug.txtUpdate)
+
+
+    ########## Solvers: ##########
 
     # TODO: add other methods
     if cfg.problem.type == "free":
@@ -71,14 +85,25 @@ def main(cfg: DictConfig):
             
             gs_list,  gs_list_plot = nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites) # agg_list_of_simplexes
 
-            if cfg.debug.verbose:
-                print("##############################")
-                print(gs_list_plot)
-                plot_img(gs_list_plot,"gs_all.png")
+            if cfg.debug.wandb:
+                contacts, _ = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
+                _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
+                run.summary["gs_list"] = gs_list_plot 
+                run.summary["contact_num"] = len(contacts_exclusion_secs) 
+                run.summary["seconds"] = np.sum(contacts_exclusion_secs)
+                run.summary["data_downlink"] = np.sum(contacts_exclusion_secs)*cfg.scenario.datarate
 
-            run.summary["gs_list"] = gs_list_plot 
-        
-    run.finish()
+                wandb.save("data/*")
+
+                if cfg.debug.plot:
+                    print("##############################")
+                    print(gs_list_plot)
+                    plot_img(gs_list_plot,"gs_all.png")
+                    figure = wandb.Image(plot_img(gs_list_plot,f"gs_all.png"))
+                    run.log({"gs_all": figure})
+
+    if cfg.debug.wandb:
+        run.finish()
 
 
 
