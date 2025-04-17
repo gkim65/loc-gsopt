@@ -1,5 +1,5 @@
 import brahe as bh
-from common.utils import load_earth_data,mp_compute_contact_times,contactExclusion #,compute_all_gaps_contacts, compute_earth_interior_angle
+from common.utils import load_earth_data,mp_compute_contact_times,contactExclusion # compute_earth_interior_angle
 from common.sat_gen import satellites_from_constellation
 from common.plotting import plot_gif,plot_img
 from methods.free_select.nelder_mead_scipy import nelder_mead_scipy
@@ -44,7 +44,9 @@ def main(cfg: DictConfig):
         cfg, resolve=True, throw_on_missing=True
     )
 
-    print(type(config_dict), config_dict)
+
+    if cfg.debug.verbose:  
+        print(type(config_dict), config_dict)
 
     if cfg.debug.wandb:
         wandb.config.update(config_dict, allow_val_change=True)
@@ -74,27 +76,18 @@ def main(cfg: DictConfig):
 
     satellites = satellites_from_constellation(cfg.scenario.constellations, cfg.debug.txtUpdate)
 
+
+    ########## Solvers: ##########
+
     # TODO: add other methods
     if cfg.problem.type == "free":
         if cfg.problem.method == "nelder":
             
             gs_list,  gs_list_plot = nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites) # agg_list_of_simplexes
 
-
-            # TODO: Maybe not need this any more if we put this on wandb
-            if cfg.debug.verbose:
-                print("##############################")
-                print(gs_list_plot)
-                plot_img(gs_list_plot,"gs_all.png")
-            
-            # TODO: Delete this this is all debugging
-            contacts, _ = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
-            _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
-            cost_func_val = 0 - (np.sum(contacts_exclusion_secs))
-            print(len(contacts_exclusion_secs))
-
-            print(gs_list_plot)
             if cfg.debug.wandb:
+                contacts, _ = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
+                _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
                 run.summary["gs_list"] = gs_list_plot 
                 run.summary["contact_num"] = len(contacts_exclusion_secs) 
                 run.summary["seconds"] = np.sum(contacts_exclusion_secs)
@@ -102,12 +95,13 @@ def main(cfg: DictConfig):
 
                 wandb.save("data/*")
 
+                if cfg.debug.plot:
+                    print("##############################")
+                    print(gs_list_plot)
+                    plot_img(gs_list_plot,"gs_all.png")
+                    figure = wandb.Image(plot_img(gs_list_plot,f"gs_all.png"))
+                    run.log({"gs_all": figure})
 
-                # TODO: Should we only run this when plotting?
-                figure = wandb.Image(plot_img(gs_list_plot,f"gs_all.png"))
-                run.log({"gs_all": figure})
-
-        
     if cfg.debug.wandb:
         run.finish()
 

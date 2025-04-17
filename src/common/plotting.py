@@ -34,7 +34,7 @@ def sliding_window(data, window_size=3):
     return result
 
 alt = 570 # Altitude in km
-elevation_min = 10.0 # TODO TRY THIS LATER! 10 - 5
+elevation_min = 10.0 # Keep to 10, but try plotting later 10 - 5
 lam = compute_earth_interior_angle(ele=elevation_min, alt=alt)
 
 

@@ -309,5 +309,11 @@ And its consistently? (I need to test this more robustly, but so far yes!!) doin
 need to add in the windows plot from vedant's code!
 
 # april 16, 2025
-added automatic don't update the txt files
-added seeded
+Things I did
+- added automatic don't update the txt files
+- added seeded
+- cleaned up a good amount of todos and other things
+- I think the simplex choosing algorithm works, I just need to prove it agressively that it chooses better than random
+ok now need todo experiments
+several tings I can do: make GA (I think theres a scipy thing for this)
+Might just run 

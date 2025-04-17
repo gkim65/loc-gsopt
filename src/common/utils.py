@@ -399,10 +399,7 @@ def compute_earth_interior_angle(ele=0.0, alt=525):
     return lam
 
 
-######################### TODO: OUTDATEED #########################
-
-
-# TODO FIX AND TAKE OUT REDUNDANCIES!
+######################### OUTDATED, used in some ipynb files #########################
 def compute_all_gaps_contacts(satellites,ground_stations,epc_start,epc_end, plot,title="gap_times_chart.png"):
 
     if plot:
