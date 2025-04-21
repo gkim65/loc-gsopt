@@ -15,13 +15,13 @@ wandb:
   entity: "loc_gsopt"
 
 problem:
-  #type: "free"
-  type: "teleport"
+  type: "free"
+  # type: "teleport"
   method: "nelder" # TODO: add options for other methods 
                         # make sure you can only choose appropriate
                         # methods for appropriate problem types
-  objective: "gap_optimization" #data_downlink, gap_optimization, max_contacts
-  gs_num: 5
+  objective: "data_downlink" #data_downlink, gap_optimization, max_contacts
+  gs_num: 2
   teleport_num: 10
   sat_num: 1 # Start with 10, just to not overload the solver
   data_rate: 1200000000 # bps
@@ -56,7 +56,10 @@ end_epoch:
 
 debug:
   verbose: True
-  plot: False # TODO: maybe i don't need anymroe? or check
+  plot: True
   wandb: True
   txtUpdate: False
   randseed: 0
+
+experiments:
+  simplexExclude: True # True to exclude current gs locations in simplex generation

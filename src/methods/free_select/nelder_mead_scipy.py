@@ -39,8 +39,8 @@ def planar_quad_area(points):
 def simplex_rand():
         return ""
 
-def simplex_select(gs_list):
-
+def simplex_select(gs_list,exclude, l=1):
+               
         # try out 40 different starting points 
         lats = np.concatenate([np.random.uniform(-70, -50, 10),
                         np.random.uniform(50, 70, 10),
@@ -59,17 +59,24 @@ def simplex_select(gs_list):
 
         # Find the triangle with the largest area
         max_area = 0
-        best_triangle = None
+        best_simplex = None
 
         # Generate all combinations of 3 points on the convex hull
         for comb in combinations(all_points, 4):
-                if not points_in_shape(gs_list, comb):
+                if exclude:
+                        if not points_in_shape(gs_list, comb):
+                                # area = triangle_area(comb[0], comb[1], comb[2])
+                                area = planar_quad_area(comb)
+                                if area > max_area:
+                                        max_area = area
+                                        best_simplex = comb #np.array([comb[0], comb[1], comb[2]])
+                else:
                         # area = triangle_area(comb[0], comb[1], comb[2])
                         area = planar_quad_area(comb)
                         if area > max_area:
                                 max_area = area
-                                best_triangle = comb #np.array([comb[0], comb[1], comb[2]])
-        
+                                best_simplex = comb #np.array([comb[0], comb[1], comb[2]])
+
         # TODO EXTENSION: possibly better simplex?
         # this lets me choose a gs as one of the points of the rectangle
         # for gs in gs_list:
@@ -84,8 +91,8 @@ def simplex_select(gs_list):
         #                         area = triangle_area(triangle[0], triangle[1], triangle[2])
         #                         if area > max_area:
         #                                 max_area = area
-        #                                 best_triangle = triangle
-        return best_triangle
+        #                                 best_simplex = triangle
+        return best_simplex
 
 
 
@@ -96,7 +103,7 @@ def nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites):
         gs_list = []
         gs_list_plot = []
         gs_contacts_og = []
-        sat_list = satellites[0:cfg.problem.sat_num]
+        sat_list = satellites
         land_geometries = land_data['geometry']
         verbose = cfg.debug.verbose
 
@@ -106,9 +113,9 @@ def nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites):
                 # Initial guess overridden by initial simplex
                 initial_guess = np.array([-0.41244896,  0.6765351 ,  0.61007058])
 
-                initial_simplex = simplex_select(gs_list_plot)
+                initial_simplex = simplex_select(gs_list_plot,cfg.experiments.simplexExclude)
                 if cfg.debug.wandb:
-                        wandb.summary({"initial simplex"+str(i+1): initial_simplex})
+                        wandb.log({"initial simplex"+str(i+1): initial_simplex})
                         
                 # conversion of simplex to unit sphere
                 simplex = []

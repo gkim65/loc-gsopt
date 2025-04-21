@@ -90,6 +90,7 @@ def plot_img(gs_list,name="example.png"):
     animate("", fig, gs_list,"Full Ground Station Selection")
 
     plt.savefig(name)
+    return fig
 
 def plot_contact_windows(selected_stations, station_contacts, name="contacts.png"):
     # Create visualization
