@@ -119,8 +119,10 @@ def main(cfg: DictConfig):
                     print("##############################")
                     print(gs_list_plot)
                     plot_img(gs_list_plot,"gs_all.png")
-                    figure = wandb.Image(plot_img(gs_list_plot,f"gs_all.png"))
+                    print(wandb.Image(plot_img(gs_list_plot,"gs_all.png")))
+                    figure = wandb.Image(plot_img(gs_list_plot,"gs_all.png"))
                     run.log({"gs_all": figure})
+                
 
     elif cfg.problem.type == "teleport":
         #Load ground stations from JSON file
