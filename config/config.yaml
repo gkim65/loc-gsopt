@@ -19,7 +19,7 @@ wandb:
 problem:
   type: "free"
   # type: "teleport"
-  method: "nelder"  # free methods: "nelder" "powell"
+  method: "nelder"  # free methods: "nelder" "powell" "nelder_ccgs"
                         # make sure you can only choose appropriate
                         # methods for appropriate problem types
   objective: "data_downlink" #data_downlink, gap_optimization, max_contacts
@@ -65,3 +65,4 @@ debug:
 
 experiments:
   simplexExclude: True # True to exclude current gs locations in simplex generation
+  ccgs: 3

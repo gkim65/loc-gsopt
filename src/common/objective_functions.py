@@ -71,7 +71,7 @@ def penalty_gs_all(new_gs,current_gs_list, dist_penalty):
 
 def cost_func(x, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og, verbose = False, plot = False):    
 
-    if cfg.problem.method == "nelder":
+    if cfg.problem.method.startswith("nelder"):
         # Normalize input to unit vector
         x_unit = x / np.linalg.norm(x)
         
