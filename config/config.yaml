@@ -19,7 +19,7 @@ wandb:
 problem:
   type: "free"
   # type: "teleport"
-  method: "nelder" # TODO: add options for other methods 
+  method: "powell"  # free methods: "nelder" "powell"
                         # make sure you can only choose appropriate
                         # methods for appropriate problem types
   objective: "data_downlink" #data_downlink, gap_optimization, max_contacts

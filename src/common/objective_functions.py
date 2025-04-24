@@ -71,12 +71,16 @@ def penalty_gs_all(new_gs,current_gs_list, dist_penalty):
 
 def cost_func(x, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og, verbose = False, plot = False):    
 
-    # Normalize input to unit vector
-    x_unit = x / np.linalg.norm(x)
-    
-    # Convert to lat/lon
-    lat_deg, lon_deg = xyz_to_latlon(x_unit)
-    new_gs = [lon_deg,lat_deg]
+    if cfg.problem.method == "nelder":
+        # Normalize input to unit vector
+        x_unit = x / np.linalg.norm(x)
+        
+        # Convert to lat/lon
+        lat_deg, lon_deg = xyz_to_latlon(x_unit)
+        new_gs = [lon_deg,lat_deg]
+
+    if cfg.problem.method == "powell":
+        new_gs = [x[0],x[1]]
 
     # Make sure that all ground stations are set to only add onto the existing selected constellations
     temp_gs_list = gs_list.copy()

@@ -16,6 +16,7 @@ dependencies = [
     "matplotlib>=3.10.0",
     "numpy>=1.26.4",
     "pyomo>=6.9.1",
+    "seaborn>=0.13.2",
     "shapely>=2.0.6",
     "wandb>=0.19.7",
 ]
