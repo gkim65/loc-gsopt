@@ -11,6 +11,8 @@
 #         - start and end epochs 
 # Output of selected sites
 
+test_name: ""
+
 wandb:
   entity: "loc_gsopt"
 
@@ -23,11 +25,11 @@ problem:
   objective: "data_downlink" #data_downlink, gap_optimization, max_contacts
   gs_num: 2
   teleport_num: 10
-  sat_num: 1 # Start with 10, just to not overload the solver
+  sat_num: 5 # Start with 10, just to not overload the solver
   data_rate: 1200000000 # bps
 
 scenario:
-  constellations: "UMBRA" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
+  constellations: "CAPELLA" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
                           #'FLOCK', 'HAWK', 'CAPELLA', 'LEGION', 
                           #'WORLDVIEW', 'GEOEYE', 'NUSAT'
   start_simplex: 3 # can be 0-6, random
@@ -49,7 +51,7 @@ start_epoch:
 end_epoch:
   year: 2025
   month: 4
-  day: 2 #8
+  day: 8
   hour: 17
   minute: 23
   second: 40.69
