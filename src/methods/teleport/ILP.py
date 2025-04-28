@@ -35,7 +35,7 @@ class ILP_Model:
         self.data_rate = data_rate
         #Initialize model
         self.model = pk.block()
-        with open('data/test_teleports.json', 'r') as f:
+        with open('data/teleport_locations.json', 'r') as f:
             self.stations_data = json.load(f)
 
         self.station_contacts = {}
