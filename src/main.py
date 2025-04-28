@@ -126,7 +126,7 @@ def main(cfg: DictConfig):
 
     elif cfg.problem.type == "teleport":
         #Load ground stations from JSON file
-        ground_stations = teleport_json('data/teleport_locations.json')[0:cfg.problem.teleport_num]
+        ground_stations = teleport_json('data/most_diverse_100_ground_stations.json')[0:cfg.problem.teleport_num]
         print(f"Loaded {len(ground_stations)} ground stations")
 
         ilp_model = ILP_Model(ground_stations, satellites, epc_start, epc_end, cfg.problem.gs_num, data_rate=cfg.problem.data_rate)
