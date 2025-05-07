@@ -65,4 +65,4 @@ debug:
 
 experiments:
   simplexExclude: True # True to exclude current gs locations in simplex generation
-  ccgs: 3
+  ccgs: 5
