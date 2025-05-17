@@ -7,6 +7,7 @@ from common.plotting import plot_gif,plot_img
 # from methods.free_select.nelder_mead_scipy import nelder_mead_scipyfrom methods.free_select.nelder_mead_scipy import nelder_mead_scipy
 from methods.free_select.scipy_methods import nelder_mead_scipy, powell_scipy
 from methods.free_select.scipy_ccgs import nelder_mead_scipy_ccgs
+from methods.free_select.genetic_algorithms import diffEvolution
 
 from methods.teleport.ILP import ILP_Model
 from common.plotting import plot_contact_windows, plot_gap_times
@@ -170,7 +171,28 @@ def main(cfg: DictConfig):
                     print(wandb.Image(plot_img(gs_list_plot,"gs_all.png")))
                     figure = wandb.Image(plot_img(gs_list_plot,"gs_all.png"))
                     run.log({"gs_all": figure})
-                
+
+        if cfg.problem.method == "diffEvolution":
+
+            gs_list,  gs_list_plot = diffEvolution(cfg,land_data,epc_start,epc_end,satellites) # agg_list_of_simplexes
+            
+            if cfg.debug.wandb:
+                contacts, _ = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
+                _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
+                run.summary["gs_list"] = gs_list_plot 
+                run.summary["contact_num"] = len(contacts_exclusion_secs) 
+                run.summary["seconds"] = np.sum(contacts_exclusion_secs)
+                run.summary["data_downlink"] = np.sum(contacts_exclusion_secs)*cfg.scenario.datarate
+
+                wandb.save("data/*")
+
+                if cfg.debug.plot:
+                    print("##############################")
+                    print(gs_list_plot)
+                    plot_img(gs_list_plot,"gs_all.png")
+                    print(wandb.Image(plot_img(gs_list_plot,"gs_all.png")))
+                    figure = wandb.Image(plot_img(gs_list_plot,"gs_all.png"))
+                    run.log({"gs_all": figure})
 
     elif cfg.problem.type == "teleport":
         #Load ground stations from JSON file

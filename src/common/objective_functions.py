@@ -4,7 +4,8 @@ from geopy.distance import geodesic
 from common.station_gen import return_bdm_gs
 from common.utils import compute_gaps_per_sat, compute_contact_times, mp_compute_contact_times, contactExclusion, xyz_to_latlon
 
-from itertools import chain
+from itertools import chain, combinations
+
 import numpy as np
 from global_land_mask import globe
 
@@ -65,6 +66,32 @@ def penalty_gs_all(new_gs,current_gs_list, dist_penalty):
             penalty_sum += dist_penalty - dist
     return penalty_sum
 
+def penalty_water_diffEvolution(gs_list,land_geometries):
+    on_water = False
+    total_penalty = 0
+    for gs in gs_list:
+        on_water = globe.is_ocean(gs.geometry.coordinates[1], gs.geometry.coordinates[0])
+        if on_water:
+            # Calculate distance to the nearest lan
+            distance, closest_land_point = calculate_distance_to_land(Point((gs.geometry.coordinates[0], gs.geometry.coordinates[1])), land_geometries)
+            total_penalty += distance
+    return total_penalty
+
+
+# Penalty for any pair of ground stations that are too close
+def penalty_gs_all_diffEvolution(gs_list, dist_penalty):
+    penalty_sum = 0
+    # Iterate over all unique pairs of ground stations
+    for gs1, gs2 in combinations(gs_list, 2):
+        # Extract (lat, lon) from each
+        coord1 = (gs1.geometry.coordinates[1], gs1.geometry.coordinates[0])
+        coord2 = (gs2.geometry.coordinates[1], gs2.geometry.coordinates[0])
+        
+        dist = geodesic(coord1, coord2).meters
+        if dist < dist_penalty:
+            penalty_sum += dist_penalty - dist
+    return penalty_sum
+
 
 ############################## Cost Functions ################################
 
@@ -118,6 +145,50 @@ def cost_func(x, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, 
                     "log_of_simplexes_lat"+str(i+1):new_gs[1]})
     if verbose:
         print(new_gs)
+        print("Current optimization value: ", value)
+        print("penalty_water: ", penalty_water)
+        print("penalty_close_gs: ", penalty_close_gs)
+        print(len(contacts_sec))
+    
+    return value
+
+
+
+def cost_func_diffEvolution(x, satellites, epc_start, epc_end, land_geometries, cfg, count, verbose = False, plot = False):    
+
+    # Make sure that all ground stations are set to only add onto the existing selected constellations
+    gs_list_plot =  [[lon, lat] for lon, lat in zip(x[::2], x[1::2])]
+    temp_gs_list =  [return_bdm_gs(lon, lat) for lon, lat in zip(x[::2], x[1::2])]
+
+    # Computing specific objective
+    if cfg.problem.objective == "gap_optimization":
+        _, _, gaps_seconds = compute_gaps_per_sat(satellites, temp_gs_list ,epc_start, epc_end, plot)
+
+        # TODO: put in additional stats per satellite etc for mean, for now just flatten everything 
+        gaps_seconds_flattened = list(chain.from_iterable(gaps_seconds))
+        mean_gap_time = np.mean(gaps_seconds_flattened)
+        cost_func_val = mean_gap_time
+
+    if cfg.problem.objective == "max_contacts":
+        all_contacts, _ = mp_compute_contact_times(satellites, temp_gs_list ,epc_start, epc_end, False)
+        cost_func_val = 0 - len(all_contacts)*100 # TODO: do we just multiply by a diff num?
+ 
+    if cfg.problem.objective == "data_downlink":
+        all_contacts, contacts_sec = mp_compute_contact_times(satellites, temp_gs_list ,epc_start, epc_end, False)
+        cost_func_val = 0 - np.sum(contacts_sec)
+
+    penalty_water = (penalty_water_diffEvolution(temp_gs_list,land_geometries)/1000)**2 # Put penalty/distance from land in 10 kms
+    penalty_close_gs = (penalty_gs_all_diffEvolution(temp_gs_list, cfg.constraints.dist_other_gs))**2 # additional penalty being close to gs, in ms
+    value = cost_func_val + penalty_water + penalty_close_gs
+
+    if cfg.debug.wandb:
+        wandb.log({"Obj_func_value": value,
+                "penalty_water": penalty_water,
+                    "penalty_close_gs": penalty_close_gs,
+                    "gs_list"+str(count): gs_list_plot})
+        count += 1
+
+    if verbose:
         print("Current optimization value: ", value)
         print("penalty_water: ", penalty_water)
         print("penalty_close_gs: ", penalty_close_gs)

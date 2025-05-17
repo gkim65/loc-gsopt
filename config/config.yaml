@@ -11,7 +11,7 @@
 #         - start and end epochs 
 # Output of selected sites
 
-test_name: "ccgs_better"
+test_name: "test_diffEvolution"
 
 wandb:
   entity: "loc_gsopt"
@@ -19,9 +19,7 @@ wandb:
 problem:
   type: "free"
   # type: "teleport"
-  method: "nelder_ccgs"  # free methods: "nelder" "powell" "nelder_ccgs"
-                        # make sure you can only choose appropriate
-                        # methods for appropriate problem types
+  method: "diffEvolution"  # free methods: "nelder" "powell" "nelder_ccgs" "diffEvolution"
   objective: "data_downlink" #data_downlink, gap_optimization, max_contacts
   gs_num: 2
   teleport_num: 10
