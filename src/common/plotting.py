@@ -64,8 +64,8 @@ def animate(i,fig,plot_points,title = "Animation Counter Optimization:",gs_list=
             geom = shapely.geometry.Polygon(circle_points)
             ax.add_geometries((geom,), crs=ccrs.Geodetic(), alpha=0.3, edgecolor='none', facecolor='red', linewidth=0)
 
-    ax.set_yticks(np.arange(-90, 90, 30))
-    ax.set_xticks(np.arange(-180, 180, 30))
+    ax.set_yticks(np.arange(-90, 91, 30))
+    ax.set_xticks(np.arange(-180, 181, 30))
     plt.grid()
 
 

@@ -19,7 +19,7 @@ from pyomo.environ import *
 from itertools import combinations, groupby
 import pyomo.kernel as pk
 
-def load_earth_data(filename, download):
+def load_earth_data(filename, download=False):
     # Here we can download the latest Earth orientation data and load it.
 
     if not os.path.exists(filename):

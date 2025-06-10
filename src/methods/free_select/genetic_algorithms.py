@@ -46,7 +46,7 @@ def diffEvolution(cfg,land_data,epc_start,epc_end,satellites):
         #         wandb.summary["contact_num"+str(iterate)] = len(contacts_exclusion_secs) 
         #         wandb.summary["seconds"+str(iterate)] = np.sum(contacts_exclusion_secs)
         #         wandb.summary["data_downlink"+str(iterate)] = np.sum(contacts_exclusion_secs)*cfg.scenario.datarate
-        gs_list_plot =  [[lon, lat] for lon, lat in zip(x[::2], x[1::2])]
+        gs_list_plot =  [[lon, lat] for lon, lat in zip(result.x[::2], result.x[1::2])]
 
                                
                 

@@ -25,7 +25,7 @@ if module_path not in sys.path:
     sys.path.append(module_path)
 
 # Required imports
-from common.sat_gen import make_tle
+from common.sat_gen import make_walker_constellation
 from common.station_gen import teleport_json
 from common.utils import load_earth_data, gap_times_condense
 #####
@@ -99,7 +99,21 @@ def main(cfg: DictConfig):
     # Make sure to load in earth inertial data every start time!
     load_earth_data('data/iau2000A_finals_ab.txt',cfg.debug.txtUpdate)
 
-    satellites = satellites_from_constellation(cfg.scenario.constellations, cfg.debug.txtUpdate)[0:cfg.problem.sat_num]
+    if cfg.walker.custom:
+        satellites = make_walker_constellation(
+            epoch=epc_start,
+            altitude_km=cfg.walker.altitude,
+            eccentricity=cfg.walker.eccentricity,
+            inclination=cfg.walker.inclination,
+            num_planes=cfg.walker.num_planes,
+            sats_per_plane= cfg.walker.sats_perplane,
+            phase=cfg.walker.phase,
+            argp=cfg.walker.argp,
+            norad_start=cfg.walker.norad_start,
+            star =cfg.walker.star,
+        )
+    else:
+        satellites = satellites_from_constellation(cfg.scenario.constellations, cfg.debug.txtUpdate)[0:cfg.problem.sat_num]
 
     ########## Solvers: ##########
 

@@ -180,6 +180,55 @@ def satellites_from_constellation(constellation: str, download):
 
     return satellites
 
+def make_walker_constellation(
+    epoch=bh.Epoch(2024, 5, 20, 0, 0, 0),
+    altitude_km=550,
+    eccentricity=0.001,
+    inclination=90,
+    num_planes=6,
+    sats_per_plane=4,
+    phase=1,
+    argp=0.0,
+    norad_start=10000,
+    star = True,
+):
+    """
+    Generate a Walker-Delta constellation and return a list of Spacecraft objects.
+    """
+    total_sats = num_planes * sats_per_plane
+    plane_spacing = 180 if star else 360  # Key difference between Star/Delta
+    constellation = []
+
+    for p in range(num_planes):
+        raan = (plane_spacing * p / num_planes)
+        for s in range(sats_per_plane):
+            mean_anomaly = (360/sats_per_plane) * ((s + phase*p) % sats_per_plane)
+            # mean_anomaly = (360.0 * s / sats_per_plane + p * walker_delta * 360.0 / total_sats) % 360.0
+            norad_id = norad_start + p * sats_per_plane + s
+            
+            # Create TLE using your make_tle function
+            tle = make_tle(
+                epc0=epoch,
+                alt=altitude_km,
+                ecc=eccentricity,
+                inc=inclination,
+                raan=raan,
+                argp=argp,
+                M=mean_anomaly,
+                norad_id=norad_id
+            )
+
+            sat_name = f"Sat_{p}_{s}"
+            sat_obj = bdm.Spacecraft(
+                id=norad_id,
+                name=sat_name,
+                line1=tle.line1,
+                line2=tle.line2,
+            )
+            constellation.append(sat_obj)
+
+    return constellation
+
 # @st.cache_resource(ttl=3600*12) # Expire cache every 12 hours
 # def get_satcat_df():
 #     # Load the TLE data
