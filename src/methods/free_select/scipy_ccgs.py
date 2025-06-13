@@ -13,86 +13,133 @@ import random
 from itertools import combinations
 from shapely.geometry import Point, Polygon
 
-def points_in_shape(gs_list, comb):
-    for p in gs_list:
-        triangle = Polygon(comb)
-        point = Point(p)
-        if triangle.contains(point) or triangle.touches(point):
-            return True
-    return False
 
-def planar_quad_area(points):
-    """
-    Compute the area of a quadrilateral in 2D using the shoelace formula.
-    `points` should be a 4x2 numpy array or list of 4 (x, y) tuples.
-    """
-    points = np.array(points)
-    x = points[:, 0]
-    y = points[:, 1]
-    # Wrap around to first point
-    x_next = np.roll(x, -1)
-    y_next = np.roll(y, -1)
-    area = 0.5 * np.abs(np.dot(x, y_next) - np.dot(y, x_next))
-    return area
+# def points_in_shape(gs_list, comb):
+#     for p in gs_list:
+#         triangle = Polygon(comb)
+#         point = Point(p)
+#         if triangle.contains(point) or triangle.touches(point):
+#             return True
+#     return False
 
-# TODO testing initial simplexes and seeing if mine's better
-def simplex_rand():
-        return ""
+# def planar_quad_area(points):
+#     """
+#     Compute the area of a quadrilateral in 2D using the shoelace formula.
+#     `points` should be a 4x2 numpy array or list of 4 (x, y) tuples.
+#     """
+#     points = np.array(points)
+#     x = points[:, 0]
+#     y = points[:, 1]
+#     # Wrap around to first point
+#     x_next = np.roll(x, -1)
+#     y_next = np.roll(y, -1)
+#     area = 0.5 * np.abs(np.dot(x, y_next) - np.dot(y, x_next))
+#     return area
 
-def simplex_select(gs_list,exclude, l=1):
+# # TODO testing initial simplexes and seeing if mine's better
+# def simplex_rand():
+#         return ""
+
+# def simplex_select(gs_list,exclude, l=1):
                
-        # try out 40 different starting points 
-        lats = np.concatenate([np.random.uniform(-70, -50, 10),
-                        np.random.uniform(50, 70, 10),
-                        np.random.uniform(-50, 50, 10),
-                        np.random.uniform(-50, 50, 10)])
+#         # try out 40 different starting points 
+#         # lats = np.concatenate([np.random.uniform(-70, -50, 10),
+#         #                 np.random.uniform(50, 70, 10),
+#         #                 np.random.uniform(-50, 50, 10),
+#         #                 np.random.uniform(-50, 50, 10)])
 
-        lons = np.concatenate([np.random.uniform(-160, 160, 10),
-                        np.random.uniform(-160, 160, 10),
-                        np.random.uniform(-160, -140, 10),
-                        np.random.uniform(140, 160, 10)])
-
-
-        # Stack latitudes and longitudes together
-        all_points = np.column_stack([lats, lons])
+#         # lons = np.concatenate([np.random.uniform(-160, 160, 10),
+#         #                 np.random.uniform(-160, 160, 10),
+#         #                 np.random.uniform(-160, -140, 10),
+#         #                 np.random.uniform(140, 160, 10)])
 
 
-        # Find the triangle with the largest area
-        max_area = 0
-        best_simplex = None
+#         lats = np.concatenate([np.random.uniform(-90, -80, 40),
+#                         np.random.uniform(70,85, 10),
+#                         np.random.uniform(-70, 70, 10),
+#                         np.random.uniform(-70, 70, 10)])
 
-        # Generate all combinations of 3 points on the convex hull
-        for comb in combinations(all_points, 4):
-                if exclude:
-                        if not points_in_shape(gs_list, comb):
-                                # area = triangle_area(comb[0], comb[1], comb[2])
-                                area = planar_quad_area(comb)
-                                if area > max_area:
-                                        max_area = area
-                                        best_simplex = comb #np.array([comb[0], comb[1], comb[2]])
-                else:
-                        # area = triangle_area(comb[0], comb[1], comb[2])
-                        area = planar_quad_area(comb)
-                        if area > max_area:
-                                max_area = area
-                                best_simplex = comb #np.array([comb[0], comb[1], comb[2]])
+#         lons = np.concatenate([np.random.uniform(-180, 180, 40),
+#                         np.random.uniform(-180, 180, 10),
+#                         np.random.uniform(-180, -160, 10),
+#                         np.random.uniform(160, 180, 10)])
 
-        # TODO EXTENSION: possibly better simplex?
-        # this lets me choose a gs as one of the points of the rectangle
-        # for gs in gs_list:
-        #         # Remove gs from gs_list for this   iteration
-        #         other_gs = [pt for pt in gs_list if not np.allclose(pt, gs)]
 
-        #         for pair in combinations(all_points, 2):
-        #                 triangle = np.array([gs, pair[0], pair[1]])
-        #                 print(points_in_shape(other_gs, triangle))
-        #                 # Check that other gs points aren't inside the triangle
-        #                 if not points_in_shape(other_gs, triangle):
-        #                         area = triangle_area(triangle[0], triangle[1], triangle[2])
-        #                         if area > max_area:
-        #                                 max_area = area
-        #                                 best_simplex = triangle
-        return best_simplex
+#         # Stack latitudes and longitudes together
+#         all_points = np.column_stack([lats, lons])
+
+
+#         # Find the triangle with the largest area
+#         max_area = 0
+#         best_simplex = None
+
+#         # Generate all combinations of 3 points on the convex hull
+#         for comb in combinations(all_points, 4):
+#                 if exclude:
+#                         if not points_in_shape(gs_list, comb):
+#                                 # area = triangle_area(comb[0], comb[1], comb[2])
+#                                 area = planar_quad_area(comb)
+#                                 if area > max_area:
+#                                         max_area = area
+#                                         best_simplex = comb #np.array([comb[0], comb[1], comb[2]])
+#                 else:
+#                         # area = triangle_area(comb[0], comb[1], comb[2])
+#                         area = planar_quad_area(comb)
+#                         if area > max_area:
+#                                 max_area = area
+#                                 best_simplex = comb #np.array([comb[0], comb[1], comb[2]])
+
+#         # TODO EXTENSION: possibly better simplex?
+#         # this lets me choose a gs as one of the points of the rectangle
+#         # for gs in gs_list:
+#         #         # Remove gs from gs_list for this   iteration
+#         #         other_gs = [pt for pt in gs_list if not np.allclose(pt, gs)]
+
+#         #         for pair in combinations(all_points, 2):
+#         #                 triangle = np.array([gs, pair[0], pair[1]])
+#         #                 print(points_in_shape(other_gs, triangle))
+#         #                 # Check that other gs points aren't inside the triangle
+#         #                 if not points_in_shape(other_gs, triangle):
+#         #                         area = triangle_area(triangle[0], triangle[1], triangle[2])
+#         #                         if area > max_area:
+#         #                                 max_area = area
+#         #                                 best_simplex = triangle
+#         return best_simplex
+
+
+def haversine_numba(lat1, lon1, lat2, lon2):
+    R = 6371.0
+    phi1, phi2 = np.deg2rad(lat1), np.deg2rad(lat2)
+    dphi  = np.deg2rad(lat2 - lat1)
+    dlamb = np.deg2rad(lon2 - lon1)
+    a = np.sin(dphi/2)**2 + np.cos(phi1)*np.cos(phi2)*np.sin(dlamb/2)**2
+    return 2 * R * np.arcsin(np.sqrt(a))
+
+def farthest_four(points):
+    """Greedy k‑centre: select 4 widely‑spaced points from `points` (N×2)."""
+    N = len(points)
+    chosen = [np.random.randint(N)]          # 1st point random
+    dists  = np.full(N, np.inf)
+
+    for _ in range(3):                      # need total of 4
+        # update min distance to current set
+        for i in range(N):
+            for j in chosen[-1:]:
+                d = haversine_numba(points[i,0], points[i,1],
+                                     points[j,0], points[j,1])
+                if d < dists[i]:
+                    dists[i] = d
+        chosen.append(int(np.argmax(dists))) # pick farthest
+
+    return points[chosen]
+
+# --- driver -------------------------------------------------
+def simplex_select(n_samples=120):
+    lats = np.degrees(np.arcsin(np.random.uniform(-1, 1, n_samples)))
+    lons = np.random.uniform(-180, 180, n_samples)
+    pts  = np.column_stack((lats, lons))
+    return farthest_four(pts)
+
 
 
 
@@ -115,7 +162,8 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites):
                         # Initial guess overridden by initial simplex
                         initial_guess = np.array([-0.41244896,  0.6765351 ,  0.61007058])
 
-                        initial_simplex = simplex_select(gs_list_plot,cfg.experiments.simplexExclude)
+                        # initial_simplex = simplex_select(gs_list_plot,cfg.experiments.simplexExclude)
+                        initial_simplex = simplex_select(n_samples=200)
                         if cfg.debug.wandb:
                                 wandb.log({"initial simplex"+str(i+1): initial_simplex})
                                 
