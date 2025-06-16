@@ -143,7 +143,6 @@ def simplex_select(n_samples=120):
 
 
 
-# TODO EXTENSION: add the cyclic coordinate descent part (May not include in this paper)
 def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites):
 
         # Setup args for minimize function
@@ -177,6 +176,14 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites):
                                 print("lat-long simplex: ", initial_simplex)
                                 print("unit circle converted simplex: ", simplex)
 
+                        # Make faster computation
+                        if iterate > 0:
+                                # Get all ground stations except the i-th one
+                                gs_list_others = [gs for idx, gs in enumerate(gs_list) if idx != i]
+                                # try to minimize number of contacts to compute:
+                                contacts_og, contacts_sec = mp_compute_contact_times(satellites, gs_list_others ,epc_start, epc_end, False)
+                                gs_contacts_og = contacts_sec
+
                         # # Perform the optimization using Nelder-Mead
                         result = minimize(cost_func, 
                                         initial_guess, 
@@ -200,7 +207,8 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites):
 
                                 # try to minimize number of contacts to compute:
                                 contacts_og, contacts_sec = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
-                                gs_contacts_og = contacts_sec
+                                if i < cfg.problem.gs_num-1: # prevent double counting
+                                        gs_contacts_og = contacts_sec
                         else:
                                 coord = xyz_to_latlon(result.x)
                                 gs_list_new = gs_list.copy()
@@ -217,6 +225,7 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites):
                                         print(gs_list_plot)
                                         gs_list[i] = return_bdm_gs(coord[1], coord[0])
                                         gs_list_plot[i] = [coord[1], coord[0]]
+
                 
 
                 if cfg.debug.wandb:
