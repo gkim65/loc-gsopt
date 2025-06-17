@@ -243,18 +243,18 @@ def contactExclusion(contacts, cfg):
     # Constraint list to ensure no overlapping contacts
     model.constraints = ConstraintList()
 
-    # Ensure that no two overlapping contacts for the same station are selected
-    contacts_sorted_by_station = sorted(contacts, key=lambda cn: cn.station_id)
+    # # Ensure that no two overlapping contacts for the same station are selected
+    # contacts_sorted_by_station = sorted(contacts, key=lambda cn: cn.station_id)
 
-    for station_id, station_contacts in groupby(contacts_sorted_by_station, lambda cn: cn.station_id):
+    # for station_id, station_contacts in groupby(contacts_sorted_by_station, lambda cn: cn.station_id):
 
-        # Convert groupby object to a sorted list (groupby creates an iterator)
-        station_contacts = sorted(list(station_contacts), key=lambda cn: cn.t_start)
+    #     # Convert groupby object to a sorted list (groupby creates an iterator)
+    #     station_contacts = sorted(list(station_contacts), key=lambda cn: cn.t_start)
 
-        # Test all pairs of contacts to check for overlap
-        for x, y in combinations(station_contacts, 2):
-            if x.t_start <= y.t_end and y.t_start <= x.t_end:
-                model.constraints.add(model.x[contacts_order[str(x.id)]] + model.x[contacts_order[str(y.id)]] <= 1)
+    #     # Test all pairs of contacts to check for overlap
+    #     for x, y in combinations(station_contacts, 2):
+    #         if x.t_start <= y.t_end and y.t_start <= x.t_end:
+    #             model.constraints.add(model.x[contacts_order[str(x.id)]] + model.x[contacts_order[str(y.id)]] <= 1)
 
     # Ensure that no two overlapping contacts for the same satellite are selected
     contacts_sorted_by_satellite = sorted(contacts, key=lambda cn: cn.spacecraft_id)

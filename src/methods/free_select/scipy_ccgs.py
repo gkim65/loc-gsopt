@@ -211,7 +211,7 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites):
                                         gs_contacts_og = contacts_sec
                         else:
                                 coord = xyz_to_latlon(result.x)
-                                gs_list_new = gs_list.copy()
+                                gs_list_new = copy.deepcopy(gs_list)
                                 gs_list_new[i] = return_bdm_gs(coord[1], coord[0])
 
                                 # Check if prev is better than current
@@ -220,7 +220,7 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites):
                                 contacts_new, contacts_sec_new = mp_compute_contact_times(satellites, gs_list_new ,epc_start, epc_end, False)
                                 _, contacts_exclusion_secs_new = contactExclusion(contacts_new,cfg)
 
-                                if np.sum(contacts_sec_prev) < np.sum(contacts_sec_new) or np.sum(contacts_exclusion_secs_prev) < np.sum(contacts_exclusion_secs_new):
+                                if np.sum(contacts_sec_prev) < np.sum(contacts_sec_new): # or np.sum(contacts_exclusion_secs_prev) < np.sum(contacts_exclusion_secs_new):
                                         print(gs_list)
                                         print(gs_list_plot)
                                         gs_list[i] = return_bdm_gs(coord[1], coord[0])
