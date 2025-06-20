@@ -202,8 +202,9 @@ def make_walker_constellation(
     for p in range(num_planes):
         raan = (plane_spacing * p / num_planes)
         for s in range(sats_per_plane):
-            mean_anomaly = (360/sats_per_plane) * ((s + phase*p) % sats_per_plane)
-            # mean_anomaly = (360.0 * s / sats_per_plane + p * walker_delta * 360.0 / total_sats) % 360.0
+            mean_anomaly = ( (360.0 / sats_per_plane) * s + \
+                 (phase * p * 360.0 / total_sats) ) % 360.0
+            # mean_anomaly = (360/sats_per_plane) * ((s + phase*p) % sats_per_plane)
             norad_id = norad_start + p * sats_per_plane + s
             
             # Create TLE using your make_tle function
