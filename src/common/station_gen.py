@@ -6,6 +6,19 @@ import numpy as np
 # Brahe Imports
 import brahe.data_models as bdm
 
+def gs_json_list(provider_file):
+
+    # load file
+    with open(provider_file, "r") as f:
+        data = json.load(f)
+
+    latlon_list = []
+
+    for feature in data["features"]:
+        lon, lat = feature["geometry"]["coordinates"]
+        latlon_list.append((lat, lon))  # convert to (lat, lon)
+
+    return latlon_list
 
 def gs_json(provider_file):
 
