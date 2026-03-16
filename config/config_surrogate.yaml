@@ -1,0 +1,79 @@
+# Config files for problem setup and formulation
+# Can input the following:
+#     - Problem Scope
+#         - type of problem (free or teleport selection)
+#         - Solution method
+#         - of sites to select
+#     - Scenario Development:
+#         - previous sites & locations (if teleport problem)
+#         - Satellite list
+#         - List of candidate sites for teleports
+#         - start and end epochs 
+# Output of selected sites
+
+test_name: "compute_test1"
+
+wandb:
+  entity: "loc_gsopt"
+
+problem:
+  type: "free"
+  # type: "teleport"
+  method: "diffEvolution"  # free methods: "nelder" "powell" "nelder_ccgs" "diffEvolution"
+  objective: "data_downlink" #data_downlink, gap_optimization, max_contacts
+  gs_num: 1
+  teleport_num: 10
+  sat_num: 5 # Start with 10, just to not overload the solver
+  data_rate: 1200000000 # bps
+
+scenario:
+  constellations: "CAPELLA" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
+                          #'FLOCK', 'HAWK', 'CAPELLA', 'LEGION', 
+                          #'WORLDVIEW', 'GEOEYE', 'NUSAT'
+  start_simplex: 3 # can be 0-6, random
+  datarate: 1200000000.0 # Data Rate [bps], for now, just set to this for all satellites and ground stations
+  # teleport_sites:
+    # TODO: Need to add teleport functionality, list of sites to select
+  
+
+walker:
+  custom: True # TURN THIS FALSE FOR CONSTELLATIONS
+  altitude: 781 # Km
+  eccentricity: 0.001 #(just can't be zero)
+  inclination: 86.4 # usually close to 90 for star, less than 60 for walker delta
+  num_planes: 1
+  sats_perplane: 1
+  phase: 2 # 1 for walker delta, 2 for star
+  argp: 0.0
+  norad_start: 10000 # just names for satellites
+  star: True # make False for Delta
+
+constraints:
+  dist_other_gs: 3000000 # 3000 km for elevation min of around 10
+
+start_epoch:
+  year: 2025
+  month: 4
+  day: 1
+  hour: 17
+  minute: 23
+  second: 40.69
+
+end_epoch:
+  year: 2025
+  month: 4
+  day: 8
+  hour: 17
+  minute: 23
+  second: 40.69
+
+debug:
+  verbose: True
+  plot: True
+  wandb: True
+  txtUpdate: False
+  randseed: 0
+
+experiments:
+  simplexExclude: True # True to exclude current gs locations in simplex generation
+  ccgs: 5

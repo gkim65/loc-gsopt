@@ -10,3 +10,4 @@
 outputs
 multirun
 /wandb
+src/examples/plotting_wandb/figures_final/*
