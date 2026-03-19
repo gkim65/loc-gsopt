@@ -65,7 +65,7 @@ def main(cfg: DictConfig):
     constraints_name = str(cfg.constraints.dist_other_gs)
 
     if cfg.debug.wandb:
-        run = wandb.init(entity=cfg.wandb.entity, project="surrogate_opt")
+        run = wandb.init(entity=cfg.wandb.entity, project="surrogate_opt", reinit=True)
 
     config_dict = omegaconf.OmegaConf.to_container(
         cfg, resolve=True, throw_on_missing=True
