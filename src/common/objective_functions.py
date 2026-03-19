@@ -1,8 +1,8 @@
 from shapely.geometry import Point
 from geopy.distance import geodesic
+import brahe as bh
 
-from common.station_gen import return_bdm_gs
-from common.utils import compute_gaps_per_sat, compute_contact_times, mp_compute_contact_times, contactExclusion, xyz_to_latlon
+from common.utils import compute_gaps_per_sat, compute_contact_times, contactExclusion, xyz_to_latlon
 
 from itertools import chain, combinations
 
@@ -61,7 +61,7 @@ def penalty(new_gs,land_geometries):
 def penalty_gs_all(new_gs,current_gs_list, dist_penalty):
     penalty_sum = 0
     for current_gs in current_gs_list:
-        dist = geodesic((new_gs[1], new_gs[0]), (current_gs.geometry.coordinates[1], current_gs.geometry.coordinates[0])).meters
+        dist = geodesic((new_gs[1], new_gs[0]), (current_gs.latitude(bh.AngleFormat.DEGREES), current_gs.longitude(bh.AngleFormat.DEGREES))).meters
         if dist < dist_penalty:
             penalty_sum += dist_penalty - dist
     return penalty_sum
@@ -70,10 +70,10 @@ def penalty_water_diffEvolution(gs_list,land_geometries):
     on_water = False
     total_penalty = 0
     for gs in gs_list:
-        on_water = globe.is_ocean(gs.geometry.coordinates[1], gs.geometry.coordinates[0])
+        on_water = globe.is_ocean(gs.latitude(bh.AngleFormat.DEGREES), gs.longitude(bh.AngleFormat.DEGREES))
         if on_water:
             # Calculate distance to the nearest lan
-            distance, closest_land_point = calculate_distance_to_land(Point((gs.geometry.coordinates[0], gs.geometry.coordinates[1])), land_geometries)
+            distance, closest_land_point = calculate_distance_to_land(Point((gs.longitude(bh.AngleFormat.DEGREES), gs.latitude(bh.AngleFormat.DEGREES))), land_geometries)
             total_penalty += distance
     return total_penalty
 
@@ -84,8 +84,8 @@ def penalty_gs_all_diffEvolution(gs_list, dist_penalty):
     # Iterate over all unique pairs of ground stations
     for gs1, gs2 in combinations(gs_list, 2):
         # Extract (lat, lon) from each
-        coord1 = (gs1.geometry.coordinates[1], gs1.geometry.coordinates[0])
-        coord2 = (gs2.geometry.coordinates[1], gs2.geometry.coordinates[0])
+        coord1 = (gs1.latitude(bh.AngleFormat.DEGREES), gs1.longitude(bh.AngleFormat.DEGREES))
+        coord2 = (gs2.latitude(bh.AngleFormat.DEGREES), gs2.longitude(bh.AngleFormat.DEGREES))
         
         dist = geodesic(coord1, coord2).meters
         if dist < dist_penalty:
@@ -112,9 +112,9 @@ def cost_func(x, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, 
     # Make sure that all ground stations are set to only add onto the existing selected constellations
     temp_gs_list = gs_list.copy()
     if not gs_list:
-        temp_gs_list = [return_bdm_gs(new_gs[0], new_gs[1])]
+        temp_gs_list = [bh.PointLocation(new_gs[0], new_gs[1])]
     else:
-        temp_gs_list.append(return_bdm_gs(new_gs[0], new_gs[1]))
+        temp_gs_list.append(bh.PointLocation(new_gs[0], new_gs[1]))
 
     # Computing specific objective
     if cfg.problem.objective == "gap_optimization":
@@ -126,11 +126,11 @@ def cost_func(x, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, 
         cost_func_val = mean_gap_time
 
     if cfg.problem.objective == "max_contacts":
-        all_contacts, _ = mp_compute_contact_times(satellites, [return_bdm_gs(new_gs[0], new_gs[1])] ,epc_start, epc_end, False)
+        all_contacts, _ = compute_contact_times(satellites, [bh.PointLocation(new_gs[0], new_gs[1])] ,epc_start, epc_end)
         cost_func_val = 0 - len(all_contacts)*100 # TODO: do we just multiply by a diff num?
  
     if cfg.problem.objective == "data_downlink":
-        all_contacts, contacts_sec = mp_compute_contact_times(satellites, [return_bdm_gs(new_gs[0], new_gs[1])] ,epc_start, epc_end, False)
+        all_contacts, contacts_sec = compute_contact_times(satellites, [bh.PointLocation(new_gs[0], new_gs[1])] ,epc_start, epc_end)
         cost_func_val = 0 - (np.sum(contacts_sec)+ np.sum(gs_contacts_og))
 
     penalty_water = (penalty(new_gs,land_geometries)/1000)**2 # Put penalty/distance from land in 10 kms
@@ -158,7 +158,7 @@ def cost_func_diffEvolution(x, satellites, epc_start, epc_end, land_geometries, 
 
     # Make sure that all ground stations are set to only add onto the existing selected constellations
     gs_list_plot =  [[lon, lat] for lon, lat in zip(x[::2], x[1::2])]
-    temp_gs_list =  [return_bdm_gs(lon, lat) for lon, lat in zip(x[::2], x[1::2])]
+    temp_gs_list =  [bh.PointLocation(lon, lat) for lon, lat in zip(x[::2], x[1::2])]
 
     # Computing specific objective
     if cfg.problem.objective == "gap_optimization":
@@ -170,11 +170,11 @@ def cost_func_diffEvolution(x, satellites, epc_start, epc_end, land_geometries, 
         cost_func_val = mean_gap_time
 
     if cfg.problem.objective == "max_contacts":
-        all_contacts, _ = mp_compute_contact_times(satellites, temp_gs_list ,epc_start, epc_end, False)
+        all_contacts, _ = compute_contact_times(satellites, temp_gs_list ,epc_start, epc_end)
         cost_func_val = 0 - len(all_contacts)*100 # TODO: do we just multiply by a diff num?
  
     if cfg.problem.objective == "data_downlink":
-        all_contacts, contacts_sec = mp_compute_contact_times(satellites, temp_gs_list ,epc_start, epc_end, False)
+        all_contacts, contacts_sec = compute_contact_times(satellites, temp_gs_list ,epc_start, epc_end)
         cost_func_val = 0 - np.sum(contacts_sec)
 
     penalty_water = (penalty_water_diffEvolution(temp_gs_list,land_geometries)/1000)**2 # Put penalty/distance from land in 10 kms

@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.optimize import minimize
 from common.objective_functions import cost_func
-from common.station_gen import return_bdm_gs
-from common.utils import mp_compute_contact_times, xyz_to_latlon, latlon_to_xyz
+import brahe as bh
+from common.utils import compute_contact_times, xyz_to_latlon, latlon_to_xyz
 
 #  WandB
 import wandb
@@ -143,11 +143,11 @@ def nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites):
 
                 # conversion of unit circle coordinates back to lon,lat
                 coord = xyz_to_latlon(result.x)
-                gs_list.append(return_bdm_gs(coord[1], coord[0]))
+                gs_list.append(bh.PointLocation(coord[1], coord[0]))
                 gs_list_plot.append([coord[1], coord[0]])
 
                 # try to minimize number of contacts to compute:
-                contacts_og, contacts_sec = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
+                contacts_og, contacts_sec = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
                 gs_contacts_og = contacts_sec
                 
         return gs_list, gs_list_plot 

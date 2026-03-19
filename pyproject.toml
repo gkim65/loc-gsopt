@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "brahe @ git+https://github.com/duncaneddy/brahe.git@master",
+    "brahe>=1.0",
     "cartopy>=0.24.1",
     "geopandas>=1.0.1",
     "geopy>=2.4.1",
@@ -16,10 +16,8 @@ dependencies = [
     "matplotlib>=3.10.0",
     "numpy>=1.26.4",
     "pyomo>=6.9.1",
+    "scipy>=1.17.1",
     "seaborn>=0.13.2",
     "shapely>=2.0.6",
     "wandb>=0.19.7",
 ]
-
-[tool.uv.sources]
-brahe = { git = "https://github.com/duncaneddy/brahe.git", rev = "master" }

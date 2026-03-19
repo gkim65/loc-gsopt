@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.optimize import minimize
 from common.objective_functions import cost_func
-from common.station_gen import return_bdm_gs
-from common.utils import mp_compute_contact_times, xyz_to_latlon, latlon_to_xyz, contactExclusion
+import brahe as bh
+from common.utils import compute_contact_times, xyz_to_latlon, latlon_to_xyz, contactExclusion
 
 #  WandB
 import wandb
@@ -181,7 +181,7 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites):
                                 # Get all ground stations except the i-th one
                                 gs_list_others = [gs for idx, gs in enumerate(gs_list) if idx != i]
                                 # try to minimize number of contacts to compute:
-                                contacts_og, contacts_sec = mp_compute_contact_times(satellites, gs_list_others ,epc_start, epc_end, False)
+                                contacts_og, contacts_sec = compute_contact_times(satellites, gs_list_others ,epc_start, epc_end)
                                 gs_contacts_og = contacts_sec
 
                         # # Perform the optimization using Nelder-Mead
@@ -202,34 +202,34 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites):
                         # conversion of unit circle coordinates back to lon,lat
                         if iterate == 0:
                                 coord = xyz_to_latlon(result.x)
-                                gs_list.append(return_bdm_gs(coord[1], coord[0]))
+                                gs_list.append(bh.PointLocation(coord[1], coord[0]))
                                 gs_list_plot.append([coord[1], coord[0]])
 
                                 # try to minimize number of contacts to compute:
-                                contacts_og, contacts_sec = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
+                                contacts_og, contacts_sec = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
                                 if i < cfg.problem.gs_num-1: # prevent double counting
                                         gs_contacts_og = contacts_sec
                         else:
                                 coord = xyz_to_latlon(result.x)
                                 gs_list_new = copy.deepcopy(gs_list)
-                                gs_list_new[i] = return_bdm_gs(coord[1], coord[0])
+                                gs_list_new[i] = bh.PointLocation(coord[1], coord[0])
 
                                 # Check if prev is better than current
-                                contacts_prev, contacts_sec_prev = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
+                                contacts_prev, contacts_sec_prev = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
                                 _, contacts_exclusion_secs_prev = contactExclusion(contacts_prev,cfg)
-                                contacts_new, contacts_sec_new = mp_compute_contact_times(satellites, gs_list_new ,epc_start, epc_end, False)
+                                contacts_new, contacts_sec_new = compute_contact_times(satellites, gs_list_new ,epc_start, epc_end)
                                 _, contacts_exclusion_secs_new = contactExclusion(contacts_new,cfg)
 
                                 if np.sum(contacts_sec_prev) < np.sum(contacts_sec_new): # or np.sum(contacts_exclusion_secs_prev) < np.sum(contacts_exclusion_secs_new):
                                         print(gs_list)
                                         print(gs_list_plot)
-                                        gs_list[i] = return_bdm_gs(coord[1], coord[0])
+                                        gs_list[i] = bh.PointLocation(coord[1], coord[0])
                                         gs_list_plot[i] = [coord[1], coord[0]]
 
                 
 
                 if cfg.debug.wandb:
-                        contacts, _ = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
+                        contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
                         _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
                         wandb.summary["gs_list"+str(iterate)] = gs_list_plot 
                         wandb.summary["contact_num"+str(iterate)] = len(contacts_exclusion_secs) 
@@ -296,11 +296,11 @@ def powell_scipy(cfg,land_data,epc_start,epc_end,satellites):
                         print("GS FOUND, Location: "+str(result.x))
 
                 # conversion of unit circle coordinates back to lon,lat
-                gs_list.append(return_bdm_gs(result.x[0], result.x[1]))
+                gs_list.append(bh.PointLocation(result.x[0], result.x[1]))
                 gs_list_plot.append([result.x[0], result.x[1]])
 
                 # try to minimize number of contacts to compute:
-                contacts_og, contacts_sec = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
+                contacts_og, contacts_sec = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
                 gs_contacts_og = contacts_sec
                 
         return gs_list, gs_list_plot 

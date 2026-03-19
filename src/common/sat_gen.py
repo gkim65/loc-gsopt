@@ -5,12 +5,9 @@ import datetime
 import httpx 
 
 import numpy as np
-# import streamlit as st
-# import polars as pl
 
 # Brahe Imports
 import brahe as bh
-import brahe.data_models as bdm
 
 logger = logging.getLogger()
 
@@ -25,7 +22,7 @@ EPHEMERIS_PATH = './data/celestrak_tles.txt' #(pathlib.Path(__file__).parent.par
 # The TLE is likely the most accessible way for you to propagate the satellite state. 
 # Brahe has a built-in TLE parser that can be used to load TLEs from lines. 
 # However to make it easier, we define a function to create a TLE from orbital elements.
-def make_tle(epc0, alt, ecc, inc, raan, argp, M, ndt2=0.0, nddt6=0.0, bstar=0.0, norad_id=99999):
+def make_tle(epc0, alt, ecc, inc, raan, argp, M, norad_id=99999):
     '''Get a TLE object from the given orbital elements
 
     Args:
@@ -46,12 +43,9 @@ def make_tle(epc0, alt, ecc, inc, raan, argp, M, ndt2=0.0, nddt6=0.0, bstar=0.0,
     # Get semi-major axis
     sma = bh.R_EARTH + alt
 
-    # Get mean motion
-    n = bh.mean_motion(sma)/(2*np.pi)*86400
+    line1, line2 = bh.keplerian_elements_to_tle(epc0, np.array([sma, ecc, inc, raan, argp, M]), str(norad_id))
 
-    tle_string = bh.tle_string_from_elements(epc0, np.array([n, ecc, inc, raan, argp, M, ndt2, nddt6, bstar]), norad_id)
-    tle = bh.TLE(*tle_string)
-    return tle
+    return line1, line2
 
 ##########################################
 
@@ -172,11 +166,7 @@ def satellites_from_constellation(constellation: str, download):
     constellation_tles = [tle for tle in tle_data if constellation.upper() in tle['object_name']]
 
     # Create a list of Satellite objects from the TLE data
-    satellites = [bdm.Spacecraft(
-                    id=int(tle['satcat_id']),
-                    name=tle['object_name'],
-                    line1=tle['tle_line1'],
-                    line2=tle['tle_line2']) for tle in constellation_tles]
+    satellites = [bh.SGPPropagator.from_tle(tle['tle_line1'], tle['tle_line2']) for tle in constellation_tles]
 
     return satellites
 
@@ -208,7 +198,7 @@ def make_walker_constellation(
             norad_id = norad_start + p * sats_per_plane + s
             
             # Create TLE using your make_tle function
-            tle = make_tle(
+            line1, line2 = make_tle(
                 epc0=epoch,
                 alt=altitude_km,
                 ecc=eccentricity,
@@ -220,148 +210,7 @@ def make_walker_constellation(
             )
 
             sat_name = f"Sat_{p}_{s}"
-            sat_obj = bdm.Spacecraft(
-                id=norad_id,
-                name=sat_name,
-                line1=tle.line1,
-                line2=tle.line2,
-            )
+            sat_obj = bh.SGPPropagator.from_tle(line1, line2)
             constellation.append(sat_obj)
 
     return constellation
-
-# @st.cache_resource(ttl=3600*12) # Expire cache every 12 hours
-# def get_satcat_df():
-#     # Load the TLE data
-#     tle_data = get_tles()
-
-#     # Create a DataFrame from the TLE data
-#     satcat_df = pl.DataFrame(tle_data, schema={
-#         'object_name': str,
-#         'satcat_id': str,
-#         'epoch': datetime.datetime,
-#         'altitude': float,
-#         'semi_major_axis': float,
-#         'eccentricity': float,
-#         'inclination': float,
-#         'right_ascension': float,
-#         'arg_of_perigee': float,
-#         'mean_anomaly': float,
-#         'tle_line0': str,
-#         'tle_line1': str,
-#         'tle_line2': str
-#     })
-
-#     return satcat_df
-
-
-##########################################
-
-# import os
-# import pathlib
-
-# import pathlib
-# import logging
-# import datetime
-# import httpx
-
-# import streamlit as st
-# import polars as pl
-# import brahe as bh
-
-# from gsopt.models import Satellite
-# from gsopt.utils import get_last_modified_time_as_datetime
-
-
-# def satellites_from_constellation(constellation: str, datarate: float = 2.0e9) -> list[Satellite]:
-
-#     # Load the TLE data
-#     tle_data = get_tles()
-
-#     # Filter the TLE data for the specified constellation
-#     constellation_tles = [tle for tle in tle_data if constellation.upper() in tle['object_name']]
-
-#     # Create a list of Satellite objects from the TLE data
-#     satellites = [Satellite(tle['satcat_id'], tle['object_name'], tle['tle_line1'], tle['tle_line2'], datarate=datarate) for tle in constellation_tles]
-
-#     return satellites
-
-# def satellite_from_satcat_id(satcat_id: str, datarate: float = 2.0e9) -> Satellite:
-
-#     # Load the TLE data
-#     tle_data = get_tles()
-
-#     # Filter the TLE data for the specified satcat_id
-#     tle = next((tle for tle in tle_data if tle['satcat_id'] == str(satcat_id)), None)
-
-#     if tle is None:
-#         raise ValueError(f"Satellite with satcat_id {satcat_id} not found in TLE data")
-
-#     # Create a Satellite object from the TLE data
-#     satellite = Satellite(tle['satcat_id'], tle['object_name'], tle['tle_line1'], tle['tle_line2'], datarate=datarate)
-
-#     return satellite
-
-##################################################
-
-# def add_constellation(self, name=str):
-#     """
-#     Add a constellation of satellites to the scenario generator
-
-#     Args:
-#         name: str: Name of the constellation to add. Must be one of the following:
-#             - YAM
-#             - UMBRA
-#             - SKYSAT
-#             - ICEYE
-#             - FLOCK
-#             - HAWK
-#             - CAPELLA
-#             - LEGION
-#             - WORLDVIEW
-#             - GEOEYE
-
-#     """
-#     if name.upper() not in CONSTELLATIONS:
-#         raise ValueError(f'Constellation {name} not found in {CONSTELLATIONS}')
-
-#     constellation_sats = self._satcat_df.filter(pl.col('object_name').str.contains(name.upper()))
-
-#     self.satellites.extend(satellites_from_dataframe(constellation_sats))
-
-
-    # def add_satellite(self, sat_id: str | int):
-    #     """
-    #     Add a specific satellite to the scenario generator
-
-    #     Args:
-    #         sat_id: str: NORAD ID of the satellite to add
-    #     """
-    #     sat = self._satcat_df.filter(pl.col('satcat_id') == str(sat_id))
-    #     self.satellites.extend(satellites_from_dataframe(sat))
-
-    # def add_random_satellites(self, num_satellites: int, alt_range: tuple = (300, 1000)):
-    #     """
-    #     Add a random selection of satellites to the scenario generator
-
-    #     Args:
-    #         num_satellites: int: Number of random satellites to add
-    #         sma_range: tuple: Range of altitudes to select random satellites from
-    #     """
-
-    #     # Get all satellites with altitudes within the specified range
-    #     random_sats = self._satcat_df.filter(pl.col('altitude').is_between(alt_range[0], alt_range[1]))
-
-    #     # Get all unique satellite NORAD IDs
-    #     sat_ids = list(sorted(random_sats['satcat_id'].unique().to_list()))
-
-    #     # Randomly select a subset of the satellite NORAD IDs
-    #     selected_sat_ids = self._rng.sample(sat_ids, num_satellites)
-
-    #     # Filter the satellite catalog DataFrame to only include the selected satellites
-    #     selected_sats = self._satcat_df.filter(pl.col('satcat_id').is_in(selected_sat_ids))
-
-    #     # Add the selected satellites to the scenario generator
-    #     self.satellites.extend(satellites_from_dataframe(selected_sats))
-
-        

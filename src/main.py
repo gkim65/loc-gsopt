@@ -1,7 +1,5 @@
 import brahe as bh
-import brahe.data_models as bdm
-from common.utils import load_earth_data,mp_compute_contact_times,contactExclusion # compute_earth_interior_angle
-
+from common.utils import load_earth_data,compute_contact_times,contactExclusion
 from common.sat_gen import satellites_from_constellation
 from common.plotting import plot_gif,plot_img
 # from methods.free_select.nelder_mead_scipy import nelder_mead_scipyfrom methods.free_select.nelder_mead_scipy import nelder_mead_scipy
@@ -9,7 +7,7 @@ from methods.free_select.scipy_methods import nelder_mead_scipy, powell_scipy
 from methods.free_select.scipy_ccgs import nelder_mead_scipy_ccgs
 from methods.free_select.genetic_algorithms import diffEvolution
 
-from methods.teleport.ILP import ILP_Model
+# from methods.teleport.ILP import ILP_Model
 from common.plotting import plot_contact_windows, plot_gap_times
 ###Vedant's imports
 # Standard imports
@@ -124,7 +122,7 @@ def main(cfg: DictConfig):
             gs_list,  gs_list_plot = nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites) # agg_list_of_simplexes
             
             if cfg.debug.wandb:
-                contacts, _ = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
+                contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
                 _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
                 run.summary["gs_list"] = gs_list_plot 
                 run.summary["contact_num"] = len(contacts_exclusion_secs) 
@@ -146,7 +144,7 @@ def main(cfg: DictConfig):
             gs_list,  gs_list_plot = nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites) # agg_list_of_simplexes
             
             if cfg.debug.wandb:
-                contacts, _ = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
+                contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
                 _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
                 run.summary["gs_list"] = gs_list_plot 
                 run.summary["contact_num"] = len(contacts_exclusion_secs) 
@@ -169,7 +167,7 @@ def main(cfg: DictConfig):
             gs_list,  gs_list_plot = powell_scipy(cfg,land_data,epc_start,epc_end,satellites) # agg_list_of_simplexes
             
             if cfg.debug.wandb:
-                contacts, _ = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
+                contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
                 _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
                 run.summary["gs_list"] = gs_list_plot 
                 run.summary["contact_num"] = len(contacts_exclusion_secs) 
@@ -191,7 +189,7 @@ def main(cfg: DictConfig):
             gs_list,  gs_list_plot = diffEvolution(cfg,land_data,epc_start,epc_end,satellites) # agg_list_of_simplexes
             
             if cfg.debug.wandb:
-                contacts, _ = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
+                contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
                 _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
                 run.summary["gs_list"] = gs_list_plot 
                 run.summary["contact_num"] = len(contacts_exclusion_secs) 

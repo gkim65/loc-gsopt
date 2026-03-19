@@ -1,6 +1,6 @@
 import brahe as bh
-import brahe.data_models as bdm
-from common.utils import load_earth_data,mp_compute_contact_times,contactExclusion # compute_earth_interior_angle
+# import brahe.data_models as bdm
+from common.utils import load_earth_data,compute_contact_times,contactExclusion
 
 from common.sat_gen import satellites_from_constellation
 from common.plotting import plot_gif,plot_img
@@ -8,8 +8,7 @@ from common.plotting import plot_gif,plot_img
 from methods.free_select.scipy_methods import nelder_mead_scipy, powell_scipy
 from methods.free_select.scipy_ccgs import nelder_mead_scipy_ccgs
 from methods.free_select.genetic_algorithms import diffEvolution
-
-from methods.teleport.ILP import ILP_Model
+# from methods.teleport.ILP import ILP_Model
 from common.plotting import plot_contact_windows, plot_gap_times
 ###Vedant's imports
 # Standard imports
@@ -121,8 +120,8 @@ def main(cfg: DictConfig):
     ########## Solvers: ##########
 
     if cfg.debug.wandb:
-        gs_list = gs_json('data/ksat.json')[cfg.problem.teleport_num]
-        gs_list_plot = gs_json_list('data/ksat.json')[cfg.problem.teleport_num]
+        gs_list = gs_json('src/examples/groundstations/ksat.json')[cfg.problem.teleport_num]
+        gs_list_plot = gs_json_list('src/examples/groundstations/ksat.json')[cfg.problem.teleport_num]
         end_dt = datetime.datetime(
             cfg.end_epoch.year,
             cfg.end_epoch.month,
@@ -145,7 +144,7 @@ def main(cfg: DictConfig):
                 new_date.second
             )
 
-            contacts, _ = mp_compute_contact_times(satellites, [gs_list] ,epc_start, epc_end, False)
+            contacts, _ = compute_contact_times(satellites, [gs_list] ,epc_start, epc_end)
             _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
             run.log({"gs_list_lat": gs_list_plot[0],
                      "gs_list_long": gs_list_plot[1],

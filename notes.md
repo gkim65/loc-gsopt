@@ -247,7 +247,7 @@ Notes for vedant:
 - line 136 >> get the import in the top of the file again
 - maybe worth putting in ilp_model into utils instead?
 - I don't think you're doing the 1 contact per sat per ground station thing (its confusing yea def)
-- also elevation need to watch out for those when calculating ground station contacts, its in the return_bdm_gs function
+- also elevation need to watch out for those when calculating ground station contacts, its in the return_bh_gs function
 
 # april 1, 2025
 - (COMPLETE! But only for Data_downlink) ok we figured out the 1 to 1 contact constraint, might need to see if theres a huge difference just optimizing as it is or optimizing with this constraint too >> at least make sure the outputs give the right thing for data downlink vs gap time (We might need to test more for gap time >>> I'm not sure if thats running correctly)

@@ -19,7 +19,7 @@ wandb:
 problem:
   type: "free"
   # type: "teleport"
-  method: "diffEvolution"  # free methods: "nelder" "powell" "nelder_ccgs" "diffEvolution"
+  method: "nelder_ccgs"  # free methods: "nelder" "powell" "nelder_ccgs" "diffEvolution"
   objective: "data_downlink" #data_downlink, gap_optimization, max_contacts
   gs_num: 1
   teleport_num: 10

@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.optimize import differential_evolution
 from common.objective_functions import cost_func_diffEvolution
-from common.station_gen import return_bdm_gs
-from common.utils import mp_compute_contact_times, xyz_to_latlon, latlon_to_xyz, contactExclusion
+import brahe as bh
+from common.utils import compute_contact_times, xyz_to_latlon, latlon_to_xyz, contactExclusion
 
 #  WandB
 import wandb
@@ -40,14 +40,14 @@ def diffEvolution(cfg,land_data,epc_start,epc_end,satellites):
 
         print(result)
         # if cfg.debug.wandb:
-        #         contacts, _ = mp_compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
+        #         contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
         #         _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
         #         wandb.summary["gs_list"+str(iterate)] = gs_list_plot 
         #         wandb.summary["contact_num"+str(iterate)] = len(contacts_exclusion_secs) 
         #         wandb.summary["seconds"+str(iterate)] = np.sum(contacts_exclusion_secs)
         #         wandb.summary["data_downlink"+str(iterate)] = np.sum(contacts_exclusion_secs)*cfg.scenario.datarate
         gs_list_plot =  [[lon, lat] for lon, lat in zip(result.x[::2], result.x[1::2])]
-        gs_list = [return_bdm_gs(coord[0], coord[1]) for coord in gs_list_plot] 
+        gs_list = [bh.PointLocation(coord[0], coord[1]) for coord in gs_list_plot] 
 
                                
                 

@@ -1,4 +1,4 @@
-# TODO
+# TODO: NEED TO DO FULL OVERHALL
 # Standard imports
 import sys
 import os
@@ -10,7 +10,6 @@ if module_path not in sys.path:
     sys.path.append(module_path)
 
 # Required imports
-from common.sat_gen import make_tle
 from common.station_gen import teleport_json
 from common.utils import load_earth_data, gap_times_condense
 
