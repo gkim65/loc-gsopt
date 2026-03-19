@@ -11,7 +11,7 @@
 #         - start and end epochs 
 # Output of selected sites
 
-test_name: "compute_test1"
+test_name: "SurrogateTest"
 
 wandb:
   entity: "loc_gsopt"
