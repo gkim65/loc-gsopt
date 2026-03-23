@@ -102,16 +102,17 @@ def parse_tle_file(filepath):
             object_name = tle_line0.rstrip()
 
             # Extract TLE data
-            tle = bh.TLE(tle_line1, tle_line2)
+            epoch, tle = bh.keplerian_elements_from_tle(tle_line1, tle_line2)
+            
 
             satcat_id = tle_line1[2:7]
-            tle_epoch = tle.epoch.to_datetime(tsys='UTC')
-            semi_major_axis = tle.a
-            eccentricity = tle.e
-            inclination = tle.i
-            right_ascension = tle.RAAN
-            arg_of_perigee = tle.w
-            mean_anomaly = tle.M
+            tle_epoch = epoch
+            semi_major_axis = tle[0]
+            eccentricity = tle[1]
+            inclination = tle[2]
+            right_ascension = tle[3]
+            arg_of_perigee = tle[4]
+            mean_anomaly = tle[5]
 
             # Append parsed information to the list
             tle_records.append({

@@ -11,3 +11,6 @@ outputs
 multirun
 /wandb
 src/examples/plotting_wandb/figures_final/*
+
+figures_final/*
+*.sh

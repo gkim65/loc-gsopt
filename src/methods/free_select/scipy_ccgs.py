@@ -143,7 +143,7 @@ def simplex_select(n_samples=120):
 
 
 
-def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites):
+def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_counter,CITY_KDTREE):
 
         # Setup args for minimize function
         gs_list = []
@@ -187,12 +187,13 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites):
                         # # Perform the optimization using Nelder-Mead
                         result = minimize(cost_func, 
                                         initial_guess, 
-                                        args = (gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og, verbose, False), 
+                                        args = (gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og,eval_counter,CITY_KDTREE, verbose, False), 
                                         method='Nelder-Mead',
                                         options={'disp': True,
                                                 'xtol': 1,     # x tolerance
                                                 'ftol': 1,     # function tolerance
-                                                'initial_simplex': np.array(simplex)})#,
+                                                'initial_simplex': np.array(simplex)})
+                                                #,
                                                 # 'maxiter': 3})
 
                         
@@ -211,7 +212,7 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites):
                                         gs_contacts_og = contacts_sec
                         else:
                                 coord = xyz_to_latlon(result.x)
-                                gs_list_new = copy.deepcopy(gs_list)
+                                gs_list_new = gs_list.copy() #copy.deepcopy(gs_list)
                                 gs_list_new[i] = bh.PointLocation(coord[1], coord[0])
 
                                 # Check if prev is better than current
@@ -235,6 +236,7 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites):
                         wandb.summary["contact_num"+str(iterate)] = len(contacts_exclusion_secs) 
                         wandb.summary["seconds"+str(iterate)] = np.sum(contacts_exclusion_secs)
                         wandb.summary["data_downlink"+str(iterate)] = np.sum(contacts_exclusion_secs)*cfg.scenario.datarate
+                        wandb.summary["eval_counter"+str(iterate)] = eval_counter.score_count
 
                                
                 
@@ -242,7 +244,7 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites):
 
 
 
-def powell_scipy(cfg,land_data,epc_start,epc_end,satellites):
+def powell_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,CITY_KDTREE):
 
         # Setup args for minimize function
         gs_list = []

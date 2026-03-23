@@ -19,6 +19,20 @@ from itertools import combinations, groupby
 import pyomo.kernel as pk
 
 
+# ── Core lookup ────────────────────────────────────────────────────────────
+def distance_to_nearest_city_km(lon, lat,CITY_KDTREE):
+    """Great-circle distance in km to nearest city, via KD-tree."""
+    lat_r, lon_r = np.radians(lat), np.radians(lon)
+    x = np.cos(lat_r) * np.cos(lon_r)
+    y = np.cos(lat_r) * np.sin(lon_r)
+    z = np.sin(lat_r)
+    
+    # KD-tree chord distance → great-circle distance
+    chord_dist, _ = CITY_KDTREE.query([x, y, z])
+    angle = 2 * np.arcsin(chord_dist / 2)
+    R_EARTH_KM = 6371.0
+    return R_EARTH_KM * angle
+
 def xyz_to_latlon(xyz):
     xyz = xyz / np.linalg.norm(xyz)
     x, y, z = xyz
@@ -37,7 +51,6 @@ def latlon_to_xyz(lat_deg, lon_deg):
     z = np.sin(lat_rad)
     return np.array([x, y, z])
 
-
 def contactExclusion(contacts, cfg):
     """
     Solves the contact exclusion problem using a pairwise overlap constraint approach.
@@ -45,73 +58,129 @@ def contactExclusion(contacts, cfg):
 
     model = ConcreteModel()
 
-    # to call contacts in the correct order 
-    contacts_order = {
-        str(contact.id):i
-        for i, contact in enumerate(contacts)
-    }
+    # Instead of using contact.id (which might be None)
+    # Just use enumerate index as the key
+    # And simplify overlap detection to use indices directly
 
+    contacts_order = {id(contact): i for i, contact in enumerate(contacts)}
 
     # Decision variables: x[c] = 1 if contact c is selected, 0 otherwise
     model.x = Var(range(len(contacts)), within=Binary)
 
-
     if cfg.problem.objective == "maximize_num_contacts":
-        # Objective: Maximize total scheduled duration
         model.obj = Objective(
-            expr=sum(model.x[i] for i in range(len(contacts))), 
+            expr=sum(model.x[i] for i in range(len(contacts))),
             sense=maximize
         )
 
- 
     if cfg.problem.objective == "data_downlink":
-        # Objective: Maximize total scheduled duration
         model.obj = Objective(
-            expr=sum(model.x[i] * contact.duration 
-                    for i, contact in enumerate(contacts)), 
+            expr=sum(model.x[i] * contact.duration
+                    for i, contact in enumerate(contacts)),
             sense=maximize
         )
 
-    # Constraint list to ensure no overlapping contacts
-    model.constraints = ConstraintList()
+    # ── Build overlap pairs ───────────────────────────────────────────
+    overlap_pairs = []
 
-    # Ensure that no two overlapping contacts for the same satellite are selected
-    contacts_sorted_by_satellite = sorted(contacts, key=lambda cn: cn.satellite_id)
-
-    for sat_id, satellite_contacts in groupby(contacts_sorted_by_satellite, lambda cn: cn.satellite_id):
-
-        # Convert groupby object to a sorted list
-        satellite_contacts = sorted(list(satellite_contacts), key=lambda cn: cn.t_start)
-
-        # Test all pairs of contacts to check for overlap
+    # Satellite exclusion
+    contacts_sorted_by_satellite = sorted(
+        contacts, key=lambda cn: cn.satellite_id
+    )
+    for sat_id, satellite_contacts in groupby(
+        contacts_sorted_by_satellite, lambda cn: cn.satellite_id
+    ):
+        satellite_contacts = sorted(
+            list(satellite_contacts), key=lambda cn: cn.start
+        )
+        
         for x, y in combinations(satellite_contacts, 2):
-            if x.t_start <= y.t_end and y.t_start <= x.t_end:
-                model.constraints.add(model.x[contacts_order[str(x.id)]] + model.x[contacts_order[str(y.id)]] <= 1)
+            if x.start <= y.end and y.start <= x.end:
+                overlap_pairs.append(
+                    (contacts_order[id(x)], contacts_order[id(y)])
+                )
 
-    # miminum duration constraint
-    for cn in contacts:
-        if cn.duration <= 180:
-            # Force all contacts with duration less than the minimum to be zero
-            model.constraints.add(model.x[contacts_order[str(cn.id)]] == 0)
+    # Ground station exclusion
+    contacts_sorted_by_gs = sorted(
+        contacts,
+        key=lambda cn: cn.location_id if cn.location_id is not None else ""
+    )
+    for gs_id, gs_contacts in groupby(
+        contacts_sorted_by_gs, lambda cn: cn.location_id
+    ):
+        gs_contacts = sorted(list(gs_contacts), key=lambda cn: cn.start)
+        for x, y in combinations(gs_contacts, 2):
+            if x.start <= y.end and y.start <= x.end:
+                overlap_pairs.append(
+                    (contacts_order[id(x)], contacts_order[id(y)])
+                )
 
-    # Solve the model
+    # Deduplicate pairs
+    overlap_pairs_set = list(set(overlap_pairs))
+
+    # ── Add constraints explicitly ────────────────────────────────────
+    for k, (i, j) in enumerate(overlap_pairs_set):
+        model.add_component(
+            f'c_{k}',
+            Constraint(expr=model.x[i] + model.x[j] <= 1)
+        )
+
+    # Minimum duration constraint
+    for i, contact in enumerate(contacts):
+        if contact.duration <= 180:
+            model.add_component(
+                f'md_{i}',
+                Constraint(expr=model.x[i] == 0)
+            )
+
+    # ── Debug prints ──────────────────────────────────────────────────
+    print(f"Total contacts: {len(contacts)}")
+    print(f"Total overlap pairs: {len(overlap_pairs)}")
+    print(f"Unique overlap pairs: {len(overlap_pairs_set)}")
+    print(f"Example t_start type: {type(contacts[0].t_start)}")
+    print(f"Example duration type: {type(contacts[0].duration)}")
+    c = contacts[0]
+    print(f"duration: {c.duration}")
+    print(f"t_end - t_start: {c.t_end - c.t_start}")
+    print(f"t_start: {c.t_start}")
+    print(f"t_end: {c.t_end}")
+
+    # ── Solve ─────────────────────────────────────────────────────────
     solver = SolverFactory('cbc')
-    solver.solve(model)
+    solver_result = solver.solve(model)
+    print(solver_result)
+    print(f"Selected contacts: {sum(1 for i in range(len(contacts)) if value(model.x[i]) > 0.75)}")
+    print(f"Total contacts: {len(contacts)}")
 
     # Extract selected contacts
-    selected_contacts = [contact for i, contact in enumerate(contacts) if value(model.x[i]) > 0.75]
-    contact_times_seconds = [contact.t_end - contact.t_start for contact in selected_contacts]
+    selected_contacts = [
+        contact for i, contact in enumerate(contacts)
+        if value(model.x[i]) > 0.75
+    ]
+    contact_times_seconds = [contact.duration for contact in selected_contacts]
+
+    # ── Sanity check ──────────────────────────────────────────────────
+    violations = 0
+    sat_selected = {}
+    for contact in selected_contacts:
+        sid = contact.satellite_id
+        if sid not in sat_selected:
+            sat_selected[sid] = []
+        for prev in sat_selected[sid]:
+            if prev.start <= contact.end and contact.start <= prev.end:
+                violations += 1
+        sat_selected[sid].append(contact)
+    print(f"Constraint violations: {violations}")
 
     return selected_contacts, contact_times_seconds
-
 
 def compute_contact_times(satellites, ground_stations, epc_start, epc_end, min_elevation_deg=10.0):
     """
     Compute contact times using Brahe's parallel propagation + batch access.
     """
 
-    # Step 1: Propagate all satellites in parallel
-    bh.par_propagate_to(satellites, epc_end)
+    # # Step 1: Propagate all satellites in parallel
+    # bh.par_propagate_to(satellites, epc_end)
 
     # Step 2: Define access constraints
     constraint = bh.ElevationConstraint(min_elevation_deg)

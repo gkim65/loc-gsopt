@@ -130,7 +130,7 @@ def nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites):
                 # # Perform the optimization using Nelder-Mead
                 result = minimize(cost_func, 
                                 initial_guess, 
-                                args = (gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og, verbose, False), 
+                                args = (gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og, eval_counter,CITY_KDTREE,verbose, False), 
                                 method='Nelder-Mead',
                                 options={'disp': True,
                                         'xtol': 1,     # x tolerance
@@ -147,7 +147,7 @@ def nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites):
                 gs_list_plot.append([coord[1], coord[0]])
 
                 # try to minimize number of contacts to compute:
-                contacts_og, contacts_sec = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
+                contacts_og, contacts_sec = compute_contact_times(satellites, gs_list ,epc_start, epc_end,eval_counter)
                 gs_contacts_og = contacts_sec
                 
         return gs_list, gs_list_plot 
@@ -212,7 +212,7 @@ def powell_scipy(cfg,land_data,epc_start,epc_end,satellites):
                 gs_list_plot.append([result.x[0], result.x[1]])
 
                 # try to minimize number of contacts to compute:
-                contacts_og, contacts_sec = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
+                contacts_og, contacts_sec = compute_contact_times(satellites, gs_list ,epc_start, epc_end,eval_counter)
                 gs_contacts_og = contacts_sec
                 
         return gs_list, gs_list_plot 

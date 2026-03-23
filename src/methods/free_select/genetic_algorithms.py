@@ -31,7 +31,7 @@ def diffEvolution(cfg,land_data,epc_start,epc_end,satellites):
         # # Perform the optimization using Nelder-Mead
         result = differential_evolution(cost_func_diffEvolution, 
                         bounds = [(-180.0, 180.0), (-90.0, 90.0)] * cfg.problem.gs_num,
-                        args = (sat_list, epc_start, epc_end, land_geometries, cfg, count, verbose, False), 
+                        args = (sat_list, epc_start, epc_end, land_geometries, cfg, count, eval_counter,CITY_KDTREE, verbose, False), 
                         strategy='best1bin',)
 
                         
@@ -48,7 +48,11 @@ def diffEvolution(cfg,land_data,epc_start,epc_end,satellites):
         #         wandb.summary["data_downlink"+str(iterate)] = np.sum(contacts_exclusion_secs)*cfg.scenario.datarate
         gs_list_plot =  [[lon, lat] for lon, lat in zip(result.x[::2], result.x[1::2])]
         gs_list = [bh.PointLocation(coord[0], coord[1]) for coord in gs_list_plot] 
+        
+        if cfg.debug.wandb:
+                wandb.summary["EvalCount"] = eval_counter.de_count
 
+                               
                                
                 
         return gs_list, gs_list_plot 

@@ -97,7 +97,7 @@ def simplex_select(gs_list,exclude, l=1):
 
 
 # TODO EXTENSION: add the cyclic coordinate descent part (May not include in this paper)
-def nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites):
+def nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,CITY_KDTREE):
 
         # Setup args for minimize function
         gs_list = []
@@ -130,7 +130,7 @@ def nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites):
                 # # Perform the optimization using Nelder-Mead
                 result = minimize(cost_func, 
                                 initial_guess, 
-                                args = (gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og, verbose, False), 
+                                args = (gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og,eval_counter,CITY_KDTREE verbose, False), 
                                 method='Nelder-Mead',
                                 options={'disp': True,
                                         'xtol': 1,     # x tolerance
