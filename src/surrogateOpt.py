@@ -5,8 +5,8 @@ from common.utils import load_earth_data,compute_contact_times,contactExclusion
 from common.sat_gen import satellites_from_constellation
 from common.plotting import plot_gif,plot_img
 # from methods.free_select.nelder_mead_scipy import nelder_mead_scipyfrom methods.free_select.nelder_mead_scipy import nelder_mead_scipy
-from methods.free_select.scipy_methods import nelder_mead_scipy, powell_scipy
-from methods.free_select.scipy_ccgs import nelder_mead_scipy_ccgs
+from methods.free_select.scipy_methods import nelder_mead_scipy
+from methods.free_select.scipy_ccgs import nelder_mead_scipy_ccgs, powell_scipy
 from methods.free_select.genetic_algorithms import diffEvolution
 # from methods.teleport.ILP import ILP_Model
 from common.plotting import plot_contact_windows, plot_gap_times
@@ -45,6 +45,7 @@ import geopandas as gpd
 from datetime import timedelta
 import datetime
 
+import time
 ################################### Global Variables ###################################
 # Usually global variables is bad practice, but just using it for land boundary dataset
 
@@ -64,20 +65,6 @@ def main(cfg: DictConfig):
     scenario_name = cfg.scenario.constellations
     constraints_name = str(cfg.constraints.dist_other_gs)
 
-    if cfg.debug.wandb:
-        run = wandb.init(entity=cfg.wandb.entity, project="surrogate_opt", reinit=True)
-
-    config_dict = omegaconf.OmegaConf.to_container(
-        cfg, resolve=True, throw_on_missing=True
-    )
-
-
-    if cfg.debug.verbose:  
-        print(type(config_dict), config_dict)
-
-    if cfg.debug.wandb:
-        wandb.config.update(config_dict, allow_val_change=True)
-
     ########## Initial Scenario Setup: ##########
 
     # Setting up start and end epochs
@@ -88,13 +75,8 @@ def main(cfg: DictConfig):
                          cfg.start_epoch.minute, 
                          cfg.start_epoch.second) 
     
-    epc_end = bh.Epoch(cfg.end_epoch.year, 
-                         cfg.end_epoch.month, 
-                         cfg.end_epoch.day, 
-                         cfg.end_epoch.hour, 
-                         cfg.end_epoch.minute, 
-                         cfg.end_epoch.second) 
-    
+    epc_end = epc_start + 86400.0
+
     # Set random seed
     np.random.seed(cfg.debug.randseed)
     
@@ -117,9 +99,30 @@ def main(cfg: DictConfig):
     else:
         satellites = satellites_from_constellation(cfg.scenario.constellations, cfg.debug.txtUpdate)[0:cfg.problem.sat_num]
 
+    ########## Check for contacts before initializing WandB ##########
+    gs_list = gs_json('src/examples/groundstations/ksat.json')[cfg.problem.teleport_num]
+
+    # Compute contacts for just the initial epoch as a pre-check
+    contacts, _ = compute_contact_times(satellites, [gs_list], epc_start, epc_end)
+    _, contacts_exclusion_secs = contactExclusion(contacts, cfg)
+
+    # Only init WandB if there are contacts
+    if cfg.debug.wandb and len(contacts_exclusion_secs) > 0 and np.sum(contacts_exclusion_secs) > 0:
+        run = wandb.init(entity=cfg.wandb.entity, project=cfg.test_name+"surrogate_opt", reinit=True)
+        config_dict = omegaconf.OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)
+        wandb.config.update(config_dict, allow_val_change=True)
+        wandbUse = True
+    else:
+        wandbUse = False
+        run = None
+        print("No contacts detected for initial check. Skipping WandB initialization.")
+
+    if cfg.debug.verbose:  
+        print(type(config_dict), config_dict)
+
     ########## Solvers: ##########
 
-    if cfg.debug.wandb:
+    if cfg.debug.wandb and wandbUse:
         gs_list = gs_json('src/examples/groundstations/ksat.json')[cfg.problem.teleport_num]
         gs_list_plot = gs_json_list('src/examples/groundstations/ksat.json')[cfg.problem.teleport_num]
         end_dt = datetime.datetime(
@@ -146,6 +149,11 @@ def main(cfg: DictConfig):
 
             contacts, _ = compute_contact_times(satellites, [gs_list] ,epc_start, epc_end)
             _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
+
+            # Break if there are no contacts
+            if len(contacts_exclusion_secs) == 0 or np.sum(contacts_exclusion_secs) == 0:
+                print(f"No contacts on day {i}, stopping loop.")
+                break
             run.log({"gs_list_lat": gs_list_plot[0],
                      "gs_list_long": gs_list_plot[1],
                     "total_contact_num": len(contacts_exclusion_secs) ,
@@ -160,9 +168,11 @@ def main(cfg: DictConfig):
                     "mean_seconds": np.sum(contacts_exclusion_secs) /(i+1),})
             wandb.save("data/*")
 
-    if cfg.debug.wandb:
+    if cfg.debug.wandb and wandbUse:
         run.finish()
         wandb.finish()
+        time.sleep(5)  # wait a few seconds for pending uploads to complete
+
 
 
 
