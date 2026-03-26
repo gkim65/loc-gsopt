@@ -100,7 +100,7 @@ def main(cfg: DictConfig):
 
     # Plot the line graph
     plt.plot(
-        max_data_downlink["gs_number"], 
+        max_data_downlink["gs_number"]+1, 
         max_data_downlink["data_downlinked"]/1000/1000*52, 
         color='blue', 
         marker='o', 
@@ -109,7 +109,7 @@ def main(cfg: DictConfig):
         label='Max Data Downlinked'
     )
     plt.plot(
-        max_lat_data_downlink["gs_number"], 
+        max_lat_data_downlink["gs_number"]+1, 
         max_lat_data_downlink["data_downlinked"]/1000/1000*52, 
         color='cornflowerblue', 
         marker='D', 

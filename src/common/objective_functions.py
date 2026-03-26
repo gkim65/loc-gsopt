@@ -100,8 +100,11 @@ def penalty_gs_all(new_gs,current_gs_list, dist_penalty):
 # ── Penalty ────────────────────────────────────────────────────────────────
 def penalty_infrastructure(lon, lat,CITY_KDTREE, weight=1.0):
     """Quadratic penalty for distance from nearest city (in km)."""
-    dist_km = distance_to_nearest_city_km(lon, lat,CITY_KDTREE)
-    return weight * (dist_km ** 2)/1000
+    if weight > 0:
+        dist_km = distance_to_nearest_city_km(lon, lat,CITY_KDTREE)
+        return weight * (dist_km ** 2)/1000
+    else:
+        return 0
 
 
 # ── DE version (takes full gs_list) ───────────────────────────────────────
@@ -202,9 +205,6 @@ def cost_func(x, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, 
             "penalty_water": penalty_water,
             "penalty_close_gs": penalty_close_gs,
             "penalty_infra": penalty_infra,          # ── new
-            "infra_dist_km": distance_to_nearest_city_km(  # ── new, nice to see raw distance too
-                new_gs[0], new_gs[1],CITY_KDTREE
-            ),
             "log_of_simplexes_lon" + str(i+1): new_gs[0],
             "log_of_simplexes_lat" + str(i+1): new_gs[1]
         })
@@ -243,7 +243,7 @@ def cost_func_diffEvolution(x, satellites, epc_start, epc_end, land_geometries, 
         all_contacts, contacts_sec = compute_contact_times(satellites, temp_gs_list ,epc_start, epc_end)
         cost_func_val = 0 - np.sum(contacts_sec)
 
-    penalty_water = (penalty_water_diffEvolution(temp_gs_list,land_geometries)/1000)**2 # Put penalty/distance from land in 10 kms
+    penalty_water = (penalty_water_diffEvolution(temp_gs_list,land_geometries,cfg.constraints.latitude_bot,cfg.constraints.latitude_top)/1000)**2 # Put penalty/distance from land in 10 kms
     penalty_close_gs = (penalty_gs_all_diffEvolution(temp_gs_list, cfg.constraints.dist_other_gs))**2 # additional penalty being close to gs, in ms
     penalty_infra = penalty_infrastructure_diffEvolution(
         temp_gs_list,

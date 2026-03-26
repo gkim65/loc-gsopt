@@ -26,6 +26,12 @@ problem:
   sat_num: 5 # Start with 10, just to not overload the solver
   data_rate: 1200000000 # bps
 
+DE: # Hyperparameter Tuning
+  popsize: 15
+  F: 0.5
+  CR: 0.9
+  strategy: 'best1bin'
+
 scenario:
   constellations: "CAPELLA" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
                           #'FLOCK', 'HAWK', 'CAPELLA', 'LEGION', 

@@ -14,7 +14,7 @@ from itertools import combinations
 from shapely.geometry import Point, Polygon
 
 
-def diffEvolution(cfg,land_data,epc_start,epc_end,satellites):
+def diffEvolution(cfg,land_data,epc_start,epc_end,satellites,eval_counter,CITY_KDTREE):
 
         # Setup args for minimize function
         gs_list = []
@@ -32,7 +32,10 @@ def diffEvolution(cfg,land_data,epc_start,epc_end,satellites):
         result = differential_evolution(cost_func_diffEvolution, 
                         bounds = [(-180.0, 180.0), (-90.0, 90.0)] * cfg.problem.gs_num,
                         args = (sat_list, epc_start, epc_end, land_geometries, cfg, count, eval_counter,CITY_KDTREE, verbose, False), 
-                        strategy='best1bin',)
+                        popsize= cfg.DE.popsize,
+                        mutation= cfg.DE.F,
+                        recombination=cfg.DE.CR,
+                        strategy=cfg.DE.strategy,)
 
                         
         if cfg.debug.verbose:

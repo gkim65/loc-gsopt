@@ -254,56 +254,69 @@ def powell_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,CITY_KD
         land_geometries = land_data['geometry']
         verbose = cfg.debug.verbose
 
-        # for every ground station
-        for i in range(cfg.problem.gs_num):
-        
-                # Latitude: Uniform sampling between -90 and 90 degrees
-                lat = random.uniform(-90, 90)
+        for iterate in range(cfg.experiments.ccgs):
+                # for every ground station
+                for i in range(cfg.problem.gs_num):
                 
-                # Longitude: Uniform sampling between -180 and 180 degrees
-                lon = random.uniform(-180, 180)
-
-                # Initial guess overridden by initial simplex
-                initial_guess = np.array([lon,lat])
-
-                initial_simplex = simplex_select(gs_list_plot,cfg.experiments.simplexExclude)
-                if cfg.debug.wandb:
-                        wandb.log({"initial simplex"+str(i+1): initial_simplex})
+                        # Latitude: Uniform sampling between -90 and 90 degrees
+                        lat = random.uniform(-90, 90)
                         
-                # conversion of simplex to unit sphere
-                simplex = []
-                for p in initial_simplex:
-                       simplex.append(latlon_to_xyz(p[1], p[0]))
+                        # Longitude: Uniform sampling between -180 and 180 degrees
+                        lon = random.uniform(-180, 180)
 
-                if cfg.debug.verbose:
-                        print("STARTING TO PERFORM MINIMIZATION ON GS: "+str(i+1))
-                        print("lat-long simplex: ", initial_simplex)
-                        print("unit circle converted simplex: ", simplex)
+                        # Initial guess overridden by initial simplex
+                        initial_guess = np.array([lon,lat])
 
-                result = minimize(
-                                cost_func,
-                                initial_guess,
-                                args=(gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og, verbose, False), 
-                                method='Powell',
-                                bounds=[(-180, 180), (-90, 90)],
-                                options={
-                                        'disp': True,
-                                        'xtol': 1e-3,     # x tolerance
-                                        'ftol': 1e-1,     # function tolerance
-                                        'maxiter': 100
-                                }
+                        if cfg.debug.verbose:
+                                print("STARTING TO PERFORM MINIMIZATION ON GS: "+str(i+1))
+
+                        if iterate > 0:
+                                gs_list_others = [gs for idx, gs in enumerate(gs_list) if idx != i]
+                                contacts_og, contacts_sec = compute_contact_times(
+                                        satellites, gs_list_others, epc_start, epc_end
                                 )
-                
-                if cfg.debug.verbose:
-                        print("GS FOUND, Location: "+str(result.x))
+                                gs_contacts_og = contacts_sec
 
-                # conversion of unit circle coordinates back to lon,lat
-                gs_list.append(bh.PointLocation(result.x[0], result.x[1]))
-                gs_list_plot.append([result.x[0], result.x[1]])
+                        result = minimize(
+                                        cost_func,
+                                        initial_guess,
+                                        args=(gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og,eval_counter,CITY_KDTREE, verbose, False), 
+                                        method='Powell',
+                                        bounds=[(-180, 180), (-90, 90)],
+                                        options={
+                                                'disp': True,
+                                                'xtol': 1e-3,     # x tolerance
+                                                'ftol': 1e-1,     # function tolerance
+                                                'maxiter': 100
+                                        }
+                                        )
+                        
+                        
+                        if cfg.debug.verbose:
+                                print("GS FOUND, Location: "+str(result.x))
 
-                # try to minimize number of contacts to compute:
-                contacts_og, contacts_sec = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
-                gs_contacts_og = contacts_sec
+                        if iterate == 0:
+                                gs_list.append(bh.PointLocation(result.x[0], result.x[1]))
+                                gs_list_plot.append([result.x[0], result.x[1]])
+
+                        else:
+                                coord = result.x
+                                gs_list_new = gs_list.copy()
+                                gs_list_new[i] = bh.PointLocation(coord[0], coord[1])
+
+                                contacts_prev, contacts_sec_prev = compute_contact_times(
+                                satellites, gs_list, epc_start, epc_end
+                                )
+                                contacts_new, contacts_sec_new = compute_contact_times(
+                                satellites, gs_list_new, epc_start, epc_end
+                                )
+
+                                if np.sum(contacts_sec_prev) < np.sum(contacts_sec_new):
+                                        gs_list[i] = bh.PointLocation(coord[0], coord[1])
+                                        gs_list_plot[i] = [coord[0], coord[1]]
+                        # try to minimize number of contacts to compute:
+                        contacts_og, contacts_sec = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
+                        gs_contacts_og = contacts_sec
                 
         return gs_list, gs_list_plot 
 
