@@ -53,31 +53,17 @@ from scipy.spatial import cKDTree
 # Load land boundary dataset
 # using: https://www.naturalearthdata.com/downloads/10m-cultural-vectors/
 land_data = gpd.read_file("data/ne_10m_admin_0_countries.shp")  
-
-
-# ── Load once at module level ──────────────────────────────────────────────
-gc = geonamescache.GeonamesCache(min_city_population=15000)
-cities = gc.get_cities()
-
-# Precompute city coords as numpy array (lat, lon) in radians for KD-tree
-CITY_COORDS_RAD = np.radians([
-    (c['latitude'], c['longitude'])
-    for c in cities.values()
-])
-
+city_data = gpd.read_file("data/city_buffers.shp")  
+print(land_data.head())
+print(type(land_data.geometry.iloc[0]))
+print(city_data.head())
+print(type(city_data.geometry.iloc[0]))
 # Build KD-tree on unit sphere (convert lat/lon to xyz first)
 def _latlon_rad_to_xyz(lat_rad, lon_rad):
     x = np.cos(lat_rad) * np.cos(lon_rad)
     y = np.cos(lat_rad) * np.sin(lon_rad)
     z = np.sin(lat_rad)
     return np.column_stack([x, y, z])
-
-CITY_XYZ = _latlon_rad_to_xyz(
-    CITY_COORDS_RAD[:, 0], 
-    CITY_COORDS_RAD[:, 1]
-)
-CITY_KDTREE = cKDTree(CITY_XYZ)
-
 
 eval_counter = EvalCounter()      # single global instance
 ################################### Main Script ###################################
@@ -159,7 +145,7 @@ def main(cfg: DictConfig):
     if cfg.problem.type == "free":
         if cfg.problem.method == "nelder":
             
-            gs_list,  gs_list_plot = nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,CITY_KDTREE) # agg_list_of_simplexes
+            gs_list,  gs_list_plot = nelder_mead_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data) # agg_list_of_simplexes
             
             if cfg.debug.wandb:
                 contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
@@ -181,7 +167,7 @@ def main(cfg: DictConfig):
         
         if cfg.problem.method == "nelder_ccgs":
             
-            gs_list,  gs_list_plot = nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_counter,CITY_KDTREE) # agg_list_of_simplexes
+            gs_list,  gs_list_plot = nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data) # agg_list_of_simplexes
             
             if cfg.debug.wandb:
                 contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
@@ -204,7 +190,7 @@ def main(cfg: DictConfig):
 
         if cfg.problem.method == "powell":
             
-            gs_list,  gs_list_plot = powell_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,CITY_KDTREE) # agg_list_of_simplexes
+            gs_list,  gs_list_plot = powell_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data) # agg_list_of_simplexes
             
             if cfg.debug.wandb:
                 contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
@@ -226,7 +212,7 @@ def main(cfg: DictConfig):
 
         if cfg.problem.method == "diffEvolution":
 
-            gs_list,  gs_list_plot = diffEvolution(cfg,land_data,epc_start,epc_end,satellites,eval_counter,CITY_KDTREE) # agg_list_of_simplexes
+            gs_list,  gs_list_plot = diffEvolution(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data) # agg_list_of_simplexes
             
             if cfg.debug.wandb:
                 contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end)

@@ -143,7 +143,7 @@ def simplex_select(n_samples=120):
 
 
 
-def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_counter,CITY_KDTREE):
+def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data):
 
         # Setup args for minimize function
         gs_list = []
@@ -187,9 +187,10 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_count
                         # # Perform the optimization using Nelder-Mead
                         result = minimize(cost_func, 
                                         initial_guess, 
-                                        args = (gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og,eval_counter,CITY_KDTREE, verbose, False), 
+                                        args = (gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og,eval_counter,city_data, verbose, False), 
                                         method='Nelder-Mead',
                                         options={'disp': True,
+                                                'maxiter': 100,
                                                 'xtol': 1,     # x tolerance
                                                 'ftol': 1,     # function tolerance
                                                 'initial_simplex': np.array(simplex)})
@@ -244,7 +245,7 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_count
 
 
 
-def powell_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,CITY_KDTREE):
+def powell_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data):
 
         # Setup args for minimize function
         gs_list = []
@@ -280,7 +281,7 @@ def powell_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,CITY_KD
                         result = minimize(
                                         cost_func,
                                         initial_guess,
-                                        args=(gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og,eval_counter,CITY_KDTREE, verbose, False), 
+                                        args=(gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og,eval_counter,city_data, verbose, False), 
                                         method='Powell',
                                         bounds=[(-180, 180), (-90, 90)],
                                         options={

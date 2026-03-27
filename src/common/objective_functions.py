@@ -18,20 +18,18 @@ class EvalCounter:
         self.score_count = 0      # counts SCORE/Nelder-Mead evals
         self.de_count = 0         # counts DE evals
 ############################## Helper Functions ################################
-
 def calculate_distance_to_land(point, land_geometries):
-    # Initialize minimum distance and closest land point
     min_distance = float('inf')
     closest_land_point = None
 
     for land_poly in land_geometries:
         # Check if the point is on land
         if land_poly.contains(point):
-            return 0, point  # The point is on land
+            return 0, point
         
         # Handle MultiPolygon or Polygon
         if land_poly.geom_type == "MultiPolygon":
-            for poly in land_poly.geoms:  # Iterate over individual polygons
+            for poly in land_poly.geoms:
                 nearest_point = poly.exterior.interpolate(
                     poly.exterior.project(point)
                 )
@@ -49,7 +47,6 @@ def calculate_distance_to_land(point, land_geometries):
                 closest_land_point = nearest_point
 
     return min_distance, closest_land_point
-
 
 def calculate_lat_penalty(lon,lat, lat_bot, lat_top):
     if lat < lat_bot:
@@ -98,22 +95,31 @@ def penalty_gs_all(new_gs,current_gs_list, dist_penalty):
     return penalty_sum
 
 # ── Penalty ────────────────────────────────────────────────────────────────
-def penalty_infrastructure(lon, lat,CITY_KDTREE, weight=1.0):
+def penalty_infrastructure(lon, lat,city_data, weight=1.0):
     """Quadratic penalty for distance from nearest city (in km)."""
     if weight > 0:
-        dist_km = distance_to_nearest_city_km(lon, lat,CITY_KDTREE)
-        return weight * (dist_km ** 2)/1000
+
+        on_water = globe.is_ocean(lat, lon)
+        land_geometries = list(city_data['geometry'])  # GeoSeries → list of Shapely Polygons
+        if not on_water:
+            distance, _ = calculate_distance_to_land(
+                Point(lon, lat), land_geometries
+            )
+            return distance*weight
+
+        return 0
+
     else:
         return 0
 
 
 # ── DE version (takes full gs_list) ───────────────────────────────────────
-def penalty_infrastructure_diffEvolution(gs_list,CITY_KDTREE, weight=1.0):
+def penalty_infrastructure_diffEvolution(gs_list,city_data, weight=1.0):
     total = 0.0
     for gs in gs_list:
         lon = gs.longitude(bh.AngleFormat.DEGREES)
         lat = gs.latitude(bh.AngleFormat.DEGREES)
-        total += penalty_infrastructure(lon, lat,CITY_KDTREE, weight)
+        total += penalty_infrastructure(lon, lat, city_data, weight)
     return total
 
 def penalty_water_diffEvolution(gs_list,land_geometries, lat_bot, lat_top):
@@ -151,7 +157,7 @@ def penalty_gs_all_diffEvolution(gs_list, dist_penalty):
 ############################## Cost Functions ################################
 
 
-def cost_func(x, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og,eval_counter,CITY_KDTREE, verbose = False, plot = False):    
+def cost_func(x, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og,eval_counter,city_data, verbose = False, plot = False):    
 
     if cfg.problem.method.startswith("nelder"):
         # Normalize input to unit vector
@@ -190,13 +196,13 @@ def cost_func(x, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, 
 
     penalty_water = (penalty(new_gs,land_geometries,cfg.constraints.latitude_bot,cfg.constraints.latitude_top)/1000)**2 # Put penalty/distance from land in 10 kms
     penalty_close_gs = (penalty_gs_all(new_gs,gs_list, cfg.constraints.dist_other_gs))**2 # additional penalty being close to gs, in ms
-    penalty_infra = penalty_infrastructure(
+    penalty_infra = (penalty_infrastructure(
         new_gs[0], new_gs[1],
-        CITY_KDTREE,
+        city_data,
         cfg.constraints.infra_weight
-    )
+    )/1000)**2
     value = cost_func_val + penalty_water + penalty_close_gs + penalty_infra
-    value = cost_func_val + penalty_water + penalty_close_gs
+    # value = cost_func_val + penalty_water + penalty_close_gs
     eval_counter.score_count += 1
 
     if cfg.debug.wandb:
@@ -220,7 +226,7 @@ def cost_func(x, gs_list, satellites, epc_start, epc_end, land_geometries, cfg, 
 
 
 
-def cost_func_diffEvolution(x, satellites, epc_start, epc_end, land_geometries, cfg, count,eval_counter,CITY_KDTREE, verbose = False, plot = False):    
+def cost_func_diffEvolution(x, satellites, epc_start, epc_end, land_geometries, cfg, count,eval_counter,city_data, verbose = False, plot = False):    
 
     # Make sure that all ground stations are set to only add onto the existing selected constellations
     gs_list_plot =  [[lon, lat] for lon, lat in zip(x[::2], x[1::2])]
@@ -245,11 +251,11 @@ def cost_func_diffEvolution(x, satellites, epc_start, epc_end, land_geometries, 
 
     penalty_water = (penalty_water_diffEvolution(temp_gs_list,land_geometries,cfg.constraints.latitude_bot,cfg.constraints.latitude_top)/1000)**2 # Put penalty/distance from land in 10 kms
     penalty_close_gs = (penalty_gs_all_diffEvolution(temp_gs_list, cfg.constraints.dist_other_gs))**2 # additional penalty being close to gs, in ms
-    penalty_infra = penalty_infrastructure_diffEvolution(
+    penalty_infra = (penalty_infrastructure_diffEvolution(
         temp_gs_list,
-        CITY_KDTREE,
+        city_data,
         cfg.constraints.infra_weight
-    )
+    )/1000)**2
     value = cost_func_val + penalty_water + penalty_close_gs + penalty_infra
     eval_counter.de_count += 1
 
