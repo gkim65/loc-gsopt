@@ -27,7 +27,7 @@ problem:
   data_rate: 1200000000 # bps
 
 scenario:
-  constellations: "ICEYE" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
+  constellations: "CAPELLA" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
                           #'FLOCK', 'HAWK', 'CAPELLA', 'LEGION', 
                           #'WORLDVIEW', 'GEOEYE', 'NUSAT'
   start_simplex: 3 # can be 0-6, random

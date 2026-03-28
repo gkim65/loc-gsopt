@@ -318,6 +318,15 @@ def powell_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_da
                         # try to minimize number of contacts to compute:
                         contacts_og, contacts_sec = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
                         gs_contacts_og = contacts_sec
+
+                if cfg.debug.wandb:
+                        contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
+                        _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
+                        wandb.summary["gs_list"+str(iterate)] = gs_list_plot 
+                        wandb.summary["contact_num"+str(iterate)] = len(contacts_exclusion_secs) 
+                        wandb.summary["seconds"+str(iterate)] = np.sum(contacts_exclusion_secs)
+                        wandb.summary["data_downlink"+str(iterate)] = np.sum(contacts_exclusion_secs)*cfg.scenario.datarate
+                        wandb.summary["eval_counter"+str(iterate)] = eval_counter.score_count
                 
         return gs_list, gs_list_plot 
 

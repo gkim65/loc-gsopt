@@ -110,7 +110,7 @@ def main(cfg: DictConfig):
                          cfg.end_epoch.second) 
     
     # Set random seed
-    np.random.seed(cfg.debug.randseed)
+    np.random.seed(int(cfg.debug.randseed))
     
     # Make sure to load in earth inertial data every start time!
     # load_earth_data('data/iau2000A_finals_ab.txt',cfg.debug.txtUpdate)

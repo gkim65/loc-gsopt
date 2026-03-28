@@ -112,7 +112,7 @@ def main(cfg: DictConfig):
             altitude_km=cfg.walker.altitude,
             eccentricity=cfg.walker.eccentricity,
             inclination=cfg.walker.inclination,
-            num_planes=cfg.walker.num_planes,
+            num_planes=4,#cfg.walker.num_planes,
             sats_per_plane= cfg.walker.sats_perplane,
             phase=cfg.walker.phase,
             argp=cfg.walker.argp,
@@ -128,23 +128,61 @@ def main(cfg: DictConfig):
     bh.par_propagate_to(satellites, epc_end)
     ########## Solvers: ##########
 
-    if cfg.debug.wandb:
-        # -12.261594786655923,-89.99634831100451
-        gs_list = [bh.PointLocation(78.76136478826095,-89.99525184319666)]
-        gs_list_plot = [78.76136478826095,-89.99525184319666]
-        
-        contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
-        _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
-        run.log({"gs_list_lat": gs_list_plot[0],
-                "gs_list_long": gs_list_plot[1],
-                "total_contact_num": len(contacts_exclusion_secs) ,
-                "total_seconds": np.sum(contacts_exclusion_secs),
-                "altitude": cfg.walker.altitude,
-                "inclination":cfg.walker.inclination,
-                "year": cfg.end_epoch.year, 
-                "month" : cfg.end_epoch.month, 
-                "day": cfg.end_epoch.day})
 
+    # -12.261594786655923,-89.99634831100451
+    #-22.64991657456346,82.83197826524209
+    runs = [
+        # Set 1
+        [[15.65, 78.23],      # Svalbard, Norway (78°N)
+                [2.53, -72.01],      # Troll Station, Antarctica (72°S)
+                [-133.72, 68.36],    # Inuvik, Canada (68°N)
+                [-57.85, -51.68]],    # Stanley, Falkland Islands (52°S)
+
+        # Set 2
+        [[-26.51, 64.14],     # Reykjavik, Iceland (64°N)
+                [2.53, -72.01],      # Troll Station, Antarctica (72°S)
+                [-148.49, 70.26],    # Prudhoe Bay, Alaska (70°N)
+                [168.38, -46.53]],    # Awarua, New Zealand (47°S)
+
+        # Set 3
+        [[25.75, 71.17],      # Vardo, Norway (71°N)
+                [2.53, -72.01],      # Troll Station, Antarctica (72°S)
+                [-51.72, 64.18],     # Nuuk, Greenland (64°N)
+                [-70.87, -52.94]],
+        [[31.11, 70.37],      # Vardo, Norway (70°N)
+           [2.53, -72.01],      # Troll Station, Antarctica (72°S)
+           [-68.70, 76.53],     # Baffin Island, Canada (77°N)
+           [51.73, -46.28]],
+        [[-68.70, 76.53],     # Baffin Island, Canada (77°N)
+        [2.53, -72.01],      # Troll Station, Antarctica (72°S)
+        [25.75, 71.17],      # Vardo, Norway (71°N)
+        [-57.85, -51.68]],   # Stanley, Falkland Islands (52°S)
+]     # Alfred Faure, Crozet (46°S)    # Punta Arenas, Chile (53°S)
+
+
+    # Set 5: Maximum longitudinal diversity
+    list_gs = runs[4]      # Troll Station, Antarctica
+    gs_list = []
+    for i, new_gs in enumerate(list_gs):
+        point_loc = bh.PointLocation(new_gs[0], new_gs[1])
+        point_loc.set_id(i)
+        gs_list.append(point_loc)
+    gs_list_plot = [-12.261594786655923,-89.99634831100451]
+    
+    contacts, contact_secs = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
+    _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
+    print(np.sum(contact_secs)*cfg.scenario.datarate*52/1000/1000/1000/1000/1000/8)
+    print(np.sum(contacts_exclusion_secs)*cfg.scenario.datarate*52/1000/1000/1000/1000/1000/8)
+    if cfg.debug.wandb:
+        run.log({"gs_list_lat": gs_list_plot[0],
+            "gs_list_long": gs_list_plot[1],
+            "total_contact_num": len(contacts_exclusion_secs) ,
+            "total_seconds": np.sum(contacts_exclusion_secs),
+            "altitude": cfg.walker.altitude,
+            "inclination":cfg.walker.inclination,
+            "year": cfg.end_epoch.year, 
+            "month" : cfg.end_epoch.month, 
+            "day": cfg.end_epoch.day})
         run.summary["gs_list"] = gs_list_plot 
         run.summary["contact_num"] = len(contacts_exclusion_secs) 
         run.summary["seconds"] = np.sum(contacts_exclusion_secs)

@@ -76,7 +76,7 @@ def main(cfg: DictConfig):
         e_data_downlink_df = df_generatorNelder("loc_gsopt/ccgs_betterfree_nelder_ccgs_data_downlink",constellation,satellites, epc_end, epc_start, cfg)
         e_data_downlink_df.to_csv(f'nelder_{cfg.scenario.constellations}.csv', index=False)  
     idx = e_data_downlink_df.groupby("gs_number")["data_downlinked"].idxmax()
-    max_data_downlink = e_data_downlink_df.groupby("gs_number")["data_downlinked"].min().reset_index()
+    max_data_downlink = e_data_downlink_df.groupby("gs_number")["data_downlinked"].max().reset_index()
 
     try:
         e_lat_data_downlink_df = pd.read_csv(f'nelder_lat_{cfg.scenario.constellations}.csv')
@@ -84,7 +84,7 @@ def main(cfg: DictConfig):
         e_lat_data_downlink_df = df_generatorNelder("loc_gsopt/SCORE_LATfree_nelder_ccgs_data_downlink",constellation,satellites, epc_end, epc_start, cfg)
         e_lat_data_downlink_df.to_csv(f'nelder_lat_{cfg.scenario.constellations}.csv', index=False)  
     idx = e_lat_data_downlink_df.groupby("gs_number")["data_downlinked"].idxmax()
-    max_lat_data_downlink = e_lat_data_downlink_df.groupby("gs_number")["data_downlinked"].min().reset_index()
+    max_lat_data_downlink = e_lat_data_downlink_df.groupby("gs_number")["data_downlinked"].max().reset_index()
 
 
     teleport_data_downlink_df = df_generatorTeleport(constellation)
@@ -222,28 +222,28 @@ def df_generatorNelder(name1,constellation,satellites, epc_end, epc_start,cfg):
             if run.state == "finished":
                 # Append each run's data as a dictionary to the list
 
-                if constellation != "CAPELLA Space":
-                    gs_list = []
-                    for i, new_gs in enumerate(run.summary['gs_list']):
-                        point_loc = bh.PointLocation(new_gs[0], new_gs[1])
-                        point_loc.set_id(i)
-                        gs_list.append(point_loc)
+                # if constellation != "CAPELLA Space":
+                gs_list = []
+                for i, new_gs in enumerate(run.summary['gs_list']):
+                    point_loc = bh.PointLocation(new_gs[0], new_gs[1])
+                    point_loc.set_id(i)
+                    gs_list.append(point_loc)
 
-                    contacts, contact_secs = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
-                    _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
-                    print(sum(contact_secs))
-                    print(sum(contacts_exclusion_secs))
-                    e_data_downlink_list.append({
-                        "gs_number": i*1.0, #+0.25
-                        "data_downlinked": np.sum(contacts_exclusion_secs)*cfg.scenario.datarate/1000000000,
-                        "gs_list": run.summary.gs_list
+                contacts, contact_secs = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
+                _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
+                print(sum(contact_secs))
+                print(sum(contacts_exclusion_secs))
+                e_data_downlink_list.append({
+                    "gs_number": i*1.0, #+0.25
+                    "data_downlinked": np.sum(contacts_exclusion_secs)*cfg.scenario.datarate/1000000000,
+                    "gs_list": run.summary.gs_list
                     })
-                else:
-                    e_data_downlink_list.append({
-                        "gs_number": i*1.0, #+0.25
-                        "data_downlinked": run.summary.data_downlink/1000000000,
-                        "gs_list": run.summary.gs_list
-                    })
+                # else:
+                #     e_data_downlink_list.append({
+                #         "gs_number": i*1.0, #+0.25
+                #         "data_downlinked": run.summary.data_downlink/1000000000,
+                #         "gs_list": run.summary.gs_list
+                #     })
 
     # Convert the list of dictionaries into a pandas DataFrame
     e_data_downlink_df = pd.DataFrame(e_data_downlink_list)

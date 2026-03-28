@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 
 import matplotlib as mpl
+from matplotlib.colors import Normalize
 
 from matplotlib.patches import Rectangle
 
@@ -64,44 +65,55 @@ def main(cfg: DictConfig):
     bh.set_global_eop_provider(eop_file_custom)
     
     ############################# Prepping Data ###############################
-    data_downlink_df_powell = df_generatorPowell(epc_end, epc_start,cfg)
-    avg_data_downlink_df_score_all = df_generatorNelder(epc_end, epc_start,cfg)
+    # data_downlink_df_powell = df_generatorPowell(epc_end, epc_start,cfg)
+    # avg_data_downlink_df_score_all = df_generatorNelder(epc_end, epc_start,cfg)
 
-    heatmap_data_SCORE = avg_data_downlink_df_score_all.pivot(index='gs_number', columns='sats', values='WallClockTime')
-    # heatmap_data_DE = avg_data_downlink_df_all.pivot(index='gs_number', columns='sats', values='WallClockTime')# 'WallClockTime')
-    heatmap_data_DE = data_downlink_df_powell.pivot(index='gs_number', columns='sats', values='WallClockTime')
+    # heatmap_data_SCORE = avg_data_downlink_df_score_all.pivot(index='gs_number', columns='sats', values='WallClockTime')
+    # # heatmap_data_DE = avg_data_downlink_df_all.pivot(index='gs_number', columns='sats', values='WallClockTime')# 'WallClockTime')
+    # heatmap_data_DE = data_downlink_df_powell.pivot(index='gs_number', columns='sats', values='WallClockTime')
+
+    data_downlink_df_powell = df_generator("heatmap1free_powell_data_downlink","powell_heatmap.csv",epc_end, epc_start,cfg)
+    data_downlink_df_nelder = df_generator("heatmapfree_nelder_ccgs_data_downlink","nelder_heatmap.csv",epc_end, epc_start,cfg)
+    data_downlink_df_DE = df_generator("heatmapfree_diffEvolution_data_downlink", "DE_heatmap.csv", epc_end, epc_start,cfg)
+    heatmap_data_SCORE = data_downlink_df_nelder.pivot(index='gs_number', columns='sats', values='eval_counter4')/1000
+    heatmap_data_powell = data_downlink_df_powell.pivot(index='gs_number', columns='sats', values='eval_counter4')/1000
+    heatmap_data_DE = data_downlink_df_DE.pivot(index='gs_number', columns='sats', values='eval_counter')/1000
+
 
     # Compute global vmin and vmax for log scale
-    vmin = min(heatmap_data_SCORE.values.min(), heatmap_data_DE.values.min())
-    vmax = max(heatmap_data_SCORE.values.max(), heatmap_data_DE.fillna(0).values.max())
+    vmin = min(heatmap_data_SCORE.values.min(), heatmap_data_powell.values.min(), heatmap_data_DE.values.min())
+    vmax = max(heatmap_data_SCORE.values.max(), heatmap_data_powell.values.max(), heatmap_data_DE.values.max())
 
     norm = LogNorm(vmin=vmin, vmax=vmax)
-    print(heatmap_data_DE.values.max())
-
-    print(vmin)
-    print(vmax)
-
-    fig, axes = plt.subplots(1, 2, figsize=(12, 6), sharey=True)
+    fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharey=True)
 
     sns.heatmap(heatmap_data_SCORE, ax=axes[0], annot=True, cmap='viridis', norm=norm, cbar=False)
-    axes[0].set_title("SCORE")
+    axes[0].set_title("SCORE (Nelder-Mead)")
     axes[0].set_xlabel("Number of Satellites")
     axes[0].set_ylabel("Number of Ground Stations")
 
-    # Second heatmap
-    sns.heatmap(heatmap_data_DE, ax=axes[1], annot=True, cmap="viridis", norm=norm,
-                cbar=True, cbar_ax=fig.add_axes([0.92, 0.25, 0.02, 0.5]), cbar_kws={
-            "label": "Runtime (hours, log scale)",
-            "format": LogFormatter()
-        })
-    axes[1].set_title("Differential Evolution")
+    sns.heatmap(heatmap_data_powell, ax=axes[1], annot=True, cmap='viridis', norm=norm, cbar=False)
+    axes[1].set_title("SCORE (Powell)")
     axes[1].set_xlabel("Number of Satellites")
     axes[1].set_ylabel("")
+
+    sns.heatmap(heatmap_data_DE, ax=axes[2], annot=True, cmap="viridis", norm=norm, cbar=False)
+    axes[2].set_title("Differential Evolution")
+    axes[2].set_xlabel("Number of Satellites")
+    axes[2].set_ylabel("")
+
+    for ax in axes:
+        ax.set_aspect('equal')  # forces square cells
+    # Create a single colorbar for all heatmaps
+    cbar_ax = fig.add_axes([0.92, 0.1, 0.02, 0.8])  # [left, bottom, width, height] in figure coords
+    sm = plt.cm.ScalarMappable(cmap='viridis', norm=norm)
+    sm.set_array([])  # needed for ScalarMappable
+    cbar = fig.colorbar(sm, cax=cbar_ax, format=LogFormatter())
+    cbar.set_label("# of Function Evaluations (e3, log)")
 
     plt.tight_layout(rect=[0, 0, 0.9, 1])  # leave room for colorbar
     plt.savefig("figures_final/heatmap_comparison.pdf", format='pdf', bbox_inches='tight')
     plt.show()
-
 
     data_rate_bps = 1#1200000000.0  # bits per second
 
@@ -111,7 +123,7 @@ def main(cfg: DictConfig):
     # Convert bits to megabytes: 1 MB = 8e6 bits
     # Since 'data_downlinked' is already in gigabytes (bits divided by 1e9), to convert to terabytes divide by 1000
     def gb_to_tb_opt(df):
-        return df / 1000/1000*52
+        return df /8
     def obj_to_mb(df):
         return df.abs() * data_rate_bps / 8e6
     def obj_to_gb(df):
@@ -122,55 +134,141 @@ def main(cfg: DictConfig):
 
     # Remove duplicate entries by taking the max Obj_func for each (gs_number, sats) pair
     # data_downlink_df_score_max = data_downlink_df_score.groupby(['gs_number', 'sats'], as_index=False).min(numeric_only=True)
-    heatmap_data_obj_SCORE = avg_data_downlink_df_score_all.pivot(index='gs_number', columns='sats', values='data_downlinked')#'Obj_func')
-    heatmap_data_obj_DE = data_downlink_df_powell.pivot(index='gs_number', columns='sats', values= 'data_downlinked')#'FirstObj_func') #'Obj_func')#
+    heatmap_data_obj_SCORE = data_downlink_df_nelder.pivot(index='gs_number', columns='sats', values='exclusion')#'Obj_func')
+    heatmap_data_obj_powell = data_downlink_df_powell.pivot(index='gs_number', columns='sats', values= 'exclusion')#'FirstObj_func') #'Obj_func')#
+    heatmap_data_obj_DE = data_downlink_df_DE.pivot(index='gs_number', columns='sats', values= 'exclusion')#'FirstObj_func') #'Obj_func')#
 
     heatmap_data_obj_SCORE = gb_to_tb_opt(heatmap_data_obj_SCORE)
+    heatmap_data_obj_powell = gb_to_tb_opt(heatmap_data_obj_powell)
     heatmap_data_obj_DE = gb_to_tb_opt(heatmap_data_obj_DE)
 
     # Compute global vmin and vmax for log scale
-    vmin = min(heatmap_data_obj_SCORE.values.min(), heatmap_data_obj_DE.values.min())
-    vmax = max(heatmap_data_obj_SCORE.values.max(), heatmap_data_obj_DE.values.max())
-    norm = LogNorm(vmin=vmin, vmax=vmax)
-    fig, axes = plt.subplots(1, 2, figsize=(12, 6), sharey=True)
+    vmin = min(heatmap_data_obj_SCORE.values.min(), heatmap_data_obj_powell.values.min(), heatmap_data_obj_DE.values.min())
+    vmax = max(heatmap_data_obj_SCORE.values.max(), heatmap_data_obj_powell.values.max(), heatmap_data_obj_DE.values.max())
 
-    # Format annotation labels to integers
-    annot_SCORE = heatmap_data_obj_SCORE.round(0).astype(int).astype(str)
-    annot_DE = heatmap_data_obj_DE.fillna(0).round(0).astype(int).astype(str)
 
-    sns.heatmap(heatmap_data_obj_SCORE, ax=axes[0],annot=True,fmt='.1f', cmap='flare', norm=norm,cbar=False)
-    axes[0].set_title("SCORE")
+    # Linear normalization
+    norm = Normalize(vmin=vmin, vmax=vmax)
+
+    fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharey=True)
+
+    sns.heatmap(heatmap_data_obj_SCORE, ax=axes[0], annot=True, fmt='.1f', cmap='flare', norm=norm, cbar=False)
+    axes[0].set_title("SCORE (Nelder-Mead)")
     axes[0].set_xlabel("Number of Satellites")
     axes[0].set_ylabel("Number of Ground Stations")
 
-
-    # Second heatmap with linear colorbar and plain number formatting
-
-    sns.heatmap(
-        heatmap_data_obj_DE,
-        ax=axes[1],
-        annot=True,
-        fmt='.1f',
-        cmap="flare",
-        norm=None,  # linear scale
-        cbar=True,
-        cbar_ax=fig.add_axes([0.92, 0.25, 0.02, 0.5]),
-        cbar_kws={
-            "label": "Data Downlinked in PB over $T_{opt}$",
-            "format": FuncFormatter(lambda x, _: f"{int(x)}")
-        }
-    )
-    axes[1].set_title("Differential Evolution")
+    sns.heatmap(heatmap_data_obj_powell, ax=axes[1], annot=True, fmt='.1f', cmap='flare', norm=norm, cbar=False)
+    axes[1].set_title("SCORE (Powell)")
     axes[1].set_xlabel("Number of Satellites")
     axes[1].set_ylabel("")
 
+    sns.heatmap(heatmap_data_obj_DE, ax=axes[2], annot=True, fmt='.1f', cmap="flare", norm=norm, cbar=False)
+    axes[2].set_title("Differential Evolution")
+    axes[2].set_xlabel("Number of Satellites")
+    axes[2].set_ylabel("")
 
-    plt.tight_layout(rect=[0, 0, 0.9, 1])  # leave room for colorbar
+    for ax in axes:
+        ax.set_aspect('equal')  # forces square cells
+
+    # Single linear colorbar
+    cbar_ax = fig.add_axes([0.92, 0.1, 0.02, 0.8])
+    sm = plt.cm.ScalarMappable(cmap='flare', norm=norm)
+    sm.set_array([])
+    cbar = fig.colorbar(sm, cax=cbar_ax)
+    cbar.set_label("Data Downlinked in PB over $T_{opt}$")
+
+    plt.tight_layout(rect=[0, 0, 0.9, 1])
     plt.savefig("figures_final/heatmap_comparison_vals.pdf", format='pdf', bbox_inches='tight')
-
     plt.show()
 
 ############################# Functions for Prepping Data ###############################
+
+def df_generator(name,csvName,epc_end, epc_start,cfg):
+
+    api = wandb.Api()
+
+    data_downlink_list= []
+
+    # Iterate through the ground station numbers and runs
+    try:
+        data_downlink_df= pd.read_csv(csvName)
+    except FileNotFoundError:
+        for gs in [1,2,3,4]:#[1, 2, 3, 4, 5]:
+            for sats in [1, 2, 3, 4]:
+
+                project_name = f"loc_gsopt/{name}_{gs}_{sats}=CAPELLA=3000000"
+                runs = api.runs(project_name)
+                
+                for (i,run) in enumerate(runs):
+                    
+                    if run.state == "finished":
+                        gs_list = []
+                        for i, new_gs in enumerate(run.summary['gs_list']):
+                            point_loc = bh.PointLocation(new_gs[0], new_gs[1])
+                            point_loc.set_id(i)
+                            gs_list.append(point_loc)
+                        satellites = make_walker_constellation(
+                                epoch=epc_start,
+                                altitude_km=cfg.walker.altitude,
+                                eccentricity=cfg.walker.eccentricity,
+                                inclination=cfg.walker.inclination,
+                                num_planes=sats,
+                                sats_per_plane= cfg.walker.sats_perplane,
+                                phase=cfg.walker.phase,
+                                argp=cfg.walker.argp,
+                                norad_start=cfg.walker.norad_start,
+                                star =cfg.walker.star,
+                            )
+                        
+                        # Step 1: Propagate all satellites in parallel
+                        bh.par_propagate_to(satellites, epc_end)
+
+                        contacts, contact_secs = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
+                        print(f"trying sat {sats} and gs {gs}")
+                        _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
+                        print(f"finishing sat {sats} and gs {gs}")
+
+                        if csvName != "DE_heatmap.csv":
+                            data_downlink_list.append({
+                                "gs_number": gs,
+                                'sats': sats,
+                                'WallClockTime': run.summary['_runtime']/60/60,
+                                'contact_num0':run.summary['contact_num0'],
+                                'contact_num1':run.summary['contact_num1'],
+                                'contact_num2':run.summary['contact_num2'],
+                                'contact_num3':run.summary['contact_num3'],
+                                'contact_num4':run.summary['contact_num4'],
+                                'data_downlink0':run.summary['data_downlink0'],
+                                'data_downlink1':run.summary['data_downlink1'],
+                                'data_downlink2':run.summary['data_downlink2'],
+                                'data_downlink3':run.summary['data_downlink3'],
+                                'data_downlink4':run.summary['data_downlink4'],
+                                'eval_counter0':run.summary['eval_counter0'],
+                                'eval_counter1':run.summary['eval_counter1'],
+                                'eval_counter2':run.summary['eval_counter2'],
+                                'eval_counter3':run.summary['eval_counter3'],
+                                'eval_counter4':run.summary['eval_counter4'],
+                                'noExclusion': np.sum(contact_secs)*cfg.scenario.datarate*52/1000/1000/1000/1000/1000,
+                                'exclusion': np.sum(contacts_exclusion_secs)*cfg.scenario.datarate*52/1000/1000/1000/1000/1000,
+                                # "sat_number": sats,
+                            })
+                        else:
+                            data_downlink_list.append({
+                                "gs_number": gs,
+                                'sats': sats,
+                                'WallClockTime': run.summary['_runtime']/60/60,
+                                'eval_counter':run.summary['EvalCount'],
+                                'noExclusion': np.sum(contact_secs)*cfg.scenario.datarate*52/1000/1000/1000/1000/1000,
+                                'exclusion': np.sum(contacts_exclusion_secs)*cfg.scenario.datarate*52/1000/1000/1000/1000/1000,
+                                # "sat_number": sats,
+                            })
+
+        # Convert the list of dictionaries into a pandas DataFrame
+        data_downlink_df = pd.DataFrame(data_downlink_list)
+        data_downlink_df.to_csv(csvName, index=False)  
+
+    return data_downlink_df.groupby(['gs_number', 'sats'], as_index=False).mean(numeric_only=True)
+
 def df_generatorPowell(epc_end, epc_start,cfg):
 
     api = wandb.Api()

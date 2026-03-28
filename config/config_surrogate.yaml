@@ -70,7 +70,7 @@ end_epoch:
 debug:
   verbose: True
   plot: True
-  wandb: True
+  wandb: False
   txtUpdate: False
   randseed: 0
 
