@@ -71,20 +71,28 @@ def main(cfg: DictConfig):
     ############################# Prepping Data ###############################
 
     try:
-        e_data_downlink_df = pd.read_csv(f'nelder_{cfg.scenario.constellations}.csv')
+        e_data_downlink_df = pd.read_csv(f'data/csv_Files/nelder_{cfg.scenario.constellations}.csv')
     except FileNotFoundError:
         e_data_downlink_df = df_generatorNelder("loc_gsopt/ccgs_betterfree_nelder_ccgs_data_downlink",constellation,satellites, epc_end, epc_start, cfg)
-        e_data_downlink_df.to_csv(f'nelder_{cfg.scenario.constellations}.csv', index=False)  
+        e_data_downlink_df.to_csv(f'data/csv_Files/nelder_{cfg.scenario.constellations}.csv', index=False)  
     idx = e_data_downlink_df.groupby("gs_number")["data_downlinked"].idxmax()
     max_data_downlink = e_data_downlink_df.groupby("gs_number")["data_downlinked"].max().reset_index()
 
     try:
-        e_lat_data_downlink_df = pd.read_csv(f'nelder_lat_{cfg.scenario.constellations}.csv')
+        e_lat_data_downlink_df = pd.read_csv(f'data/csv_Files/nelder_lat2_{cfg.scenario.constellations}.csv')
     except FileNotFoundError:
-        e_lat_data_downlink_df = df_generatorNelder("loc_gsopt/SCORE_LATfree_nelder_ccgs_data_downlink",constellation,satellites, epc_end, epc_start, cfg)
-        e_lat_data_downlink_df.to_csv(f'nelder_lat_{cfg.scenario.constellations}.csv', index=False)  
+        e_lat_data_downlink_df = df_generatorNelder("loc_gsopt/SCORE_LAT2free_nelder_ccgs_data_downlink",constellation,satellites, epc_end, epc_start, cfg)
+        e_lat_data_downlink_df.to_csv(f'data/csv_Files/nelder_lat2_{cfg.scenario.constellations}.csv', index=False)  
     idx = e_lat_data_downlink_df.groupby("gs_number")["data_downlinked"].idxmax()
     max_lat_data_downlink = e_lat_data_downlink_df.groupby("gs_number")["data_downlinked"].max().reset_index()
+
+    try:
+        e_infra_data_downlink_df = pd.read_csv(f'data/csv_Files/nelder_infra2_{cfg.scenario.constellations}.csv')
+    except FileNotFoundError:
+        e_infra_data_downlink_df = df_generatorNelder("loc_gsopt/SCORE_INFRA2free_nelder_ccgs_data_downlink",constellation,satellites, epc_end, epc_start, cfg)
+        e_infra_data_downlink_df.to_csv(f'data/csv_Files/nelder_infra2_{cfg.scenario.constellations}.csv', index=False)  
+    idx = e_infra_data_downlink_df.groupby("gs_number")["data_downlinked"].idxmax()
+    max_infra_data_downlink = e_infra_data_downlink_df.groupby("gs_number")["data_downlinked"].max().reset_index()
 
 
     teleport_data_downlink_df = df_generatorTeleport(constellation)
@@ -118,7 +126,17 @@ def main(cfg: DictConfig):
         label='Max Data Downlinked'
     )
 
-    e_data_downlink_df
+    # SCORE - infrastructure cost constrained (new!)
+    plt.plot(
+        max_infra_data_downlink["gs_number"]+1, 
+        max_infra_data_downlink["data_downlinked"]/1000/1000*52, 
+        color='steelblue',       # darker blue family, distinct from cornflowerblue
+        marker='P',              # filled plus, very distinct from D and o
+        markersize=5,            # slightly bigger so P is visible
+        linestyle=(0, (3, 1, 1, 1)),  # dash-dot-dot, distinct from -.
+        label='SCORE (Infrastructure-Constrained)'
+    )
+
     plt.plot(
         tele_max_data_downlink["gs_number"], 
         tele_max_data_downlink["data_downlinked"]/1000/1000*52, 
@@ -144,12 +162,17 @@ def main(cfg: DictConfig):
     plt.xlabel(f"Ground Stations Selected for {constellation} Constellation")
     plt.ylabel(r"Total Data Downlinked (PB) over $T_{opt}$")
     plt.legend(
-        handles=[
-            # plt.Line2D([0], [0], marker='o', color='black', markersize=8, linestyle='None', label='Nelder Mead'), 
-            plt.Line2D([0], [0], marker='o', color='blue', markersize=8, linestyle=':', label='SCORE'), 
-            plt.Line2D([0], [0], marker='2', color='blue', markersize=8, linestyle=':', label='SCORE-Constraint'), 
-            plt.Line2D([0], [0], marker='^', color='purple', markersize=8, linestyle='--', label='Teleports'),
-            plt.Line2D([0], [0], marker='s', color='red', markersize=8, linestyle='-', label='KSAT')
+    handles=[
+            plt.Line2D([0], [0], marker='o', color='blue', 
+                    markersize=8, linestyle=':', label='SCORE'),
+            plt.Line2D([0], [0], marker='D', color='cornflowerblue', 
+                    markersize=8, linestyle='-.', label='SCORE (Lat-Const)'),
+            plt.Line2D([0], [0], marker='P', color='steelblue', 
+                    markersize=8, linestyle=(0, (3, 1, 1, 1)), label='SCORE (Infra-Const)'),
+            plt.Line2D([0], [0], marker='^', color='purple', 
+                    markersize=8, linestyle='--', label='Teleports'),
+            plt.Line2D([0], [0], marker='s', color='red', 
+                    markersize=8, linestyle='-', label='KSAT'),
         ],
         loc='lower right'
     )
@@ -162,9 +185,9 @@ def main(cfg: DictConfig):
     if constellation == "CAPELLA Space":
         plt.gca().add_patch(
             Rectangle(
-                (1.5, 160/1000*52),        # (x, y) bottom-left corner
+                (14.5, 48),        # (x, y) bottom-left corner
                 1,                  # width
-                40/1000*52,                # height
+                12,                # height
                 linewidth=1,
                 edgecolor='gray',
                 facecolor='lightgray',
@@ -199,6 +222,97 @@ def main(cfg: DictConfig):
 
     plt.show()
 
+    plt.figure(figsize=(13, 6))
+
+    # Plot only data around gs_number = 2
+    plt.plot(
+        max_data_downlink["gs_number"]+1, 
+        max_data_downlink["data_downlinked"]/1000/1000*52, 
+        color='blue', marker='o', markersize=10, linestyle=':', label='SCORE'
+    )
+
+    plt.plot(
+            max_lat_data_downlink["gs_number"]+1, 
+            max_lat_data_downlink["data_downlinked"]/1000/1000*52, 
+            color='cornflowerblue', 
+            marker='D', 
+            markersize=10,  # Smaller marker size
+            linestyle='-.', 
+            label='Max Data Downlinked'
+        )
+
+    # SCORE - infrastructure cost constrained (new!)
+    plt.plot(
+        max_infra_data_downlink["gs_number"]+1, 
+        max_infra_data_downlink["data_downlinked"]/1000/1000*52, 
+        color='steelblue',       # darker blue family, distinct from cornflowerblue
+        marker='P',              # filled plus, very distinct from D and o
+        markersize=10,            # slightly bigger so P is visible
+        linestyle=(0, (3, 1, 1, 1)),  # dash-dot-dot, distinct from -.
+        label='SCORE (Infrastructure-Constrained)'
+    )
+    plt.plot(
+        tele_max_data_downlink["gs_number"], 
+        tele_max_data_downlink["data_downlinked"]/1000/1000*52, 
+        color='purple', marker='^', markersize=10, linestyle='--', label='Teleports'
+    )
+
+    plt.plot(
+        ksat_data_downlink_df["gs_number"], 
+        ksat_data_downlink_df["data_downlinked"]/1000/1000*52, 
+        color='red', marker='s', markersize=10, linestyle='-', label='KSAT'
+    )
+
+    # plt.xlabel("Ground Stations Selected for CAPELLA Space Constellation")
+    # plt.ylabel(r"Total Data Downlinked (GB) over $T_{sim}$")
+    # plt.legend(loc="upper left")
+    plt.legend(
+    handles=[
+            plt.Line2D([0], [0], marker='o', color='blue', 
+                    markersize=10, linestyle=':', label='SCORE'),
+            plt.Line2D([0], [0], marker='D', color='cornflowerblue', 
+                    markersize=10, linestyle='-.', label='SCORE (Lat-Const)'),
+            plt.Line2D([0], [0], marker='P', color='steelblue', 
+                    markersize=10, linestyle=(0, (3, 1, 1, 1)), label='SCORE (Infra-Const)'),
+            plt.Line2D([0], [0], marker='^', color='purple', 
+                    markersize=10, linestyle='--', label='Teleports'),
+            plt.Line2D([0], [0], marker='s', color='red', 
+                    markersize=10, linestyle='-', label='KSAT'),
+        ],
+        loc='upper left'
+    )
+
+    # Focus on gs_number = 2 with small margin
+
+    if constellation == "CAPELLA Space":
+
+        plt.title(f"Zoomed View at GS = 15 for {constellation}")
+        plt.xlim(14.5, 15.5)
+        x_ticks = [15]
+        plt.ylim(48, 60)
+        # plt.yticks([160000, 200000], [r"$1.6 \times 10^5$", r"$2.0 \times 10^5$"])
+    if constellation == "ICEYE":
+        plt.title(f"Zoomed View at GS = 10 for {constellation}")
+        plt.xlim(1.5, 2.5)
+        x_ticks = [15]
+        plt.ylim(750/1000*52, 1100/1000*52)
+        # plt.yticks([160000, 200000], [r"$1.9 \times 10^6$", r"$3.0 \times 10^6$"])
+    # Optional: narrow y-limits if helpful
+    # For example, to show more detail between 40,000 and 80,000 GB:
+
+    plt.xticks(ticks=x_ticks, labels=x_ticks)
+    # plt.yscale("log")
+
+    plt.tight_layout()
+
+
+    if constellation == "CAPELLA Space":
+        plt.savefig("figures_final/capellaDataDownlink_zoom_GS2.pdf")
+    if constellation == "ICEYE":
+        plt.savefig("figures_final/iceyeDataDownlink_zoom_GS2.pdf")
+    plt.show()
+
+
 
 ############################# Functions for Prepping Data ###############################
 
@@ -214,7 +328,7 @@ def df_generatorNelder(name1,constellation,satellites, epc_end, epc_start,cfg):
     if constellation == "CAPELLA Space":
         text = "5=CAPELLA"
     
-    for i in [1, 2, 3, 4, 5, 7, 10, 15, 20]:
+    for i in [1, 2, 3, 4]: #5 , 7, 10, 15, 20]:
         project_name = f"{name1}_{i}_{text}=3000000"
         runs = api.runs(project_name)
         for run in runs:

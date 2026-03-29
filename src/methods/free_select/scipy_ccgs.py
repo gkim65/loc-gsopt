@@ -14,99 +14,6 @@ from itertools import combinations
 from shapely.geometry import Point, Polygon
 
 
-# def points_in_shape(gs_list, comb):
-#     for p in gs_list:
-#         triangle = Polygon(comb)
-#         point = Point(p)
-#         if triangle.contains(point) or triangle.touches(point):
-#             return True
-#     return False
-
-# def planar_quad_area(points):
-#     """
-#     Compute the area of a quadrilateral in 2D using the shoelace formula.
-#     `points` should be a 4x2 numpy array or list of 4 (x, y) tuples.
-#     """
-#     points = np.array(points)
-#     x = points[:, 0]
-#     y = points[:, 1]
-#     # Wrap around to first point
-#     x_next = np.roll(x, -1)
-#     y_next = np.roll(y, -1)
-#     area = 0.5 * np.abs(np.dot(x, y_next) - np.dot(y, x_next))
-#     return area
-
-# # TODO testing initial simplexes and seeing if mine's better
-# def simplex_rand():
-#         return ""
-
-# def simplex_select(gs_list,exclude, l=1):
-               
-#         # try out 40 different starting points 
-#         # lats = np.concatenate([np.random.uniform(-70, -50, 10),
-#         #                 np.random.uniform(50, 70, 10),
-#         #                 np.random.uniform(-50, 50, 10),
-#         #                 np.random.uniform(-50, 50, 10)])
-
-#         # lons = np.concatenate([np.random.uniform(-160, 160, 10),
-#         #                 np.random.uniform(-160, 160, 10),
-#         #                 np.random.uniform(-160, -140, 10),
-#         #                 np.random.uniform(140, 160, 10)])
-
-
-#         lats = np.concatenate([np.random.uniform(-90, -80, 40),
-#                         np.random.uniform(70,85, 10),
-#                         np.random.uniform(-70, 70, 10),
-#                         np.random.uniform(-70, 70, 10)])
-
-#         lons = np.concatenate([np.random.uniform(-180, 180, 40),
-#                         np.random.uniform(-180, 180, 10),
-#                         np.random.uniform(-180, -160, 10),
-#                         np.random.uniform(160, 180, 10)])
-
-
-#         # Stack latitudes and longitudes together
-#         all_points = np.column_stack([lats, lons])
-
-
-#         # Find the triangle with the largest area
-#         max_area = 0
-#         best_simplex = None
-
-#         # Generate all combinations of 3 points on the convex hull
-#         for comb in combinations(all_points, 4):
-#                 if exclude:
-#                         if not points_in_shape(gs_list, comb):
-#                                 # area = triangle_area(comb[0], comb[1], comb[2])
-#                                 area = planar_quad_area(comb)
-#                                 if area > max_area:
-#                                         max_area = area
-#                                         best_simplex = comb #np.array([comb[0], comb[1], comb[2]])
-#                 else:
-#                         # area = triangle_area(comb[0], comb[1], comb[2])
-#                         area = planar_quad_area(comb)
-#                         if area > max_area:
-#                                 max_area = area
-#                                 best_simplex = comb #np.array([comb[0], comb[1], comb[2]])
-
-#         # TODO EXTENSION: possibly better simplex?
-#         # this lets me choose a gs as one of the points of the rectangle
-#         # for gs in gs_list:
-#         #         # Remove gs from gs_list for this   iteration
-#         #         other_gs = [pt for pt in gs_list if not np.allclose(pt, gs)]
-
-#         #         for pair in combinations(all_points, 2):
-#         #                 triangle = np.array([gs, pair[0], pair[1]])
-#         #                 print(points_in_shape(other_gs, triangle))
-#         #                 # Check that other gs points aren't inside the triangle
-#         #                 if not points_in_shape(other_gs, triangle):
-#         #                         area = triangle_area(triangle[0], triangle[1], triangle[2])
-#         #                         if area > max_area:
-#         #                                 max_area = area
-#         #                                 best_simplex = triangle
-#         return best_simplex
-
-
 def haversine_numba(lat1, lon1, lat2, lon2):
     R = 6371.0
     phi1, phi2 = np.deg2rad(lat1), np.deg2rad(lat2)
@@ -146,16 +53,29 @@ def simplex_select(n_samples=120):
 def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data):
 
         # Setup args for minimize function
-        gs_list = []
-        gs_list_plot = []
+        if cfg.constraints.extra_gs:
+                gs_list = [bh.PointLocation(cfg.constraints.extra_gs_lon,cfg.constraints.extra_gs_lat)]
+                gs_list_plot = [[cfg.constraints.extra_gs_lon,cfg.constraints.extra_gs_lat]]
+                gs_offset = 1
+
+        else:
+                gs_list = []
+                gs_list_plot = []
+                gs_offset = 0
         gs_contacts_og = []
         sat_list = satellites
         land_geometries = land_data['geometry']
         verbose = cfg.debug.verbose
+
+        if cfg.problem.gs_num == 1 and cfg.constraints.extra_gs:
+                return gs_list, gs_list_plot
+
         for iterate in range(cfg.experiments.ccgs):
 
                 # for every ground station
-                for i in range(cfg.problem.gs_num):
+                for i in range(gs_offset, cfg.problem.gs_num):
+
+                # for i in range(cfg.problem.gs_num):
                 
 
                         # Initial guess overridden by initial simplex
@@ -218,9 +138,9 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_count
 
                                 # Check if prev is better than current
                                 contacts_prev, contacts_sec_prev = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
-                                _, contacts_exclusion_secs_prev = contactExclusion(contacts_prev,cfg)
+                                # _, contacts_exclusion_secs_prev = contactExclusion(contacts_prev,cfg)
                                 contacts_new, contacts_sec_new = compute_contact_times(satellites, gs_list_new ,epc_start, epc_end)
-                                _, contacts_exclusion_secs_new = contactExclusion(contacts_new,cfg)
+                                # _, contacts_exclusion_secs_new = contactExclusion(contacts_new,cfg)
 
                                 if np.sum(contacts_sec_prev) < np.sum(contacts_sec_new): # or np.sum(contacts_exclusion_secs_prev) < np.sum(contacts_exclusion_secs_new):
                                         print(gs_list)

@@ -61,6 +61,9 @@ constraints:
   # latitude_bot: -73
   latitude_top: 90
   latitude_bot: -90
+  extra_gs: False
+  extra_gs_lat: -72.011643
+  extra_gs_lon: 2.534985
 
 start_epoch:
   year: 2025
