@@ -50,7 +50,7 @@ def simplex_select(n_samples=120):
 
 
 
-def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data):
+def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data, rng=None):
 
         # Setup args for minimize function
         if cfg.constraints.extra_gs:
@@ -72,8 +72,19 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_count
 
         for iterate in range(cfg.experiments.ccgs):
 
+                
+                # Determine ground station iteration order
+                gs_indices = list(range(cfg.problem.gs_num))
+                print(gs_indices)
+                if iterate > 0 and cfg.experiments.ccgs_random:
+                        # Shuffle in-place using the provided rng for reproducibility
+                        rng.shuffle(gs_indices)
+
                 # for every ground station
-                for i in range(gs_offset, cfg.problem.gs_num):
+                for i in gs_indices:#range(cfg.problem.gs_num):
+                        if iterate == 0 and cfg.constraints.extra_gs:
+                                break
+
 
                 # for i in range(cfg.problem.gs_num):
                 

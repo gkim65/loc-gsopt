@@ -167,7 +167,11 @@ def main(cfg: DictConfig):
         
         if cfg.problem.method == "nelder_ccgs":
             
-            gs_list,  gs_list_plot = nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data) # agg_list_of_simplexes
+
+            seed = cfg.debug.randseed  # e.g., 42, 123, 7, ...
+            rng = np.random.default_rng(seed) if cfg.experiments.ccgs_random else None
+
+            gs_list,  gs_list_plot = nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data, rng=rng) # agg_list_of_simplexes
             
             if cfg.debug.wandb:
                 contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
