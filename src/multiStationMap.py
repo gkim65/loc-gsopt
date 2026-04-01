@@ -8,7 +8,15 @@ from common.utils import compute_earth_interior_angle
 import brahe as bh
 import numpy as np
 
+import matplotlib as mpl
 
+mpl.rcParams.update({
+    "text.usetex": True,
+    "font.family": "serif",
+    "font.size" : 24, 
+    "font.serif": ["Computer Modern Roman"],  # optional: you can specify others like Times
+    "axes.unicode_minus": False  # optional: fix minus signs in LaTeX
+})
 # api = wandb.Api()
 # project_name = f"loc_gsopt/heatmapfree_nelder_ccgs_data_downlink_4_4=CAPELLA=3000000"
 # runs = api.runs(project_name)

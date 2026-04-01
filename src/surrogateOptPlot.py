@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import pickle
 import os
+import matplotlib as mpl
 
 # ─────────────────────────────────────────────
 # CONFIG — edit these
@@ -21,6 +22,13 @@ MAX_DAYS    = 100            # x-axis cutoff for plots (no need to show all 365)
 SURROGATE_DAY = 7           # the vertical line we want to justify
 EPSILON     = 0.05          # 2% tolerance for convergence threshold plot
 
+mpl.rcParams.update({
+    "text.usetex": True,
+    "font.family": "serif",
+    "font.size" : 24, 
+    "font.serif": ["Computer Modern Roman"],  # optional: you can specify others like Times
+    "axes.unicode_minus": False  # optional: fix minus signs in LaTeX
+})
 # ─────────────────────────────────────────────
 # 1. PULL DATA FROM W&B (with caching)
 # ─────────────────────────────────────────────
@@ -192,7 +200,7 @@ def plot_convergence(all_data, max_days=MAX_DAYS, surrogate_day=SURROGATE_DAY, e
     ax.axvline(surrogate_day, color="red", ls="--", lw=1.5, label=f"Day {surrogate_day}")
     ax.axhline(95, color="black", ls=":", lw=1, alpha=0.5, label="95% threshold")
     ax.set_title(
-        f"% of Configurations Whose Running Mean\nIs Within {int(epsilon*100)}% of 365-day Mean",
+        f"\% of Configurations Whose Running Mean\nIs Within {int(epsilon*100)}\% of 365-day Mean",
         fontsize=16
     )
     ax.set_xlabel("Simulation Duration (days)", fontsize=14)
@@ -205,8 +213,9 @@ def plot_convergence(all_data, max_days=MAX_DAYS, surrogate_day=SURROGATE_DAY, e
     ax.grid(True, alpha=0.3)
  
     plt.tight_layout()
-    out_path = "figures_final/surrogate_convergence.png"
-    plt.savefig(out_path, dpi=200, bbox_inches="tight")
+    os.makedirs("figures_final", exist_ok=True)
+    out_path = "figures_final/surrogate_convergence.pdf"
+    plt.savefig(out_path, dpi=300, bbox_inches="tight")
     print(f"Saved to {out_path}")
     plt.close()
  

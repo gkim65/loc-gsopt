@@ -23,7 +23,7 @@ from common.utils import compute_contact_times,contactExclusion
 import os
 
 mpl.rcParams.update({
-    "text.usetex": False,
+    "text.usetex": True,
     "font.family": "serif",
     "font.size" : 24, 
     "font.serif": ["Computer Modern Roman"],  # optional: you can specify others like Times
@@ -198,9 +198,9 @@ def main(cfg: DictConfig):
     else:
         plt.gca().add_patch(
                 Rectangle(
-                    (1.5, 750/1000*52),        # (x, y) bottom-left corner
+                    (14.5, 190),        # (x, y) bottom-left corner
                     1,                  # width
-                    1100/1000*52-750/1000*52,                 # height
+                    35,                 # height
 
                     linewidth=1,
                     edgecolor='gray',
@@ -287,15 +287,15 @@ def main(cfg: DictConfig):
     if constellation == "CAPELLA Space":
 
         plt.title(f"Zoomed View at GS = 15 for {constellation}")
-        plt.xlim(14.5, 15.5)
+        plt.xlim(14.5, 15.25)
         x_ticks = [15]
         plt.ylim(48, 60)
         # plt.yticks([160000, 200000], [r"$1.6 \times 10^5$", r"$2.0 \times 10^5$"])
     if constellation == "ICEYE":
-        plt.title(f"Zoomed View at GS = 10 for {constellation}")
-        plt.xlim(1.5, 2.5)
+        plt.title(f"Zoomed View at GS = 15 for {constellation}")
+        plt.xlim(14.5, 15.25)
         x_ticks = [15]
-        plt.ylim(750/1000*52, 1100/1000*52)
+        plt.ylim(190, 225)
         # plt.yticks([160000, 200000], [r"$1.9 \times 10^6$", r"$3.0 \times 10^6$"])
     # Optional: narrow y-limits if helpful
     # For example, to show more detail between 40,000 and 80,000 GB:
@@ -311,6 +311,30 @@ def main(cfg: DictConfig):
     if constellation == "ICEYE":
         plt.savefig("figures_final/iceyeDataDownlink_zoom_GS2.pdf")
     plt.show()
+    # Print values at key network sizes for paper
+    for gs_num in [1, 2, 3, 5, 7, 10, 15, 20]:
+        score_val = max_data_downlink[
+            max_data_downlink["gs_number"] == gs_num-1
+        ]["data_downlinked"].values
+        lat_val = max_lat_data_downlink[
+            max_lat_data_downlink["gs_number"] == gs_num-1
+        ]["data_downlinked"].values
+        infra_val = max_infra_data_downlink[
+            max_infra_data_downlink["gs_number"] == gs_num-1
+        ]["data_downlinked"].values
+        tele_val = tele_max_data_downlink[
+            tele_max_data_downlink["gs_number"] == gs_num
+        ]["data_downlinked"].values
+        ksat_val = ksat_data_downlink_df[
+            ksat_data_downlink_df["gs_number"] == gs_num
+        ]["data_downlinked"].values
+
+        def fmt(v): 
+            return f"{v[0]/1000/1000*52:.2f}" if len(v) > 0 else "N/A"
+        
+        print(f"GS={gs_num:2d} | SCORE={fmt(score_val)} | "
+            f"Lat={fmt(lat_val)} | Infra={fmt(infra_val)} | "
+            f"Tele={fmt(tele_val)} | KSAT={fmt(ksat_val)} PB")
 
 
 
@@ -328,11 +352,12 @@ def df_generatorNelder(name1,constellation,satellites, epc_end, epc_start,cfg):
     if constellation == "CAPELLA Space":
         text = "5=CAPELLA"
     
-    for i in [1, 2, 3, 4]: #5 , 7, 10, 15, 20]:
+    for i in [1, 2, 3, 4, 5, 7, 10, 15, 20]:
         project_name = f"{name1}_{i}_{text}=3000000"
         runs = api.runs(project_name)
         for run in runs:
             print(run)
+            
             if run.state == "finished":
                 # Append each run's data as a dictionary to the list
 
@@ -358,6 +383,28 @@ def df_generatorNelder(name1,constellation,satellites, epc_end, epc_start,cfg):
                 #         "data_downlinked": run.summary.data_downlink/1000000000,
                 #         "gs_list": run.summary.gs_list
                 #     })
+            elif i > 10:
+                gs_list = [bh.PointLocation(2.534985,-72.011643)]
+                for gs in range(1,i):
+                    lon = run.summary.get(f'log_of_simplexes_lon{gs+1}')
+                    lat = run.summary.get(f'log_of_simplexes_lat{gs+1}')
+
+                    point_loc = bh.PointLocation(lon, lat)
+                    point_loc.set_id(i)
+                    gs_list.append(point_loc)
+                print(gs_list)
+
+                contacts, contact_secs = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
+                # _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
+                print(sum(contact_secs))
+                # print(sum(contacts_exclusion_secs))
+                e_data_downlink_list.append({
+                    "gs_number": i*1.0, #+0.25
+                    "data_downlinked": np.sum(contact_secs)*cfg.scenario.datarate/1000000000/2,
+                    # "gs_list": run.summary.gs_list
+                    })
+
+
 
     # Convert the list of dictionaries into a pandas DataFrame
     e_data_downlink_df = pd.DataFrame(e_data_downlink_list)

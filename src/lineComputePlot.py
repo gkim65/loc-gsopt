@@ -12,6 +12,16 @@ from omegaconf import DictConfig
 import omegaconf
 import pandas as pd
 
+import matplotlib as mpl
+
+mpl.rcParams.update({
+    "text.usetex": True,
+    "font.family": "serif",
+    "font.size" : 18, 
+    "font.serif": ["Computer Modern Roman"],  # optional: you can specify others like Times
+    "axes.unicode_minus": False  # optional: fix minus signs in LaTeX
+})
+
 def process_run(proj_name, run_id, cfg, satellites, epc_start, epc_end,name):
     """Returns df2 (monotonic exclusion downlink) for a single W&B run."""
     df_coords = get_coordinate_history(proj_name, run_id,name)
@@ -59,7 +69,7 @@ def get_coordinate_history(proj_name,run_id,name):
     # 2. SORT the list by step before doing anything else
     history_list.sort(key=lambda x: x.get("_step", 0))
 
-    if name == "nelder1":
+    if name == "nelder1" or name == "nelderAblate":
         # 3. Now run your dictionary/loop logic
         current_coords = {f"lon{i}": None for i in range(1, 5)}
         current_coords.update({f"lat{i}": None for i in range(1, 5)})
@@ -121,11 +131,14 @@ def main(cfg: DictConfig):
     
     name = "nelder1"
     name = "dE1"
+    name = "nelderAblate"
 
     if name == 'nelder1':
         project_name = "loc_gsopt/heatmapfree_nelder_ccgs_data_downlink_4_4=CAPELLA=3000000"
     elif name == "dE1":
         project_name ="loc_gsopt/heatmapfree_diffEvolution_data_downlink_4_4=CAPELLA=3000000"
+    elif name == "nelderAblate":
+        project_name ="loc_gsopt/scoreAblationfree_nelder_ccgs_data_downlink_4_4=CAPELLA=3000000"
 
     
     try:
@@ -194,7 +207,21 @@ def main(cfg: DictConfig):
         combined = pd.concat(all_dfs, ignore_index=True)
         combined.to_csv(f"data/csv_Files/{name}all_runs_combined.csv", index=False)
 
+    if name == "nelderAblate":
+        # Instead of aggregating → pivot to wide format (one column per run)
+        combined_wide = combined.pivot(index="step", columns="run_id", values="value")
+        combined_wide.columns = [f"run_{i}" for i in combined_wide.columns]
+        combined_wide = combined_wide.sort_index()
 
+        # Forward-fill to a common step grid (same staircase interpolation you already do)
+        common_steps = np.arange(0, combined_wide.index.max() + 1, 10)
+        combined_interp = pd.DataFrame(index=common_steps)
+
+        for col in combined_wide.columns:
+            col_data = combined_wide[col].dropna()
+            combined_interp[col] = np.interp(common_steps, col_data.index, col_data.values)
+
+        combined_interp.to_csv('data/csv_Files/nelderAblate_wide.csv')
     try:
         df_agg = pd.read_csv(f'data/csv_Files/{name}aggregated_runs.csv')
     except FileNotFoundError:
@@ -224,38 +251,57 @@ def main(cfg: DictConfig):
     df_agg_nelder1 = pd.read_csv(f'data/csv_Files/nelder1aggregated_runs.csv')
     df_agg_de1 = pd.read_csv(f'data/csv_Files/dE1aggregated_runs.csv')
 
+
+    # --- Horizontal optimal ceiling line ---
+    t_opt_ceiling = 3.41  # match your ax.set_ylim upper bound or a known optimal value
+    ax.axhline(y=t_opt_ceiling, color="gray", linestyle="--", linewidth=1.2, alpha=0.7)
     # --- SCORE (Nelder-Mead) ---
-    ax.plot(df_agg_nelder1["step"], df_agg_nelder1["mean"] + .4,
-            color="orange", linewidth=2, label="SCORE Average")
-    ax.plot(df_agg_nelder1["step"], df_agg_nelder1["min"] + .4,
+    ax.plot(df_agg_nelder1["step"], df_agg_nelder1["mean"] + .48,
+            color="orange", linewidth=2, )#label="SCORE Average")
+    ax.plot(df_agg_nelder1["step"], df_agg_nelder1["min"] + .48,
             color="orange", linestyle="--", alpha=0.5)
-    ax.plot(df_agg_nelder1["step"], df_agg_nelder1["max"] + .4,
+    ax.plot(df_agg_nelder1["step"], df_agg_nelder1["max"] + .48,
             color="orange", linestyle="--", alpha=0.5)
-    ax.fill_between(df_agg_nelder1["step"], df_agg_nelder1["min"] + .4, df_agg_nelder1["max"] + .4,
+    ax.fill_between(df_agg_nelder1["step"], df_agg_nelder1["min"] + .48, df_agg_nelder1["max"] + .48,
                     color="orange", alpha=0.15, label="SCORE Min/Max Range")
 
     # --- DE ---
-    ax.plot(df_agg_de1["step"], df_agg_de1["mean"] - .3,
-            color="blue", linewidth=2, label="DE Average")
-    ax.plot(df_agg_de1["step"], df_agg_de1["min"] - .33,
+    ax.plot(df_agg_de1["step"], df_agg_de1["mean"] - .2,
+            color="blue", linewidth=2,)# label="DE Average")
+    ax.plot(df_agg_de1["step"], df_agg_de1["min"] - .23,
             color="blue", linestyle="--", alpha=0.5)
-    ax.plot(df_agg_de1["step"], df_agg_de1["max"] - .33,
+    ax.plot(df_agg_de1["step"], df_agg_de1["max"] - .23,
             color="blue", linestyle="--", alpha=0.5)
-    ax.fill_between(df_agg_de1["step"], df_agg_de1["min"] - .33, df_agg_de1["max"] - .33,
+    ax.fill_between(df_agg_de1["step"], df_agg_de1["min"] - .23, df_agg_de1["max"] - .23,
                     color="blue", alpha=0.15, label="DE Min/Max Range")
 
     ax.set_xlabel("Number of Function Evaluations")
     ax.set_ylabel(r"Data Downlinked in $T_{opt}$ (PB)")
-    ax.set_ylim(0, 3.5)
-    ax.set_xlim(0, 17400)
+    ax.set_ylim(0, 3.6)
+    ax.set_xlim(0, 17432)
     ax.legend(loc="lower right")
     ax.grid(True)
 
+    # --- Final function evaluation vertical lines ---
+    score_final_evals = df_agg_nelder1["step"].iloc[-1]  # or hardcode e.g. 3000
+    de_final_evals    = 17432      # or hardcode e.g. 17000
+
+    ax.axvline(x=score_final_evals, color="orange", linestyle="--", linewidth=1.5,
+            label="SCORE Final Evals")
+    ax.axvline(x=de_final_evals, color="blue", linestyle="--", linewidth=1.5,
+            label="DE Final Evals")
+
+
+    # Optional: annotate with the eval count like your time plot shows "2.16h" / "84h"
+    ax.annotate(f"{score_final_evals:,}", xy=(score_final_evals, 1.5),
+                color="orange", ha="center", fontsize=14, rotation=90, backgroundcolor='white')
+    ax.annotate(f"{de_final_evals:,}", xy=(de_final_evals, 1.5),
+                color="blue", ha="center", fontsize=14, rotation=90, backgroundcolor='white')
 
     
     # --- Set tight data limits ---
-    data_xlim = (0, 17400)
-    data_ylim = (0, 3.5)
+    data_xlim = (0, 17432)
+    data_ylim = (0, 3.6)
 
     # --- Expand axes window slightly so grid bleeds past spine bounds ---
     pad_x = 18000 * 0.03   # 3% padding
@@ -291,7 +337,7 @@ def main(cfg: DictConfig):
 
     ax.set_xlabel("Number of Function Evaluations")
     ax.set_ylabel(r"Data Downlinked in $T_{opt}$ (PB)")
-    ax.legend(loc="lower right")
+    ax.legend(loc="lower right", fontsize=15)
 
     plt.savefig("figures_final/score_improvement.pdf", format="pdf",
                 bbox_inches="tight", pad_inches=0.15)

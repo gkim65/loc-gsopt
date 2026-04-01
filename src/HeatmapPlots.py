@@ -27,7 +27,7 @@ import os
 
 
 mpl.rcParams.update({
-    "text.usetex": False,
+    "text.usetex": True,
     "font.family": "serif",
     "font.size" : 24, 
     "font.serif": ["Computer Modern Roman"],  # optional: you can specify others like Times
@@ -72,9 +72,9 @@ def main(cfg: DictConfig):
     # # heatmap_data_DE = avg_data_downlink_df_all.pivot(index='gs_number', columns='sats', values='WallClockTime')# 'WallClockTime')
     # heatmap_data_DE = data_downlink_df_powell.pivot(index='gs_number', columns='sats', values='WallClockTime')
 
-    data_downlink_df_powell = df_generator("heatmap1free_powell_data_downlink","powell_heatmap.csv",epc_end, epc_start,cfg)
-    data_downlink_df_nelder = df_generator("heatmapfree_nelder_ccgs_data_downlink","nelder_heatmap.csv",epc_end, epc_start,cfg)
-    data_downlink_df_DE = df_generator("heatmapfree_diffEvolution_data_downlink", "DE_heatmap.csv", epc_end, epc_start,cfg)
+    data_downlink_df_powell = df_generator("heatmap1free_powell_data_downlink","data/csv_Files/powell_heatmap.csv",epc_end, epc_start,cfg)
+    data_downlink_df_nelder = df_generator("heatmapfree_nelder_ccgs_data_downlink","data/csv_Files/nelder_heatmap.csv",epc_end, epc_start,cfg)
+    data_downlink_df_DE = df_generator("heatmapfree_diffEvolution_data_downlink", "data/csv_Files/DE_heatmap.csv", epc_end, epc_start,cfg)
     heatmap_data_SCORE = data_downlink_df_nelder.pivot(index='gs_number', columns='sats', values='eval_counter4')/1000
     heatmap_data_powell = data_downlink_df_powell.pivot(index='gs_number', columns='sats', values='eval_counter4')/1000
     heatmap_data_DE = data_downlink_df_DE.pivot(index='gs_number', columns='sats', values='eval_counter')/1000
@@ -109,7 +109,7 @@ def main(cfg: DictConfig):
     sm = plt.cm.ScalarMappable(cmap='viridis', norm=norm)
     sm.set_array([])  # needed for ScalarMappable
     cbar = fig.colorbar(sm, cax=cbar_ax, format=LogFormatter())
-    cbar.set_label("# of Function Evaluations (e3, log)")
+    cbar.set_label(r"\# of Function Evaluations ($10^3$, log)")
 
     plt.tight_layout(rect=[0, 0, 0.9, 1])  # leave room for colorbar
     plt.savefig("figures_final/heatmap_comparison.pdf", format='pdf', bbox_inches='tight')
