@@ -1,18 +1,21 @@
 # loc-gsopt
 
-Free-placement optimization of ground station locations for low-Earth-orbit satellites. This is the
-code for Kim, Eddy, Srinivas and Kochenderfer, *Free-Placement Optimization of Ground Station
+Free-placement optimization of ground station locations for low-Earth-orbit satellites.
+
+Code for: Kim, Eddy, Srinivas and Kochenderfer, *Free-Placement Optimization of Ground Station
 Locations for Low-Earth-Orbit Satellites*, Journal of Aerospace Information Systems (2026)
 ([arXiv:2606.12667](https://arxiv.org/abs/2606.12667)).
 
-This code picks where to put a constellation's ground stations so it can downlink as much data as
-possible. A station can go at any point on land, not just at an existing teleport site. Placement
-uses SCORE (Sequential Cyclic Optimization via Refinement & Evaluation), which adds stations one at
-a time, putting each where it adds the most downlink given the stations already placed. It then
-goes back through the network, re-optimizing one station at a time with the others fixed, and keeps
-a change only if the total improves. SCORE works with any inner optimizer; this repository includes
-Nelder-Mead and Powell's method. Penalty terms keep stations on land and apart from each other, and
-can also restrict them to a latitude band or to sites near existing infrastructure.
+This repository implements our paper's ground station placement optimization methods for
+low-Earth-orbit satellite constellations, with a focus on maximizing total data downlink. Ground
+station locations are optimized over continuous longitude and latitude coordinates using our method
+**SCORE (Sequential Cyclic Optimization via Refinement & Evaluation)**. SCORE first places stations
+sequentially, selecting each location to maximize the additional downlink given the existing
+network. It then cyclically refines individual station locations while holding the others fixed,
+accepting only changes that improve total downlink. The method supports different inner optimizers,
+such as Nelder-Mead and Powell's method, both included here. Placement constraints are incorporated
+through penalty terms for land placement, minimum station separation, and optional restrictions on
+latitude and proximity to existing infrastructure.
 
 In the paper we test SCORE on the Capella Space and ICEYE constellations and on a synthetic
 Walker-Star constellation. Compared with differential evolution, it needs up to 5× fewer function
