@@ -98,7 +98,7 @@ def main(cfg: DictConfig):
         satellites = satellites_from_constellation(cfg.scenario.constellations, cfg.debug.txtUpdate)[0:cfg.problem.sat_num]
 
     ########## Check for contacts before initializing WandB ##########
-    gs_list = gs_json('src/examples/groundstations/ksat.json')[cfg.problem.teleport_num]
+    gs_list = gs_json('data/groundstations/ksat.json')[cfg.problem.teleport_num]
 
     # Compute contacts for just the initial epoch as a pre-check
     contacts, _ = compute_contact_times(satellites, [gs_list], epc_start, epc_end)
@@ -121,8 +121,8 @@ def main(cfg: DictConfig):
     ########## Solvers: ##########
 
     if cfg.debug.wandb and wandbUse:
-        gs_list = gs_json('src/examples/groundstations/ksat.json')[cfg.problem.teleport_num]
-        gs_list_plot = gs_json_list('src/examples/groundstations/ksat.json')[cfg.problem.teleport_num]
+        gs_list = gs_json('data/groundstations/ksat.json')[cfg.problem.teleport_num]
+        gs_list_plot = gs_json_list('data/groundstations/ksat.json')[cfg.problem.teleport_num]
         end_dt = datetime.datetime(
             cfg.end_epoch.year,
             cfg.end_epoch.month,
