@@ -15,7 +15,22 @@ from shapely.geometry import Point, Polygon
 
 
 def diffEvolution(cfg,land_data,epc_start,epc_end,satellites,eval_counter,CITY_KDTREE):
+        """
+            diffEvolution(cfg, land_data, epc_start, epc_end, satellites, eval_counter, CITY_KDTREE) -> (list, list)
 
+        Place all `cfg.problem.gs_num` stations at once with SciPy differential evolution over the
+        flattened `[lon_1, lat_1, ...]` vector, bounded to [-180, 180] x [-90, 90] deg.
+
+          - `cfg` — the Hydra config; `cfg.DE` sets `popsize`, `F` (mutation), `CR` (recombination)
+            and `strategy`
+          - `land_data` — GeoDataFrame of country polygons
+          - `epc_start`, `epc_end` — simulation window (`bh.Epoch`)
+          - `satellites` — propagated `bh.SGPPropagator` objects
+          - `eval_counter` — `EvalCounter`; `de_count` counts objective evaluations
+          - `CITY_KDTREE` — GeoDataFrame of infrastructure zones (`data/city_buffers.shp`)
+
+        Returns the stations as `bh.PointLocation` objects and as `[lon, lat]` pairs (deg).
+        """
         # Setup args for minimize function
         gs_list = []
         gs_list_plot = []
@@ -28,7 +43,6 @@ def diffEvolution(cfg,land_data,epc_start,epc_end,satellites,eval_counter,CITY_K
         if cfg.debug.verbose:
             print("STARTING TO PERFORM MINIMIZATION ON ITERATION: "+str(count))
 
-        # # Perform the optimization using Nelder-Mead
         result = differential_evolution(cost_func_diffEvolution, 
                         bounds = [(-180.0, 180.0), (-90.0, 90.0)] * cfg.problem.gs_num,
                         args = (sat_list, epc_start, epc_end, land_geometries, cfg, count, eval_counter,CITY_KDTREE, verbose, False), 
@@ -42,13 +56,6 @@ def diffEvolution(cfg,land_data,epc_start,epc_end,satellites,eval_counter,CITY_K
                 print("Final GS list: "+str(result.x))
 
         print(result)
-        # if cfg.debug.wandb:
-        #         contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end, False)
-        #         _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
-        #         wandb.summary["gs_list"+str(iterate)] = gs_list_plot 
-        #         wandb.summary["contact_num"+str(iterate)] = len(contacts_exclusion_secs) 
-        #         wandb.summary["seconds"+str(iterate)] = np.sum(contacts_exclusion_secs)
-        #         wandb.summary["data_downlink"+str(iterate)] = np.sum(contacts_exclusion_secs)*cfg.scenario.datarate
         gs_list_plot =  [[lon, lat] for lon, lat in zip(result.x[::2], result.x[1::2])]
         gs_list = [bh.PointLocation(coord[0], coord[1]) for coord in gs_list_plot] 
         
