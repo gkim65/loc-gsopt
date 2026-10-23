@@ -25,6 +25,7 @@ problem:
   teleport_num: 10
   sat_num: 5 # Start with 10, just to not overload the solver
   data_rate: 1200000000 # bps
+  solver: "cbc"  # MILP solver for contact exclusion: "cbc" (free) or "gurobi" (needs a license)
 
 DE: # Hyperparameter Tuning
   popsize: 15

@@ -5,9 +5,23 @@ code for Kim, Eddy, Srinivas and Kochenderfer, *Free-Placement Optimization of G
 Locations for Low-Earth-Orbit Satellites*, Journal of Aerospace Information Systems (2026)
 ([arXiv:2606.12667](https://arxiv.org/abs/2606.12667)).
 
-Rather than choosing from a fixed list of candidate sites, the optimizer places each ground station
-anywhere on Earth to maximize the data a constellation can downlink, subject to staying on land and
-apart from the other stations.
+Ground station networks are usually planned by picking sites from a fixed list of existing
+teleports. Here, stations can go anywhere on land. The repository implements **SCORE** (Sequential
+Cyclic Optimization via Refinement & Evaluation):
+
+1. **Place** stations one at a time, each at the point that most increases the data the
+   constellation can downlink given the stations already chosen.
+2. **Refine** by cycling through the stations, re-optimizing each one with the others held
+   fixed and keeping the move only if the whole network improves.
+
+Each search runs Nelder-Mead on the unit sphere, which avoids the singularities of latitude and
+longitude at the poles, or Powell's method. Penalties keep stations on land and apart from each
+other, and can also hold them within latitude limits or near existing infrastructure.
+
+Across Capella Space, ICEYE and a synthetic Walker-Star constellation, SCORE needs up to **5×
+fewer function evaluations** than differential evolution and downlinks up to **13% more**. It
+delivers up to **15% more** total downlink than choosing among fixed teleport or KSAT sites, and
+keeps over **92% of that gain** when stations must sit near existing infrastructure.
 
 ![Ground stations selected for the Capella constellation by each method](images/capella_comparison.png)
 
@@ -23,8 +37,9 @@ uv sync
 
 Two tools come from outside Python:
 
-- **CBC**, the MILP solver used to resolve overlapping contacts: `brew install cbc` on macOS,
-  `sudo apt install coinor-cbc` on Debian/Ubuntu.
+- **CBC**, the free MILP solver used to resolve overlapping contacts: `brew install cbc` on macOS,
+  `sudo apt install coinor-cbc` on Debian/Ubuntu. If you have a Gurobi license, you can use it
+  instead with `problem.solver=gurobi`.
 - **LaTeX**, only for the figure scripts, which typeset labels with `text.usetex`.
 
 ## Quick start
@@ -82,8 +97,8 @@ runs the scripts in turn.
 
 | Path | Contents |
 |---|---|
-| `data/celestrak_tles.txt` | TLE snapshot from [CelesTrak](https://celestrak.org) used for every run |
-| `data/iau2000A_finals_ab.txt` | Earth orientation parameters |
+| `data/celestrak_tles.txt` | TLE snapshot from [CelesTrak](https://celestrak.org), downloaded around 10 April 2025 (its newest TLE epoch) |
+| `data/iau2000A_finals_ab.txt` | Earth orientation parameters, downloaded around mid-January 2025 (measured values end 16 January 2025; later dates are predictions) |
 | `data/ne_10m_admin_0_countries.*` | Country boundaries from [Natural Earth](https://www.naturalearthdata.com/downloads/10m-cultural-vectors/), for the on-land penalty |
 | `data/teleport_locations.json` | Teleport locations |
 | `data/city_buffers.*` | 50 km buffers around the teleport locations, for the infrastructure penalty (made by `data/citymap.py`) |
@@ -91,7 +106,9 @@ runs the scripts in turn.
 | `data/groundstations/` | Ground station lists for commercial providers |
 | `data/csv_Files/` | Results behind the paper figures |
 
-The `jais-2026` tag holds the code and data exactly as used for the paper.
+The TLE and Earth orientation files are snapshots tied to the paper's simulation window
+(1–8 April 2025). Keep them to reproduce the paper; a newer TLE download gives different satellites
+and epochs. The `jais-2026` tag holds the code and data exactly as used for the paper.
 
 ### Configuration notes
 
@@ -100,6 +117,8 @@ teleport-selection path (`problem.type=teleport`) are kept in the code but raise
 `NotImplementedError`; the MILP results used in the paper are in `data/csv_Files/milp_*.csv`.
 
 ## Citation
+
+If you use this repository, or build on this work in general, please cite:
 
 ```bibtex
 @article{kim2026free,

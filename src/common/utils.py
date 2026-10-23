@@ -63,7 +63,7 @@ def contactExclusion(contacts, cfg):
     """
         contactExclusion(contacts, cfg) -> (list, list)
 
-    Select the subset of contacts that can actually be used, by solving a binary program with CBC:
+    Select the subset of contacts that can actually be used, by solving a binary program:
     no two selected contacts may overlap on the same satellite or the same ground station, and
     contacts of 180 s or less are never selected.
 
@@ -73,7 +73,7 @@ def contactExclusion(contacts, cfg):
 
     Returns the selected contacts and their durations (s).
 
-    NOTE: requires the `cbc` executable on PATH.
+    NOTE: solves with `cfg.problem.solver` (default "cbc"), whose executable must be on PATH.
     """
     if not contacts:
         return [], []
@@ -158,7 +158,7 @@ def contactExclusion(contacts, cfg):
     print(f"Unique overlap pairs: {len(overlap_pairs_set)}")
 
     # ── Solve ─────────────────────────────────────────────────────────
-    solver = SolverFactory('cbc')
+    solver = SolverFactory(cfg.problem.get("solver", "cbc"))
     solver_result = solver.solve(model)
     print(solver_result)
     print(f"Selected contacts: {sum(1 for i in range(len(contacts)) if value(model.x[i]) > 0.75)}")
