@@ -61,6 +61,62 @@ def check_supported(cfg):
             raise NotImplementedError(f'problem.{key}="{value}" is not currently supported: {reason}.')
 
 
+def setup_scenario(cfg):
+    """
+        setup_scenario(cfg) -> (bh.Epoch, bh.Epoch, list)
+
+    Seed NumPy, load Earth orientation data, build the satellites and propagate them over
+    the simulation window.
+
+      - `cfg` — the Hydra config for this run
+
+    Returns `epc_start`, `epc_end` and the propagated `bh.SGPPropagator` satellites: the first
+    `cfg.problem.sat_num` TLEs matching `cfg.scenario.constellations`, or a Walker
+    constellation when `cfg.walker.custom`.
+    """
+    epc_start = bh.Epoch(cfg.start_epoch.year,
+                         cfg.start_epoch.month,
+                         cfg.start_epoch.day,
+                         cfg.start_epoch.hour,
+                         cfg.start_epoch.minute,
+                         cfg.start_epoch.second)
+
+    epc_end = bh.Epoch(cfg.end_epoch.year,
+                       cfg.end_epoch.month,
+                       cfg.end_epoch.day,
+                       cfg.end_epoch.hour,
+                       cfg.end_epoch.minute,
+                       cfg.end_epoch.second)
+
+    np.random.seed(int(cfg.debug.randseed))
+
+    eop_file_custom = bh.FileEOPProvider.from_standard_file(
+        repo_path("data/iau2000A_finals_ab.txt"),
+        True,  # Interpolation
+        "Hold",  # Extrapolation
+    )
+    bh.set_global_eop_provider(eop_file_custom)
+
+    if cfg.walker.custom:
+        satellites = make_walker_constellation(
+            epoch=epc_start,
+            altitude_km=cfg.walker.altitude,
+            eccentricity=cfg.walker.eccentricity,
+            inclination=cfg.walker.inclination,
+            num_planes=cfg.walker.num_planes,
+            sats_per_plane= cfg.walker.sats_perplane,
+            phase=cfg.walker.phase,
+            argp=cfg.walker.argp,
+            norad_start=cfg.walker.norad_start,
+            star =cfg.walker.star,
+        )
+    else:
+        satellites = satellites_from_constellation(cfg.scenario.constellations, cfg.debug.txtUpdate)[0:cfg.problem.sat_num]
+
+    bh.par_propagate_to(satellites, epc_end)
+    return epc_start, epc_end, satellites
+
+
 def summarize_free(cfg, satellites, gs_list, gs_list_plot, epc_start, epc_end):
     """
         summarize_free(cfg, satellites, gs_list, gs_list_plot, epc_start, epc_end) -> dict
@@ -145,52 +201,8 @@ def main(cfg: DictConfig):
         wandb.config.update(config_dict, allow_val_change=True)
 
     ########## Initial Scenario Setup: ##########
+    epc_start, epc_end, satellites = setup_scenario(cfg)
 
-    # Setting up start and end epochs
-    epc_start = bh.Epoch(cfg.start_epoch.year, 
-                         cfg.start_epoch.month, 
-                         cfg.start_epoch.day, 
-                         cfg.start_epoch.hour, 
-                         cfg.start_epoch.minute, 
-                         cfg.start_epoch.second) 
-    
-    epc_end = bh.Epoch(cfg.end_epoch.year, 
-                         cfg.end_epoch.month, 
-                         cfg.end_epoch.day, 
-                         cfg.end_epoch.hour, 
-                         cfg.end_epoch.minute, 
-                         cfg.end_epoch.second) 
-    
-    # Set random seed
-    np.random.seed(int(cfg.debug.randseed))
-    
-    # Make sure to load in earth inertial data every start time!
-    # load_earth_data(repo_path('data/iau2000A_finals_ab.txt'),cfg.debug.txtUpdate)
-    eop_file_custom = bh.FileEOPProvider.from_standard_file(
-        repo_path("data/iau2000A_finals_ab.txt"),  # Replace with actual file path
-        True,  # Interpolation
-        "Hold",  # Extrapolation
-    )
-    bh.set_global_eop_provider(eop_file_custom)
-
-    if cfg.walker.custom:
-        satellites = make_walker_constellation(
-            epoch=epc_start,
-            altitude_km=cfg.walker.altitude,
-            eccentricity=cfg.walker.eccentricity,
-            inclination=cfg.walker.inclination,
-            num_planes=cfg.walker.num_planes,
-            sats_per_plane= cfg.walker.sats_perplane,
-            phase=cfg.walker.phase,
-            argp=cfg.walker.argp,
-            norad_start=cfg.walker.norad_start,
-            star =cfg.walker.star,
-        )
-    else:
-        satellites = satellites_from_constellation(cfg.scenario.constellations, cfg.debug.txtUpdate)[0:cfg.problem.sat_num]
-
-    # Step 1: Propagate all satellites in parallel
-    bh.par_propagate_to(satellites, epc_end)
     ########## Solvers: ##########
 
     if cfg.problem.type == "free":
