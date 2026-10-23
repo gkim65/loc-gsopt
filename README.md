@@ -5,14 +5,14 @@ code for Kim, Eddy, Srinivas and Kochenderfer, *Free-Placement Optimization of G
 Locations for Low-Earth-Orbit Satellites*, Journal of Aerospace Information Systems (2026)
 ([arXiv:2606.12667](https://arxiv.org/abs/2606.12667)).
 
-Ground station networks are usually built by choosing from a list of existing teleport sites. We
-let stations go anywhere on land instead, and place them with SCORE (Sequential Cyclic Optimization
-via Refinement & Evaluation). SCORE adds stations one at a time, putting each one where it most
-increases the data the constellation can downlink given the stations already placed. It then goes
-back through the network, re-optimizing one station at a time with the others fixed, and keeps a
-change only if the total improves. SCORE works with any inner optimizer; this repository includes
-Nelder-Mead and Powell's method. Penalty terms keep stations on land and apart from each other,
-and can also restrict them to a latitude band or to sites near existing infrastructure.
+This code picks where to put a constellation's ground stations so it can downlink as much data as
+possible. A station can go at any point on land, not just at an existing teleport site. Placement
+uses SCORE (Sequential Cyclic Optimization via Refinement & Evaluation), which adds stations one at
+a time, putting each where it adds the most downlink given the stations already placed. It then
+goes back through the network, re-optimizing one station at a time with the others fixed, and keeps
+a change only if the total improves. SCORE works with any inner optimizer; this repository includes
+Nelder-Mead and Powell's method. Penalty terms keep stations on land and apart from each other, and
+can also restrict them to a latitude band or to sites near existing infrastructure.
 
 In the paper we test SCORE on the Capella Space and ICEYE constellations and on a synthetic
 Walker-Star constellation. Compared with differential evolution, it needs up to 5× fewer function
