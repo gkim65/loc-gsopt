@@ -13,6 +13,22 @@ import json
 import pyomo.kernel as pk
 
 class ILP_Model:
+    """
+        ILP_Model(ground_stations, satellites, epc0, epc1, max_stations, data_rate=10, solver="cbc")
+
+    Fixed-site baseline: a binary program that selects exactly `max_stations` of the candidate
+    sites, built with `pyomo.kernel`.
+
+      - `ground_stations` — candidate sites from `teleport_json`, ids equal to their list index
+      - `satellites` — propagated `bh.SGPPropagator` objects
+      - `epc0`, `epc1` — simulation window (`bh.Epoch`)
+      - `max_stations` — number of sites to select
+      - `data_rate` — downlink rate (bps)
+      - `solver` — Pyomo solver name, "cbc" (free) or "gurobi" (needs a license)
+
+    NOTE: site names come from `data/most_diverse_100_ground_stations.json` by index, so
+    `ground_stations` must be a prefix of that file.
+    """
     def __init__(self, ground_stations, satellites, epc0, epc1, max_stations, data_rate=10, solver="cbc"):
         self.ground_stations = ground_stations
         self.satellites = satellites
@@ -28,7 +44,7 @@ class ILP_Model:
 
         self.station_contacts = {}
         self.model.x = pk.variable_dict()
-                # Create binary variables for station selection
+        # Create binary variables for station selection
         for i in range(len(self.ground_stations)):
             self.model.x[i] = pk.variable(domain=pk.Binary)
 
@@ -110,6 +126,7 @@ class ILP_Model:
 
 
     def solve(self):
+        """solve() -> None: solve the built model in place with `self.solver`."""
         # Create solver using SolverFactory
         from pyomo.opt import SolverFactory
         solver = SolverFactory(self.solver)
@@ -119,6 +136,14 @@ class ILP_Model:
 
         
     def gap_time_ilp(self):
+         """
+             gap_time_ilp() -> (list, dict, list)
+
+         Select `max_stations` sites to minimize total coverage gap time.
+
+         NOTE: still written against the pre-1.0 brahe access API (`ba` is not imported); the
+         gap-time objective is not currently supported.
+         """
  
          # Get contacts for each station
  
@@ -207,6 +232,14 @@ class ILP_Model:
          return selected_stations, self.station_contacts, all_gap_times
 
     def max_contact_ilp(self):
+        """
+            max_contact_ilp() -> (list, dict, int)
+
+        Select `max_stations` sites to maximize the number of usable contacts.
+
+        NOTE: still written against the pre-1.0 brahe access API (`ba` is not imported); the
+        contact-count objective is not currently supported.
+        """
         # Initialize empty list to store all contacts
         all_contacts = []
 

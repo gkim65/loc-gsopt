@@ -37,9 +37,9 @@ uv sync
 
 Two tools come from outside Python:
 
-- **CBC**, the free MILP solver used to resolve overlapping contacts: `brew install cbc` on macOS,
-  `sudo apt install coinor-cbc` on Debian/Ubuntu. If you have a Gurobi license, you can use it
-  instead with `problem.solver=gurobi`.
+- **CBC**, the free MILP solver used to resolve overlapping contacts and for the fixed-site
+  baseline: `brew install cbc` on macOS, `sudo apt install coinor-cbc` on Debian/Ubuntu. If you have
+  a Gurobi license, you can use it instead with `problem.solver=gurobi`.
 - **LaTeX**, only for the figure scripts, which typeset labels with `text.usetex`.
 
 ## Quick start
@@ -64,6 +64,14 @@ in bits, objective evaluations) and `gs_all.png` to its Hydra output directory,
 | `powell` | SCORE with a Powell inner search |
 | `diffEvolution` | Differential evolution over all stations at once |
 
+The fixed-site baseline from the paper chooses `problem.gs_num` sites from the 100 candidate
+teleports with an integer program (`problem.type=teleport`), e.g. for three stations serving five
+Capella satellites:
+
+```bash
+uv run python src/main.py problem.type=teleport problem.teleport_num=100 problem.gs_num=3
+```
+
 `scripts/run_sweeps.sh` runs the SCORE and Powell seed sweeps over ground station counts.
 
 ## Configuration
@@ -75,7 +83,10 @@ change:
 
 | Key | Default | Meaning |
 |---|---|---|
-| `problem.method` | `diffEvolution` | `nelder_ccgs`, `powell` or `diffEvolution` |
+| `problem.type` | `free` | `free` for free placement, `teleport` for the fixed-site integer program |
+| `problem.method` | `diffEvolution` | `nelder_ccgs`, `powell` or `diffEvolution` (free placement) |
+| `problem.teleport_num` | `10` | Number of candidate sites for `teleport`, the first ones in `data/most_diverse_100_ground_stations.json` |
+| `problem.solver` | `cbc` | Integer-program solver, `cbc` or `gurobi` |
 | `problem.gs_num` | `1` | Number of ground stations to place |
 | `problem.sat_num` | `5` | Number of satellites, the first ones in the TLE file matching `scenario.constellations` |
 | `scenario.constellations` | `CAPELLA` | Satellite name to match in the TLE file, e.g. `ICEYE` |
@@ -135,9 +146,8 @@ and epochs. The `jais-2026` tag holds the code and data exactly as used for the 
 
 ### Configuration notes
 
-`problem.objective` supports `data_downlink`. The gap-time and contact-count objectives and the MILP
-teleport-selection path (`problem.type=teleport`) are kept in the code but raise
-`NotImplementedError`; the MILP results used in the paper are in `data/csv_Files/milp_*.csv`.
+`problem.objective` supports `data_downlink`. The gap-time and contact-count objectives are kept in
+the code but raise `NotImplementedError`.
 
 ## Citation
 
