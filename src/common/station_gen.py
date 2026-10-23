@@ -34,10 +34,22 @@ def gs_json(provider_file):
 
 
 def teleport_json(provider_file):
+    """
+        teleport_json(provider_file) -> list
+
+    Load candidate sites from a JSON list of `{"name", "latitude", "longitude", ...}` records.
+
+      - `provider_file` — path to the JSON file
+
+    Returns `bh.PointLocation` objects in file order, each with its list index as its id.
+    """
     stations = []
 
     stations_json = json.load(open(provider_file, 'r'))
 
-    stations.append(bh.PointLocation(sta['longitude'], sta['latitude']))
+    for i, sta in enumerate(stations_json):
+        station = bh.PointLocation(sta['longitude'], sta['latitude'])
+        station.set_id(i)
+        stations.append(station)
 
     return stations
