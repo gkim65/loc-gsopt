@@ -1,16 +1,17 @@
-/**/data
-/**/__pycache__
-.DS_Store
-**/*.pyc
-/sandbox
+# Python
+__pycache__/
+*.pyc
 *.egg-info
 /.venv
-**/*.gif
-**/*.png
-outputs
-multirun
-/wandb
-src/examples/plotting_wandb/figures_final/*
+/sandbox
 
-figures_final/*
-*.sh
+# Run outputs (Hydra and W&B)
+outputs/
+multirun/
+/wandb/
+
+# Regenerated figures and the local W&B cache
+figures_final/
+wandb_runs_cache.pkl
+
+.DS_Store

@@ -1,13 +1,12 @@
 [project]
 name = "loc-gsopt"
 version = "0.1.0"
-description = "Add your description here"
+description = "Free-placement optimization of ground station locations for low-Earth-orbit satellites"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "brahe>=1.0",
     "cartopy>=0.24.1",
-    "geonamescache>=3.0.0",
     "geopandas>=1.0.1",
     "geopy>=2.4.1",
     "global-land-mask>=1.0.0",
@@ -17,6 +16,7 @@ dependencies = [
     "ipykernel>=6.29.5",
     "matplotlib>=3.10.0",
     "numpy>=1.26.4",
+    "pandas>=3.0.1",
     "pyomo>=6.9.1",
     "scipy>=1.17.1",
     "seaborn>=0.13.2",
