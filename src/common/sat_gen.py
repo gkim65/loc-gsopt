@@ -12,32 +12,31 @@ import brahe as bh
 
 logger = logging.getLogger()
 
+# Commercial constellations whose satellite names appear in the CelesTrak TLE snapshot
 CONSTELLATIONS = sorted(['YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 'FLOCK', 'HAWK', 'CAPELLA', 'LEGION', 'WORLDVIEW', 'GEOEYE',
                   'NUSAT'])
 
-EPHEMERIS_PATH = repo_path('data/celestrak_tles.txt') #(pathlib.Path(__file__).parent.parent /  repo_path('data/celestrak_tles.txt')).absolute()
+# TLE snapshot used for every run; see the README for its date
+EPHEMERIS_PATH = repo_path('data/celestrak_tles.txt')
 
 
-# Working with Satellite States
-
-# The TLE is likely the most accessible way for you to propagate the satellite state. 
-# Brahe has a built-in TLE parser that can be used to load TLEs from lines. 
-# However to make it easier, we define a function to create a TLE from orbital elements.
 def make_tle(epc0, alt, ecc, inc, raan, argp, M, norad_id=99999):
-    '''Get a TLE object from the given orbital elements
+    """
+        make_tle(epc0, alt, ecc, inc, raan, argp, M, norad_id=99999) -> (str, str)
 
-    Args:
-    - epc0 (Epoch): Epoch of the orbital elements / state
-    - alt (float): Altitude of the orbit [km]
-    - ecc (float): Eccentricity of the orbit
-    - inc (float): Inclination of the orbit [deg]
-    - raan (float): Right Ascension of the Ascending Node [deg]
-    - argp (float): Argument of Perigee [deg]
-    - M (float): Mean Anomaly [deg]
+    Two-line element set for a satellite with the given mean orbital elements.
 
-    Returns:
-    - tle (TLE): TLE object for the given orbital elements
-    '''
+      - `epc0` — element epoch (`bh.Epoch`)
+      - `alt` — altitude above the equatorial radius (km)
+      - `ecc` — eccentricity
+      - `inc` — inclination (deg)
+      - `raan` — right ascension of the ascending node (deg)
+      - `argp` — argument of perigee (deg)
+      - `M` — mean anomaly (deg)
+      - `norad_id` — catalog number written into the TLE
+
+    Returns TLE lines 1 and 2.
+    """
 
     alt *= 1e3 # Convert to meters
 
@@ -48,18 +47,25 @@ def make_tle(epc0, alt, ecc, inc, raan, argp, M, norad_id=99999):
 
     return line1, line2
 
-##########################################
-
 def get_last_modified_time(file_path):
+    """get_last_modified_time(file_path) -> float: modification time of `file_path` (s since the epoch)."""
     return os.path.getmtime(file_path)
 
 def get_last_modified_time_as_datetime(file_path):
+    """get_last_modified_time_as_datetime(file_path) -> datetime.datetime: modification time of `file_path`, local time."""
     return datetime.datetime.fromtimestamp(get_last_modified_time(file_path))
 
-# Celestrak and satellite constellations
 
-# Function for downloading celestrak tles
 def get_latest_celestrak_tles(output_dir=repo_path('data')):
+    """
+        get_latest_celestrak_tles(output_dir=repo_path('data')) -> None
+
+    Download CelesTrak's current active-satellite TLEs to `output_dir/celestrak_tles.txt`.
+
+      - `output_dir` — directory to write to, created if missing
+
+    NOTE: this overwrites the committed snapshot, which changes every result that uses it.
+    """
     CELESTRAK_URL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=ACTIVE&FORMAT=TLE'
 
     # Create the output directory if it doesn't exist
@@ -83,7 +89,17 @@ def get_latest_celestrak_tles(output_dir=repo_path('data')):
 
 
 def parse_tle_file(filepath):
+    """
+        parse_tle_file(filepath) -> list
 
+    Parse a three-line TLE file (name line, line 1, line 2).
+
+      - `filepath` — path to the TLE file
+
+    Returns one dict per satellite: `object_name`, `satcat_id`, `epoch` (`bh.Epoch`),
+    `semi_major_axis` (m), `altitude` (km above the equatorial radius), `eccentricity`,
+    `inclination`, `right_ascension`, `arg_of_perigee`, `mean_anomaly` (deg) and the three raw lines.
+    """
     # Create an empty list to store parsed TLE records
     tle_records = []
 
@@ -138,7 +154,17 @@ def parse_tle_file(filepath):
     return tle_records
 
 def get_tles(download):
+    """
+        get_tles(download) -> list
 
+    Parsed records from `EPHEMERIS_PATH`, downloading the file if it is missing.
+
+      - `download` — also re-download when the file is more than a day old
+
+    Returns the records from `parse_tle_file`.
+
+    NOTE: `download=True` (`debug.txtUpdate`) replaces the snapshot the paper used.
+    """
     if not os.path.exists(EPHEMERIS_PATH):
         get_latest_celestrak_tles()
 
@@ -160,7 +186,17 @@ def get_tles(download):
     return parse_tle_file(EPHEMERIS_PATH)
 
 def satellites_from_constellation(constellation: str, download):
+    """
+        satellites_from_constellation(constellation, download) -> list
 
+    SGP4 propagators for every satellite whose TLE name contains `constellation`.
+
+      - `constellation` — case-insensitive name fragment, e.g. "CAPELLA" or "ICEYE"
+      - `download` — passed to `get_tles`
+
+    Returns unpropagated `bh.SGPPropagator` objects in TLE-file order; callers take the first
+    `problem.sat_num`.
+    """
     # Load the TLE data
     tle_data = get_tles(download)
 
@@ -185,7 +221,21 @@ def make_walker_constellation(
     star = True,
 ):
     """
-    Generate a Walker-Delta constellation and return a list of Spacecraft objects.
+        make_walker_constellation(epoch, altitude_km=550, eccentricity=0.001, inclination=90, num_planes=6, sats_per_plane=4, phase=1, argp=0.0, norad_start=10000, star=True) -> list
+
+    Walker constellation of near-circular orbits at one altitude and inclination.
+
+      - `epoch` — element epoch (`bh.Epoch`)
+      - `altitude_km` — altitude (km)
+      - `eccentricity` — eccentricity
+      - `inclination` — inclination (deg)
+      - `num_planes`, `sats_per_plane` — constellation size
+      - `phase` — Walker phasing factor between adjacent planes
+      - `argp` — argument of perigee (deg)
+      - `norad_start` — catalog number of the first satellite
+      - `star` — spread planes over 180 deg of RAAN (Walker-Star) instead of 360 deg (Walker-Delta)
+
+    Returns `bh.SGPPropagator` objects, plane by plane.
     """
     total_sats = num_planes * sats_per_plane
     plane_spacing = 180 if star else 360  # Key difference between Star/Delta
@@ -196,10 +246,8 @@ def make_walker_constellation(
         for s in range(sats_per_plane):
             mean_anomaly = ( (360.0 / sats_per_plane) * s + \
                  (phase * p * 360.0 / total_sats) ) % 360.0
-            # mean_anomaly = (360/sats_per_plane) * ((s + phase*p) % sats_per_plane)
             norad_id = norad_start + p * sats_per_plane + s
             
-            # Create TLE using your make_tle function
             line1, line2 = make_tle(
                 epc0=epoch,
                 alt=altitude_km,
