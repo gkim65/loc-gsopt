@@ -1,0 +1,10 @@
+constellation,gs_number,data_downlinked,run_id,run_name,project
+CAPELLA,1,90247.9218756,oyzpwo72,scarlet-lake-2,loc_gsopt/teleport_select_100_data_downlink_1_5=CAPELLA=3000000
+CAPELLA,2,176310.9140676,lr0teg9e,cosmic-lake-2,loc_gsopt/teleport_select_100_data_downlink_2_5=CAPELLA=3000000
+CAPELLA,3,261894.73536,rvk4lxre,serene-frost-2,loc_gsopt/teleport_select_100_data_downlink_3_5=CAPELLA=3000000
+CAPELLA,4,345416.3833032,e48yv1xa,copper-elevator-1,loc_gsopt/teleport_select_100_data_downlink_4_5=CAPELLA=3000000
+CAPELLA,5,428740.068624,y3iynafi,bright-sunset-3,loc_gsopt/teleport_select_100_data_downlink_5_5=CAPELLA=3000000
+CAPELLA,7,587997.230748,n2ytryef,wise-wood-2,loc_gsopt/teleport_select_100_data_downlink_7_5=CAPELLA=3000000
+CAPELLA,10,792912.1926732,345h0ce0,ethereal-thunder-2,loc_gsopt/teleport_select_100_data_downlink_10_5=CAPELLA=3000000
+CAPELLA,15,1055470.5747468,yfdjsfvi,mild-terrain-2,loc_gsopt/teleport_select_100_data_downlink_15_5=CAPELLA=3000000
+CAPELLA,20,1302079.6978176,ig5gklnv,jolly-hill-2,loc_gsopt/teleport_select_100_data_downlink_20_5=CAPELLA=3000000

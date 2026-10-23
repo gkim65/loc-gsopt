@@ -1,0 +1,10 @@
+constellation,gs_number,data_downlinked,run_id,run_name,project
+CAPELLA,1,84708.1867512,ff532snj,pretty-snowball-1,loc_gsopt/KSAT_MILP_data_downlink_1_5=CAPELLA=3000000
+CAPELLA,2,168854.2712172,jytarj2b,stellar-waterfall-1,loc_gsopt/KSAT_MILP_data_downlink_2_5=CAPELLA=3000000
+CAPELLA,3,251407.3644816,10wz7s2r,driven-wood-1,loc_gsopt/KSAT_MILP_data_downlink_3_5=CAPELLA=3000000
+CAPELLA,4,329599.067874,cxacr13f,jumping-water-1,loc_gsopt/KSAT_MILP_data_downlink_4_5=CAPELLA=3000000
+CAPELLA,5,404715.6123132,a5iapsdv,peachy-energy-5,loc_gsopt/KSAT_MILP_data_downlink_5_5=CAPELLA=3000000
+CAPELLA,7,541925.7099684001,dn5b2kny,vibrant-feather-1,loc_gsopt/KSAT_MILP_data_downlink_7_5=CAPELLA=3000000
+CAPELLA,10,719664.119388,28ivxbda,dark-plasma-1,loc_gsopt/KSAT_MILP_data_downlink_10_5=CAPELLA=3000000
+CAPELLA,15,959753.006112,ktr4dcmi,denim-breeze-1,loc_gsopt/KSAT_MILP_data_downlink_15_5=CAPELLA=3000000
+CAPELLA,20,1137944.111574,3do1h4th,dulcet-pyramid-1,loc_gsopt/KSAT_MILP_data_downlink_20_5=CAPELLA=3000000
