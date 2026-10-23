@@ -1,0 +1,1002 @@
+[
+  {
+    "name": "Encompass Digital Media Woofferton Teleport",
+    "latitude": 52.3097807,
+    "longitude": -2.7203587,
+    "region": "Europe",
+    "country": "United Kingdom\n",
+    "metro_area": "Woofferton",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "We Are I.T. Philippines, Incorporated",
+    "latitude": 14.594343,
+    "longitude": 121.05599,
+    "region": "Asia-Pacific",
+    "country": "Philippines",
+    "metro_area": "Manila",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "Elara Queretaro Teleport - Quer\u00e9taro, Mexico",
+    "latitude": 20.566841,
+    "longitude": -100.281953,
+    "region": "Latin America",
+    "country": "Mexico",
+    "metro_area": "Mexico City",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Yahsat Al Ain (Site B)",
+    "latitude": 24.1786111111111,
+    "longitude": 55.78,
+    "region": "Middle East/Africa",
+    "country": "United Arab Emirates",
+    "metro_area": "Al Ain",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Globalstar Cordoba",
+    "latitude": -31.6045616,
+    "longitude": -64.5691617,
+    "region": "Latin America",
+    "country": "Argentina",
+    "metro_area": "Cordoba",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "SpaceX/Starlink Ki Ki SA Gateway",
+    "latitude": -35.5716751,
+    "longitude": 139.8173501,
+    "region": "Asia-Pacific",
+    "country": "Australia",
+    "metro_area": "Adelaide",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "Cape Town Film Studios Data Centre\n",
+    "latitude": -34.02762,
+    "longitude": 18.71868,
+    "region": "Middle East/Africa\n",
+    "country": "South Africa\n",
+    "metro_area": "Cape Town\n",
+    "certification": "Cape Town Film Studios \n",
+    "wta_member": null
+  },
+  {
+    "name": "SpaceX/Starlink Honololu HI Gateway",
+    "latitude": 21.31494,
+    "longitude": -157.8664848,
+    "region": "North America",
+    "country": "United States",
+    "metro_area": "Honolulu",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "Roberts Communications Network",
+    "latitude": 43.775835,
+    "longitude": -71.681964,
+    "region": "North America",
+    "country": "United States",
+    "metro_area": "Boston",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "ATLAS Space Operations - Mojave, CA\n",
+    "latitude": 35.0536819,
+    "longitude": -118.1558159,
+    "region": "North America\n",
+    "country": "United States\n",
+    "metro_area": "Los Angeles\n",
+    "certification": null,
+    "wta_member": null
+  },
+  {
+    "name": "SES Kiev Teleport",
+    "latitude": 50.46615,
+    "longitude": 30.504861111111,
+    "region": "Europe",
+    "country": "Ukraine",
+    "metro_area": "Kiev",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "Maroc Telecom Dakhla",
+    "latitude": 23.693447,
+    "longitude": -15.9350118,
+    "region": "Middle East/Africa",
+    "country": "Morocco",
+    "metro_area": "Dakhla",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "SpaceX/Starlink Ishikari\n",
+    "latitude": 43.1732192,
+    "longitude": 141.2583617,
+    "region": "Asia-Pacific",
+    "country": "Japan",
+    "metro_area": "Sapporo",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "Microcom Fairbanks Teleport",
+    "latitude": 64.8549387,
+    "longitude": -147.6860494,
+    "region": "North America",
+    "country": "United States",
+    "metro_area": "Fairbanks",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "Indiasign Kolkata Teleport",
+    "latitude": 22.569866,
+    "longitude": 88.42956,
+    "region": "Asia-Pacific",
+    "country": "India",
+    "metro_area": "Kolkata",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Scopetel Sdn Bhd Cyberjaya",
+    "latitude": 2.91714,
+    "longitude": 101.66189,
+    "region": "Asia-Pacific",
+    "country": "Malaysia",
+    "metro_area": "Kuala Lumpur",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "SpaceX/Starlink Surubim\n",
+    "latitude": -7.8539302,
+    "longitude": -35.7800803,
+    "region": "Latin America\n",
+    "country": "Brazil",
+    "metro_area": "Recife",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "SuperTech STL ltd (Gilat Colo)",
+    "latitude": 5.6111,
+    "longitude": -0.19336,
+    "region": "Middle East/Africa",
+    "country": "Ghana",
+    "metro_area": "Accra",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Sencinet Zona Franca Teleport",
+    "latitude": 4.670462,
+    "longitude": -74.1639188,
+    "region": "Latin America",
+    "country": "Colombia",
+    "metro_area": "Bogota",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Rwanda Broadcasting Agency",
+    "latitude": -1.9383838,
+    "longitude": 30.0827172,
+    "region": "Middle East/Africa\n",
+    "country": "Rwanda",
+    "metro_area": "Kigali",
+    "certification": null,
+    "wta_member": null
+  },
+  {
+    "name": "TDC Herstedvester",
+    "latitude": 55.68012,
+    "longitude": 12.354422,
+    "region": "Europe",
+    "country": "Denmark",
+    "metro_area": "Copenhagen",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "SpaceX/Starlink Passa Quatro",
+    "latitude": -22.350536,
+    "longitude": -44.944711,
+    "region": "Latin America\n",
+    "country": "Brazil",
+    "metro_area": "Rio de Janeiro",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "Space Operations New Zealand Limited - Awarua ",
+    "latitude": -46.5288827,
+    "longitude": 168.3811515,
+    "region": "Asia-Pacific",
+    "country": "New Zealand\n",
+    "metro_area": "Awarua ",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Prince Albert Satellite Station",
+    "latitude": 53.21166667,
+    "longitude": -105.9302778,
+    "region": "North America",
+    "country": "Canada",
+    "metro_area": null,
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "Gilat Satcom Tel Aviv",
+    "latitude": 32.097682,
+    "longitude": 34.854432,
+    "region": "Middle East/Africa",
+    "country": "Israel",
+    "metro_area": "Tel Aviv",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "SSC Clewiston Florida Satellite Station",
+    "latitude": 26.7477182,
+    "longitude": -81.0492164,
+    "region": "North America",
+    "country": "United States",
+    "metro_area": "Miami",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "Optus Lockridge Teleport - Perth, Australia",
+    "latitude": -31.880318,
+    "longitude": 115.941223,
+    "region": "Asia-Pacific",
+    "country": "Australia",
+    "metro_area": "Perth",
+    "certification": "No",
+    "wta_member": "Yes"
+  },
+  {
+    "name": "OmniAccess Teleport",
+    "latitude": 39.6352081,
+    "longitude": 2.6304638,
+    "region": "Europe",
+    "country": "Mallorca",
+    "metro_area": "Palma",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "ATLAS Space Operations - Tahiti, French Polynesia\n",
+    "latitude": -17.64,
+    "longitude": -149.61,
+    "region": "Asia-Pacific",
+    "country": "French Polynesia\n",
+    "metro_area": "Papeete",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "Solomon Telekom",
+    "latitude": -9.4307791,
+    "longitude": 159.9524674,
+    "region": "Asia-Pacific",
+    "country": "Soloman Islands",
+    "metro_area": "Honiara",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "RSCC Zheleznogorsk Teleport",
+    "latitude": 56.24975,
+    "longitude": 93.5143972,
+    "region": "Asia-Pacific",
+    "country": "Russia",
+    "metro_area": "Krasnoyarsk",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "Tata New Delhi",
+    "latitude": 28.630919,
+    "longitude": 77.207869,
+    "region": "Asia-Pacific",
+    "country": "India",
+    "metro_area": "New Delhi",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Kongsberg Satellite Services, SvalSat",
+    "latitude": 78.229206,
+    "longitude": 15.390987,
+    "region": "Europe",
+    "country": "Norway",
+    "metro_area": "Longyearbyen",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Suddenlink Communications",
+    "latitude": 30.642714,
+    "longitude": -96.3328266,
+    "region": "North America",
+    "country": "United States",
+    "metro_area": "Houston",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "A-Socmos Yokohama",
+    "latitude": 35.5055841,
+    "longitude": 139.5139215,
+    "region": "Asia-Pacific",
+    "country": "Japan",
+    "metro_area": "Yokohama",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "Viasat RTE Pretoria\n",
+    "latitude": -25.88446,
+    "longitude": 27.70926,
+    "region": "Middle East/Africa\n",
+    "country": "South Africa\n",
+    "metro_area": "Johannesburg\n",
+    "certification": null,
+    "wta_member": null
+  },
+  {
+    "name": "SES Manassas",
+    "latitude": 38.7837778,
+    "longitude": -77.5734167,
+    "region": "North America",
+    "country": "United States",
+    "metro_area": "Washington DC",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "CONTEC Boden\n",
+    "latitude": 65.801187,
+    "longitude": 21.679534,
+    "region": "Europe",
+    "country": "Sweden",
+    "metro_area": "Boden",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Telespazio - Scanzano Space Centre",
+    "latitude": 37.913421,
+    "longitude": 13.361766,
+    "region": "Europe",
+    "country": "Italy",
+    "metro_area": "Palermo",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "Hawaii Pacific Teleport Guam",
+    "latitude": 13.418494,
+    "longitude": 144.752154,
+    "region": "Asia-Pacific",
+    "country": "Guam",
+    "metro_area": "Pulantat",
+    "certification": "PROVISIONAL CERTIFICATION",
+    "wta_member": "Yes"
+  },
+  {
+    "name": "L-3 Communication Systems-West",
+    "latitude": 40.783137,
+    "longitude": -111.951599,
+    "region": "North America",
+    "country": "United States",
+    "metro_area": "Salt Lake City",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "SpaceX/Starlink Kendan\n",
+    "latitude": -3.977442,
+    "longitude": 122.5112923,
+    "region": "Asia-Pacific",
+    "country": "Indonesia",
+    "metro_area": "Kendari",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "Speedcast Lima",
+    "latitude": -12.2483,
+    "longitude": -76.8914,
+    "region": "Latin America\n",
+    "country": "Peru",
+    "metro_area": "Lima",
+    "certification": "TIER 3 CERTIFIED TELEPORT",
+    "wta_member": "Yes"
+  },
+  {
+    "name": "GlobalStar Las Palmas\n",
+    "latitude": 17.9773825,
+    "longitude": -67.1366788,
+    "region": "Latin America\n",
+    "country": "Puerto Rico\n",
+    "metro_area": "Las Palmas\n",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Tierra del Fuego Ground Station",
+    "latitude": -54.510862,
+    "longitude": -67.115683,
+    "region": null,
+    "country": null,
+    "metro_area": null,
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "SpaceX/Starlink Redmond WA Gateway\n",
+    "latitude": 47.6943092,
+    "longitude": -122.0323562,
+    "region": "North America\n",
+    "country": "United States\n",
+    "metro_area": "Seattle",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Isotropic Networks Inc. Teleport - Lake Geneva, WI, USA",
+    "latitude": 42.617925,
+    "longitude": -88.439068,
+    "region": "North America",
+    "country": "United States",
+    "metro_area": "Milwaukee",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "Asianet Satellite Communications",
+    "latitude": 9.9920496,
+    "longitude": 76.3088327,
+    "region": null,
+    "country": null,
+    "metro_area": null,
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "SpaceX/Starlink St. John's NL Gateway",
+    "latitude": 47.5609626,
+    "longitude": -52.7755931,
+    "region": "North America",
+    "country": "Canada",
+    "metro_area": "St. John's",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "Hong Kong Cyberport",
+    "latitude": 22.2618386,
+    "longitude": 114.1293776,
+    "region": "Asia-Pacific",
+    "country": "China",
+    "metro_area": "Hong Kong",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "NT Telecom (CAT Telecom) Ubol Ratchathani",
+    "latitude": 15.1951708,
+    "longitude": 105.3645837,
+    "region": "Asia-Pacific\n",
+    "country": "Thailand",
+    "metro_area": "Ubol Ratchathani",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Dalkom Somalia",
+    "latitude": 2.007,
+    "longitude": 45.292,
+    "region": "Middle East/Africa",
+    "country": "Somalia",
+    "metro_area": "Mogadishu",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "Telkomsat Satellite Master Control Station",
+    "latitude": -6.4481158,
+    "longitude": 106.9366011,
+    "region": "Asia-Pacific",
+    "country": "Indonesia",
+    "metro_area": "Jakarta",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Kongsberg Earth Station, Troll Station",
+    "latitude": -72.011643,
+    "longitude": 2.534985,
+    "region": "Europe",
+    "country": "Norway",
+    "metro_area": "Svalbard",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "FLYCOM LTD",
+    "latitude": 55.806375,
+    "longitude": 37.704674,
+    "region": "Europe",
+    "country": "Russia",
+    "metro_area": "Moscow",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Telespazio - Lario Space Centre",
+    "latitude": 46.158725,
+    "longitude": 9.409699,
+    "region": "Europe",
+    "country": "Italy",
+    "metro_area": "Milan",
+    "certification": "TIER 4 CERTIFIED TELEPORT",
+    "wta_member": "Yes"
+  },
+  {
+    "name": "ViaSat RTE Alice Springs",
+    "latitude": -23.7588982,
+    "longitude": 133.8803847,
+    "region": "Asia-Pacific",
+    "country": "Australia",
+    "metro_area": "Alice Springs",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "MSTelcom Luanda Teleport",
+    "latitude": -8.7719011,
+    "longitude": 13.2953534,
+    "region": "Africa",
+    "country": "Angola",
+    "metro_area": "Luanda",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "SpaceX/Starlink Willows QLD Gateway",
+    "latitude": -23.6667131,
+    "longitude": 147.50248,
+    "region": "Asia-Pacific",
+    "country": "Australia",
+    "metro_area": "Brisbane",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "Suparco Karachi ",
+    "latitude": 24.94568,
+    "longitude": 67.135841,
+    "region": "Asia-Pacific",
+    "country": "Pakistan ",
+    "metro_area": "Karachi",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Inmarsat Beijing Teleport",
+    "latitude": 40.1172,
+    "longitude": 116.2275,
+    "region": "Asia-Pacific",
+    "country": "China",
+    "metro_area": "Beijing",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "ESA Santa Maria Azores",
+    "latitude": 36.99725,
+    "longitude": -25.13572222,
+    "region": null,
+    "country": null,
+    "metro_area": null,
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "Telecom Fiji Yaqara",
+    "latitude": -17.4389057,
+    "longitude": 177.9772341,
+    "region": "Asia-Pacific",
+    "country": "Fiji",
+    "metro_area": "Suva",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "OMNi Teleport",
+    "latitude": 39.57993,
+    "longitude": -104.8593,
+    "region": "North America",
+    "country": "United States",
+    "metro_area": "Denver",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Jeddah Iridium Gateay",
+    "latitude": 21.39675,
+    "longitude": 39.384028,
+    "region": "Middle East/Africa",
+    "country": "Saudi Arabia",
+    "metro_area": "Jeddah",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Cinetcomm Atlanta Teleport (Atlanta International Teleport)",
+    "latitude": 33.7088606,
+    "longitude": -84.7077492,
+    "region": "North America",
+    "country": "United States",
+    "metro_area": "Atlanta",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "SpaceX/Starlink Nome AK Gateway",
+    "latitude": 64.5034417,
+    "longitude": -165.4285391,
+    "region": "North America",
+    "country": "United States",
+    "metro_area": "Nome",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "Telefonica Servicios Audiovisuales SA",
+    "latitude": 40.39759,
+    "longitude": -3.792241,
+    "region": "Europe",
+    "country": "Spain",
+    "metro_area": "Madrid",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "SpaceX/Starlink Manaus",
+    "latitude": -2.9263873,
+    "longitude": -59.997961,
+    "region": "Latin America",
+    "country": "Brazil",
+    "metro_area": "Manaus",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "VIVACOM - Plana Satellite Station - PlanaSat",
+    "latitude": 42.48266,
+    "longitude": 23.445552,
+    "region": "Europe",
+    "country": "Bulgaria",
+    "metro_area": "Sofia",
+    "certification": "TIER 4 CERTIFIED TELEPORT",
+    "wta_member": "Yes"
+  },
+  {
+    "name": "T\u00fcrksat Lagari Hasan \u00c7elebi Uydu M\u00fczesi",
+    "latitude": 39.6396894,
+    "longitude": 32.801467,
+    "region": "Europe",
+    "country": "Turkey",
+    "metro_area": "Ankara",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Trefoil Networks - TFnet",
+    "latitude": 9.052634,
+    "longitude": 7.4662,
+    "region": "Middle East/Africa",
+    "country": "Nigeria",
+    "metro_area": "Abuja",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "KTsat - Kumsan Earth Station",
+    "latitude": 36.124835,
+    "longitude": 127.488705,
+    "region": "Asia-Pacific",
+    "country": "South Korea\n",
+    "metro_area": "Seoul",
+    "certification": "TIER 4 CERTIFIED TELEPORT",
+    "wta_member": "Yes"
+  },
+  {
+    "name": "SpaceX/Starlink Uruguaiana",
+    "latitude": -29.76558,
+    "longitude": -56.526874,
+    "region": "Latin America\n",
+    "country": "Brazil",
+    "metro_area": "Uruguaiana",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "Marlink (Vizada) Bratislava Teleport",
+    "latitude": 48.180166,
+    "longitude": 17.139905,
+    "region": "Europe",
+    "country": "Slovakia",
+    "metro_area": "Bratislava",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Bluesky Pago Pago",
+    "latitude": -14.3388131,
+    "longitude": -170.7306065,
+    "region": "Asia-Pacific",
+    "country": "American Samoa",
+    "metro_area": "Pago Pago",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Inmarsat Auckland Teleport",
+    "latitude": -36.7482,
+    "longitude": 174.6959,
+    "region": "Asia-Pacific",
+    "country": "New Zealand",
+    "metro_area": "Auckland",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "SpaceX/Starlink Villahermosa Gateway",
+    "latitude": 18.0402005,
+    "longitude": -92.9319755,
+    "region": "Latin America",
+    "country": "Mexico",
+    "metro_area": "Villahermosa",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "Optus Belrose Teleport",
+    "latitude": -33.717513,
+    "longitude": 151.21217,
+    "region": "Asia-Pacific",
+    "country": "Australia",
+    "metro_area": "Sydney",
+    "certification": "TIER 4 CERTIFIED TELEPORT",
+    "wta_member": "Yes"
+  },
+  {
+    "name": "Siminn (Iceland Telecom) Skyggnir Teleport",
+    "latitude": 64.143157,
+    "longitude": -21.687227,
+    "region": "Europe",
+    "country": "Iceland",
+    "metro_area": "Reykjavik",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Inuvik Satellite Station Facility",
+    "latitude": 68.3195115,
+    "longitude": -133.549226,
+    "region": "North America",
+    "country": "United States",
+    "metro_area": null,
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "SpaceX/Starlink Kuparuk AK Gateway",
+    "latitude": 70.3178746,
+    "longitude": -148.9412693,
+    "region": "North America",
+    "country": "United States",
+    "metro_area": "Prudhoe Bay",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "ABE Amachuma Ground Station (+ENTEL)",
+    "latitude": -16.622397,
+    "longitude": -68.13008,
+    "region": "Latin America",
+    "country": "Bolivia",
+    "metro_area": "La Paz",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "SpaceX/Starlink San Clemente Gateway",
+    "latitude": -35.5559817,
+    "longitude": -71.3568696,
+    "region": "Latin America",
+    "country": "Chile",
+    "metro_area": "San Clemente",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "JSAT Space Port South (PASCO Ltd.)",
+    "latitude": 26.1409452,
+    "longitude": 127.6615503,
+    "region": "Asia-Pacific",
+    "country": "Japan",
+    "metro_area": "Okinawa",
+    "certification": null,
+    "wta_member": null
+  },
+  {
+    "name": "Teleport Georgia Ltd",
+    "latitude": 41.6955548,
+    "longitude": 44.904557,
+    "region": "Asia-Pacific",
+    "country": "Georgia",
+    "metro_area": "Tbilisi",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "Digicel Vanuatu Ltd",
+    "latitude": -17.75730654,
+    "longitude": 168.3071706,
+    "region": "Asia-Pacific",
+    "country": "Vanuatu ",
+    "metro_area": null,
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "Teracom Kakn\u00e4stornet",
+    "latitude": 59.335,
+    "longitude": 18.126389,
+    "region": "Europe",
+    "country": "Sweden",
+    "metro_area": "Stockholm",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "SpaceX/Starlink Greenville PA Gateway",
+    "latitude": 41.4337083,
+    "longitude": -80.3336725,
+    "region": "North America",
+    "country": "United States",
+    "metro_area": "Pittsburgh",
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "Tata Pune Teleport",
+    "latitude": 18.6041,
+    "longitude": 73.8657,
+    "region": "Asia-Pacific",
+    "country": "India",
+    "metro_area": "Pune",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Thaicom - Ladlumkaew, Patumthani Teleport ",
+    "latitude": 14.0856111111111,
+    "longitude": 100.421694444444,
+    "region": "Asia-Pacific",
+    "country": "Thailand",
+    "metro_area": "Bangkok",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "ABS Port Moresby Teleport",
+    "latitude": -9.4042153,
+    "longitude": 147.2596443,
+    "region": "Asia-Pacific\n",
+    "country": "Papua New Guinea",
+    "metro_area": "Port Moresby",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "USGS Earth Resources Observation and Science (EROS) Center",
+    "latitude": 43.735654,
+    "longitude": -96.625378,
+    "region": null,
+    "country": null,
+    "metro_area": null,
+    "certification": "No",
+    "wta_member": "No"
+  },
+  {
+    "name": "HyperLink",
+    "latitude": 53.471825,
+    "longitude": -113.4752298,
+    "region": "North America",
+    "country": "Canada",
+    "metro_area": "Edmonton",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "BSS Lessive Teleport",
+    "latitude": 50.129857,
+    "longitude": 5.145344,
+    "region": "Europe",
+    "country": "Belgium",
+    "metro_area": "Lessive",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "iSAT Africa Nairobi Teleport",
+    "latitude": -1.325408,
+    "longitude": 36.850757,
+    "region": "Middle East/Africa",
+    "country": "Kenya",
+    "metro_area": "Nairobi",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "Sencinet Buenos Aires",
+    "latitude": -34.688141,
+    "longitude": -58.312699,
+    "region": "Latin America",
+    "country": "Argentina",
+    "metro_area": "Buenos Aires",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "Telecomm - MEXSAT",
+    "latitude": 29.0966372,
+    "longitude": -111.0042366,
+    "region": "Latin America",
+    "country": "Mexico",
+    "metro_area": "Mexico City",
+    "certification": null,
+    "wta_member": "No"
+  },
+  {
+    "name": "TTcomm Minsk Teleport",
+    "latitude": 52.170346,
+    "longitude": 21.5371756,
+    "region": "Europe",
+    "country": "Poland",
+    "metro_area": "Minsk",
+    "certification": null,
+    "wta_member": "Yes"
+  },
+  {
+    "name": "Amazon Ground Station Middle East - Hamala",
+    "latitude": 26.1545722,
+    "longitude": 50.4740179,
+    "region": "Middle East\n",
+    "country": "Bahrain",
+    "metro_area": "Manama",
+    "certification": null,
+    "wta_member": "No"
+  }
+]
