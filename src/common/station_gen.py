@@ -5,8 +5,17 @@ import brahe as bh
 
 
 def gs_json_list(provider_file):
+    """
+        gs_json_list(provider_file) -> list
 
-    # load file
+    Station coordinates from a GeoJSON FeatureCollection of points (e.g. `data/groundstations/*.json`).
+
+      - `provider_file` — path to the GeoJSON file
+
+    Returns `(lat, lon)` tuples (deg).
+
+    NOTE: the order is latitude first, the reverse of the `[lon, lat]` pairs used elsewhere.
+    """
     with open(provider_file, "r") as f:
         data = json.load(f)
 
@@ -21,7 +30,15 @@ def gs_json_list(provider_file):
 
 
 def gs_json(provider_file):
+    """
+        gs_json(provider_file) -> list
 
+    Stations from a GeoJSON FeatureCollection of points (e.g. `data/groundstations/*.json`).
+
+      - `provider_file` — path to the GeoJSON file
+
+    Returns `bh.PointLocation` objects in file order.
+    """
     stations = []
 
     stations_json = json.load(open(provider_file, 'r'))
