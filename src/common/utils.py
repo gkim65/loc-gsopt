@@ -21,6 +21,17 @@ import pyomo.kernel as pk
 
 
 def xyz_to_latlon(xyz):
+    """
+        xyz_to_latlon(xyz) -> numpy.ndarray
+
+    Convert a Cartesian direction to spherical (not geodetic) latitude and longitude.
+
+      - `xyz` — 3-vector in any length units; it is normalized first
+
+    Returns `[lat, lon]` (deg).
+
+    NOTE: the order is latitude first, the reverse of the `[lon, lat]` pairs used elsewhere.
+    """
     xyz = xyz / np.linalg.norm(xyz)
     x, y, z = xyz
     lat_rad = np.arcsin(z)  # sin(lat) = z
@@ -31,6 +42,16 @@ def xyz_to_latlon(xyz):
 
 
 def latlon_to_xyz(lat_deg, lon_deg):
+    """
+        latlon_to_xyz(lat_deg, lon_deg) -> numpy.ndarray
+
+    Convert spherical latitude and longitude to a unit vector.
+
+      - `lat_deg` — latitude (deg)
+      - `lon_deg` — longitude (deg)
+
+    Returns the unit 3-vector `[x, y, z]`.
+    """
     lat_rad = np.radians(lat_deg)
     lon_rad = np.radians(lon_deg)
     x = np.cos(lat_rad) * np.cos(lon_rad)
@@ -40,17 +61,26 @@ def latlon_to_xyz(lat_deg, lon_deg):
 
 def contactExclusion(contacts, cfg):
     """
-    Solves the contact exclusion problem using a pairwise overlap constraint approach.
+        contactExclusion(contacts, cfg) -> (list, list)
+
+    Select the subset of contacts that can actually be used, by solving a binary program with CBC:
+    no two selected contacts may overlap on the same satellite or the same ground station, and
+    contacts of 180 s or less are never selected.
+
+      - `contacts` — access windows from `compute_contact_times`
+      - `cfg` — the Hydra config; `cfg.problem.objective == "data_downlink"` maximizes total
+        selected contact time
+
+    Returns the selected contacts and their durations (s).
+
+    NOTE: requires the `cbc` executable on PATH.
     """
     if not contacts:
         return [], []
 
     model = ConcreteModel()
 
-    # Instead of using contact.id (which might be None)
-    # Just use enumerate index as the key
-    # And simplify overlap detection to use indices directly
-
+    # Contacts are keyed by their index in `contacts`
     contacts_order = {id(contact): i for i, contact in enumerate(contacts)}
 
     # Decision variables: x[c] = 1 if contact c is selected, 0 otherwise
@@ -158,16 +188,21 @@ def contactExclusion(contacts, cfg):
 
 def compute_contact_times(satellites, ground_stations, epc_start, epc_end, min_elevation_deg=10.0):
     """
-    Compute contact times using Brahe's parallel propagation + batch access.
+        compute_contact_times(satellites, ground_stations, epc_start, epc_end, min_elevation_deg=10.0) -> (list, list)
+
+    Find every access window between the satellites and the ground stations.
+
+      - `satellites` — `bh.SGPPropagator` objects
+      - `ground_stations` — `bh.PointLocation` objects
+      - `epc_start`, `epc_end` — search window (`bh.Epoch`)
+      - `min_elevation_deg` — minimum elevation of the satellite seen from the station (deg)
+
+    Returns the access windows and their durations (s).
+
+    NOTE: the satellites must already be propagated to `epc_end` (`bh.par_propagate_to`).
     """
-
-    # # Step 1: Propagate all satellites in parallel
-    # bh.par_propagate_to(satellites, epc_end)
-
-    # Step 2: Define access constraints
     constraint = bh.ElevationConstraint(min_elevation_deg)
 
-    # Step 3: Compute access windows for all satellites at once
     windows = bh.location_accesses(
         ground_stations,
         satellites,
@@ -176,7 +211,6 @@ def compute_contact_times(satellites, ground_stations, epc_start, epc_end, min_e
         constraint
     )
 
-    # Step 4: Flatten results and compute durations
     all_contacts = []
     contact_times_seconds = []
 
@@ -186,20 +220,19 @@ def compute_contact_times(satellites, ground_stations, epc_start, epc_end, min_e
 
     return all_contacts, contact_times_seconds
 
-# mostly just for plotting
 def compute_earth_interior_angle(ele=0.0, alt=525):
-    '''This function computes the earth interior angle for a given elevation angle and altitude.
-    This is the angle between the satellite and the observer on the Earth's surface viewing the satellite
-    at the given elevation angle. This is more useful for plotting than the look angle, since it
-    can used alonside Earth's Radius to draw a circle around the subsatellite point to get
-    the view cone of observers on the Earth's surface that would be able to see the satellite.
+    """
+        compute_earth_interior_angle(ele=0.0, alt=525) -> float
 
+    Earth central angle between the sub-satellite point and an observer who sees the satellite
+    at elevation `ele`. Multiplied by the Earth radius it gives the radius of the coverage
+    circle drawn on the station maps.
 
-    Args:
-    - ele (float): Elevation angle of the satellite [deg]
-    - alt (float): Altitude of the satellite [km]
+      - `ele` — elevation of the satellite seen by the observer (deg)
+      - `alt` — satellite altitude (km)
 
-    '''
+    Returns the central angle (rad).
+    """
     ele = ele * math.pi / 180.0
 
     rho = math.asin(bh.R_EARTH/(bh.R_EARTH + alt * 1e3))
@@ -211,9 +244,20 @@ def compute_earth_interior_angle(ele=0.0, alt=525):
 
 
 
-# More for getting gap times between one specific contact task, like one satellite to gs
-# Using for plotting for now, may not need this for computations
 def gap_times(contacts, epc_start, epc_end):
+    """
+        gap_times(contacts, epc_start, epc_end) -> list
+
+    Gaps between consecutive contacts of one satellite-station pair, plus the gaps before the
+    first and after the last contact.
+
+      - `contacts` — contacts sorted by start time
+      - `epc_start`, `epc_end` — simulation window, same time type as the contact times
+
+    Returns `(gap_start, gap_end)` pairs.
+
+    NOTE: used only by the gap-time objective, which is not currently supported.
+    """
     gap_time_list = [(contacts[i].t_end,contacts[i+1].t_start) for i in range(len(contacts)-1)]
     
     if len(contacts) != 0:
@@ -225,8 +269,20 @@ def gap_times(contacts, epc_start, epc_end):
     return gap_time_list
 
 
-# Condensing gap times when there are overlapping contacts (Specifically should be used on per satellite basis)
 def gap_times_condense(contacts_all, epc_start, epc_end):
+    """
+        gap_times_condense(contacts_all, epc_start, epc_end) -> (list, list)
+
+    Gaps in coverage for one satellite across all its stations, merging overlapping contacts.
+
+      - `contacts_all` — every contact of one satellite, in any order
+      - `epc_start`, `epc_end` — simulation window (`datetime`)
+
+    Returns the `(gap_start, gap_end)` pairs and the gap durations (s).
+
+    NOTE: expects contacts whose `t_start`/`t_end` subtract to a `timedelta`, as in the pre-1.0
+    brahe API; used only by the gap-time objective and the MILP path, neither currently supported.
+    """
     all_gap_times = []
     gaps_seconds = []
 
@@ -255,8 +311,22 @@ def gap_times_condense(contacts_all, epc_start, epc_end):
     return all_gap_times,gaps_seconds
 
 
-# for the correct contacts for gap times per satellite
 def compute_gaps_per_sat(satellites,ground_stations,epc_start,epc_end, plot,title="gap_times_chart.png"):
+    """
+        compute_gaps_per_sat(satellites, ground_stations, epc_start, epc_end, plot, title="gap_times_chart.png") -> (list, list, list)
+
+    Per-satellite contacts and coverage gaps over all ground stations, optionally plotted.
+
+      - `satellites`, `ground_stations` — spacecraft and stations
+      - `epc_start`, `epc_end` — simulation window (`bh.Epoch`)
+      - `plot` — save a contact/gap chart to `title` when True
+      - `title` — output image path
+
+    Returns per-satellite lists of contacts, gap intervals and gap durations (s).
+
+    NOTE: calls the pre-1.0 brahe `find_location_accesses` (`ba` is not imported), so it raises
+    `NameError`; the gap-time objective that uses it is not currently supported.
+    """
 
     # plot boolean used for any plotting function
     if plot:
@@ -326,13 +396,20 @@ def compute_gaps_per_sat(satellites,ground_stations,epc_start,epc_end, plot,titl
 
 
 
-# TODO: Need to edit, can't use this specific format
 def load_earth_data(filename, download=False):
-    # Here we can download the latest Earth orientation data and load it.
+    """
+        load_earth_data(filename, download=False) -> None
 
+    Initialize brahe's default Earth orientation data.
+
+      - `filename` — EOP file path; only checked for existence
+      - `download` — print download messages when `filename` is missing
+
+    NOTE: nothing is downloaded and `filename` is not loaded; `bh.initialize_eop()` uses brahe's
+    built-in data. `main.setup_scenario` loads `data/iau2000A_finals_ab.txt` explicitly instead.
+    """
     if not os.path.exists(filename):
         if download:
-            # Uncomment this line ONCE the data has been downloaded. Recomment it once it has been downloaded.
             print("Downloading latest earth orientation data...")
             if not os.path.exists(repo_path("data")):
                 os.makedirs(repo_path("data"))
