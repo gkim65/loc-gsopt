@@ -8,30 +8,12 @@ import shapely
 import cartopy.crs as ccrs
 import cartopy.geodesic
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 from common.utils import compute_gaps_per_sat
 import warnings
 # Suppress Cartopy's CRS approximation warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
 ############################## Helper Functions ################################
-
-def sliding_window(data, window_size=3):
-    """
-    Creates a list of lists by applying a sliding window over the input list.
-
-    Args:
-        data (list): The input list to process.
-        window_size (int): The size of the window (default is 3).
-
-    Returns:
-        list: A list of sublists, each containing `window_size` elements.
-    """
-    if window_size > len(data):
-        raise ValueError("Window size cannot be larger than the data length.")
-
-    result = [data[i:i + window_size] for i in range(len(data) - window_size + 1)]
-    return result
 
 alt = 570 # Altitude in km
 elevation_min = 10.0 # Keep to 10, but try plotting later 10 - 5
@@ -71,69 +53,11 @@ def animate(i,fig,plot_points,title = "Animation Counter Optimization:",gs_list=
 
 ############################## Main Plotting Functions ################################
 
-def plot_gif(global_list_of_simplexes,name="example.gif",window_size=3,gs_list=[],ind=0):
-    plot_points = sliding_window(global_list_of_simplexes,window_size)
-    fig = plt.figure()
-    ani = FuncAnimation(fig, 
-                        animate, 
-                        fargs=(fig,plot_points,"Animation Counter Optimization:",gs_list,ind),
-                        frames = range(len(plot_points)),
-                        repeat = False,
-                        interval =500)
-
-    ani.save(filename=name, writer="ffmpeg")
-
-
 def plot_img(gs_list,name="example.png"):
     fig = plt.figure()
     print(gs_list)
     animate("", fig, gs_list,"Full Ground Station Selection")
 
-    plt.savefig(name)
-    return fig
-
-def plot_contact_windows(selected_stations, station_contacts, name="contacts.png"):
-    # Create visualization
-    fig, ax = plt.subplots(figsize=(20,7))
-
-    # Plot contacts for individual selected stations
-    for idx, station_id in enumerate(selected_stations):
-        contacts = station_contacts[station_id]['contacts']
-        station_name = station_contacts[station_id]['name']
-        ax.broken_barh([(contact.t_start, contact.t_end-contact.t_start) 
-                        for contact in contacts],
-                        (idx + 1, 0.8),  # Shifted up by 1 to make room for combined view
-                        facecolors=f'C{idx}',
-                        alpha=0.6,
-                        label=f'Station {station_id}')
-
-    # Plot combined contacts at the bottom
-    selected_contacts = []
-    for station_id in selected_stations:
-        selected_contacts.extend(station_contacts[station_id]['contacts'])
-
-    # Sort contacts by start time
-    sorted_contacts = sorted(selected_contacts, key=lambda x: x.t_start)
-
-    # Plot the actual contact windows for combined view
-    ax.broken_barh([(contact.t_start, contact.t_end-contact.t_start) 
-                    for contact in sorted_contacts],
-                    (0, 0.8),  # At the bottom
-                    facecolors='tab:blue',  # Single solid color
-                    alpha=0.8,
-                    label='Combined Coverage')
-
-    # Update y-axis ticks with station ID and name
-    ax.set_yticks([0.4] + [i + 1.4 for i in range(len(selected_stations))])
-    ax.set_yticklabels(['Combined'] + [f'Station {sid} - {station_contacts[sid]["name"]}' 
-                                    for sid in selected_stations])
-
-    plt.ylabel("Ground Stations")
-    plt.xlabel("Time")
-    plt.title("Contact Windows for Selected Ground Stations")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
     plt.savefig(name)
     return fig
 

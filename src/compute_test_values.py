@@ -3,11 +3,11 @@ import brahe as bh
 from common.utils import load_earth_data,compute_contact_times,contactExclusion
 
 from common.sat_gen import satellites_from_constellation
-from common.plotting import plot_gif,plot_img
+from common.plotting import plot_img
 from methods.free_select.scipy_ccgs import nelder_mead_scipy_ccgs
 from methods.free_select.genetic_algorithms import diffEvolution
 # from methods.teleport.ILP import ILP_Model
-from common.plotting import plot_contact_windows, plot_gap_times
+from common.plotting import plot_gap_times
 ###Vedant's imports
 # Standard imports
 import sys

@@ -1,31 +1,12 @@
 import brahe as bh
 from common.objective_functions import EvalCounter
-from common.utils import load_earth_data,compute_contact_times,contactExclusion
-from common.sat_gen import satellites_from_constellation
-from common.plotting import plot_gif,plot_img
+from common.utils import compute_contact_times,contactExclusion
+from common.sat_gen import satellites_from_constellation, make_walker_constellation
+from common.station_gen import teleport_json
+from common.plotting import plot_img, plot_gap_times
 from methods.free_select.scipy_ccgs import nelder_mead_scipy_ccgs, powell_scipy
 from methods.free_select.genetic_algorithms import diffEvolution
-
 # from methods.teleport.ILP import ILP_Model
-from common.plotting import plot_contact_windows, plot_gap_times
-###Vedant's imports
-# Standard imports
-import sys
-import os
-from itertools import groupby
-import pyomo.environ as pyo
-import pyomo.kernel as pk
-
-# Add the path to the folder containing the module
-module_path = os.path.abspath(os.path.join('..'))
-if module_path not in sys.path:
-    sys.path.append(module_path)
-
-# Required imports
-from common.sat_gen import make_walker_constellation
-from common.station_gen import teleport_json
-from common.utils import load_earth_data, gap_times_condense
-#####
 
 import numpy as np
 
@@ -41,27 +22,13 @@ import wandb
 import geopandas as gpd
 
 
-import geonamescache
-from scipy.spatial import cKDTree
-
-
 ################################### Global Variables ###################################
 # Usually global variables is bad practice, but just using it for land boundary dataset
 
 # Load land boundary dataset
 # using: https://www.naturalearthdata.com/downloads/10m-cultural-vectors/
-land_data = gpd.read_file("data/ne_10m_admin_0_countries.shp")  
-city_data = gpd.read_file("data/city_buffers.shp")  
-print(land_data.head())
-print(type(land_data.geometry.iloc[0]))
-print(city_data.head())
-print(type(city_data.geometry.iloc[0]))
-# Build KD-tree on unit sphere (convert lat/lon to xyz first)
-def _latlon_rad_to_xyz(lat_rad, lon_rad):
-    x = np.cos(lat_rad) * np.cos(lon_rad)
-    y = np.cos(lat_rad) * np.sin(lon_rad)
-    z = np.sin(lat_rad)
-    return np.column_stack([x, y, z])
+land_data = gpd.read_file("data/ne_10m_admin_0_countries.shp")
+city_data = gpd.read_file("data/city_buffers.shp")
 
 eval_counter = EvalCounter()      # single global instance
 ################################### Main Script ###################################

@@ -2,7 +2,7 @@ from shapely.geometry import Point
 from geopy.distance import geodesic
 import brahe as bh
 
-from common.utils import compute_gaps_per_sat, compute_contact_times, contactExclusion, xyz_to_latlon, distance_to_nearest_city_km
+from common.utils import compute_gaps_per_sat, compute_contact_times, contactExclusion, xyz_to_latlon
 
 from itertools import chain, combinations
 
