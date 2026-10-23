@@ -1,24 +1,25 @@
 [project]
 name = "loc-gsopt"
 version = "0.1.0"
-description = "Add your description here"
+description = "Free-placement optimization of ground station locations for low-Earth-orbit satellites"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "brahe @ git+https://github.com/duncaneddy/brahe.git@master",
+    "brahe>=1.0",
     "cartopy>=0.24.1",
     "geopandas>=1.0.1",
     "geopy>=2.4.1",
     "global-land-mask>=1.0.0",
     "httpx>=0.28.1",
     "hydra-core>=1.3.2",
+    "hydra-joblib-launcher>=1.2.0",
     "ipykernel>=6.29.5",
     "matplotlib>=3.10.0",
     "numpy>=1.26.4",
+    "pandas>=3.0.1",
     "pyomo>=6.9.1",
+    "scipy>=1.17.1",
+    "seaborn>=0.13.2",
     "shapely>=2.0.6",
     "wandb>=0.19.7",
 ]
-
-[tool.uv.sources]
-brahe = { git = "https://github.com/duncaneddy/brahe.git", rev = "master" }

@@ -11,32 +11,60 @@
 #         - start and end epochs 
 # Output of selected sites
 
+test_name: "compute_test1"
+
 wandb:
-  entity: "loc_gsopt"
+  entity: null  # W&B team or user; null uses WANDB_ENTITY or your default entity
 
 problem:
   type: "free"
   # type: "teleport"
-  method: "nelder" # TODO: add options for other methods 
-                        # make sure you can only choose appropriate
-                        # methods for appropriate problem types
-  objective: "data_downlink" #data_downlink, gap_optimization, max_contacts
-  gs_num: 2
+  method: "diffEvolution"  # free methods: "nelder_ccgs" (SCORE), "powell", "diffEvolution"
+  objective: "data_downlink" # data_downlink (gap_optimization, max_contacts: not currently supported)
+  gs_num: 1
   teleport_num: 10
-  sat_num: 1 # Start with 10, just to not overload the solver
+  sat_num: 5 # Start with 10, just to not overload the solver
   data_rate: 1200000000 # bps
+  solver: "cbc"  # MILP solver for contact exclusion: "cbc" (free) or "gurobi" (needs a license)
+
+DE: # Hyperparameter Tuning
+  popsize: 15
+  F: 0.5
+  CR: 0.9
+  strategy: 'best1bin'
 
 scenario:
-  constellations: "UMBRA" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
+  constellations: "CAPELLA" # 'YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 
                           #'FLOCK', 'HAWK', 'CAPELLA', 'LEGION', 
                           #'WORLDVIEW', 'GEOEYE', 'NUSAT'
   start_simplex: 3 # can be 0-6, random
   datarate: 1200000000.0 # Data Rate [bps], for now, just set to this for all satellites and ground stations
-  teleport_sites:
+  # teleport_sites:
     # TODO: Need to add teleport functionality, list of sites to select
   
+
+walker:
+  custom: False # TURN THIS FALSE FOR CONSTELLATIONS
+  altitude: 781 # Km
+  eccentricity: 0.001 #(just can't be zero)
+  inclination: 86.4 # usually close to 90 for star, less than 60 for walker delta
+  num_planes: 1
+  sats_perplane: 1
+  phase: 2 # 1 for walker delta, 2 for star
+  argp: 0.0
+  norad_start: 10000 # just names for satellites
+  star: True # make False for Delta
+
 constraints:
   dist_other_gs: 3000000 # 3000 km for elevation min of around 10
+  infra_weight: 0.0
+  # latitude_top: 78.230906
+  # latitude_bot: -73
+  latitude_top: 90
+  latitude_bot: -90
+  extra_gs: False
+  extra_gs_lat: -72.011643
+  extra_gs_lon: 2.534985
 
 start_epoch:
   year: 2025
@@ -49,7 +77,7 @@ start_epoch:
 end_epoch:
   year: 2025
   month: 4
-  day: 2 #8
+  day: 8
   hour: 17
   minute: 23
   second: 40.69
@@ -57,9 +85,11 @@ end_epoch:
 debug:
   verbose: True
   plot: True
-  wandb: True
+  wandb: False  # True logs runs to W&B (needs `wandb login`); results.json is always written
   txtUpdate: False
   randseed: 0
 
 experiments:
   simplexExclude: True # True to exclude current gs locations in simplex generation
+  ccgs: 5
+  ccgs_random: False

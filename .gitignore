@@ -1,12 +1,20 @@
-/**/data
-/**/__pycache__
-.DS_Store
-**/*.pyc
-/sandbox
+# Python
+__pycache__/
+*.pyc
 *.egg-info
 /.venv
-**/*.gif
-**/*.png
-outputs
-multirun
-/wandb
+/sandbox
+
+# Run outputs (Hydra and W&B)
+outputs/
+multirun/
+/wandb/
+
+# Regenerated figures and the local W&B cache
+figures_final/
+wandb_runs_cache.pkl
+
+.DS_Store
+
+# Unused intermediate kept locally
+data/csv_Files/SCOREablation_plot_data.csv

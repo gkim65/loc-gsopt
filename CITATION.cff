@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper below."
+title: "loc-gsopt: free-placement ground station optimization"
+type: software
+license: MIT
+repository-code: "https://github.com/gkim65/loc-gsopt"
+authors:
+  - family-names: Kim
+    given-names: Grace Ra
+  - family-names: Eddy
+    given-names: Duncan
+  - family-names: Srinivas
+    given-names: Vedant
+  - family-names: Kochenderfer
+    given-names: Mykel J.
+preferred-citation:
+  type: article
+  title: "Free-Placement Optimization of Ground Station Locations for Low-Earth-Orbit Satellites"
+  authors:
+    - family-names: Kim
+      given-names: Grace Ra
+    - family-names: Eddy
+      given-names: Duncan
+    - family-names: Srinivas
+      given-names: Vedant
+    - family-names: Kochenderfer
+      given-names: Mykel J.
+  journal: "Journal of Aerospace Information Systems"
+  publisher:
+    name: "American Institute of Aeronautics and Astronautics"
+  volume: 23
+  issue: 10
+  start: 975
+  end: 994
+  year: 2026

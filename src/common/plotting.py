@@ -8,37 +8,33 @@ import shapely
 import cartopy.crs as ccrs
 import cartopy.geodesic
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 from common.utils import compute_gaps_per_sat
 import warnings
-# Suppress Cartopy's CRS approximation warnings
+# Suppress Cartopy's CRS approximation warnings.
+# NOTE: this silences every UserWarning in the process once this module is imported.
 warnings.filterwarnings("ignore", category=UserWarning)
 
 ############################## Helper Functions ################################
 
-def sliding_window(data, window_size=3):
-    """
-    Creates a list of lists by applying a sliding window over the input list.
-
-    Args:
-        data (list): The input list to process.
-        window_size (int): The size of the window (default is 3).
-
-    Returns:
-        list: A list of sublists, each containing `window_size` elements.
-    """
-    if window_size > len(data):
-        raise ValueError("Window size cannot be larger than the data length.")
-
-    result = [data[i:i + window_size] for i in range(len(data) - window_size + 1)]
-    return result
-
+# Coverage circles on the station maps: the area that sees a satellite at `alt` above `elevation_min`
 alt = 570 # Altitude in km
-elevation_min = 10.0 # Keep to 10, but try plotting later 10 - 5
-lam = compute_earth_interior_angle(ele=elevation_min, alt=alt)
+elevation_min = 10.0 # deg
+lam = compute_earth_interior_angle(ele=elevation_min, alt=alt) # rad
 
 
 def animate(i,fig,plot_points,title = "Animation Counter Optimization:",gs_list=[],ind=0):
+    """
+        animate(i, fig, plot_points, title="Animation Counter Optimization:", gs_list=[], ind=0) -> None
+
+    Draw stations and their coverage circles on a world map in `fig`.
+
+      - `i` — frame index into `plot_points`, or a non-int to draw `plot_points` itself
+      - `fig` — matplotlib figure to clear and draw into
+      - `plot_points` — `[lon, lat]` pairs (deg), or a sequence of such lists when `i` is an int
+      - `title` — title prefix; `i` is appended
+      - `gs_list` — extra `[lon, lat]` pairs (deg) drawn in red, up to index `ind`
+      - `ind` — last index of `gs_list` to draw
+    """
     fig.clear()
     ax = plt.axes(projection=ccrs.PlateCarree())
     ax.set_global()
@@ -64,27 +60,24 @@ def animate(i,fig,plot_points,title = "Animation Counter Optimization:",gs_list=
             geom = shapely.geometry.Polygon(circle_points)
             ax.add_geometries((geom,), crs=ccrs.Geodetic(), alpha=0.3, edgecolor='none', facecolor='red', linewidth=0)
 
-    ax.set_yticks(np.arange(-90, 90, 30))
-    ax.set_xticks(np.arange(-180, 180, 30))
+    ax.set_yticks(np.arange(-90, 91, 30))
+    ax.set_xticks(np.arange(-180, 181, 30))
     plt.grid()
 
 
 ############################## Main Plotting Functions ################################
 
-def plot_gif(global_list_of_simplexes,name="example.gif",window_size=3,gs_list=[],ind=0):
-    plot_points = sliding_window(global_list_of_simplexes,window_size)
-    fig = plt.figure()
-    ani = FuncAnimation(fig, 
-                        animate, 
-                        fargs=(fig,plot_points,"Animation Counter Optimization:",gs_list,ind),
-                        frames = range(len(plot_points)),
-                        repeat = False,
-                        interval =500)
-
-    ani.save(filename=name, writer="ffmpeg")
-
-
 def plot_img(gs_list,name="example.png"):
+    """
+        plot_img(gs_list, name="example.png") -> matplotlib.figure.Figure
+
+    Save a world map of the stations and their coverage circles.
+
+      - `gs_list` — `[lon, lat]` pairs (deg)
+      - `name` — output image path
+
+    Returns the figure.
+    """
     fig = plt.figure()
     print(gs_list)
     animate("", fig, gs_list,"Full Ground Station Selection")
@@ -92,52 +85,22 @@ def plot_img(gs_list,name="example.png"):
     plt.savefig(name)
     return fig
 
-def plot_contact_windows(selected_stations, station_contacts, name="contacts.png"):
-    # Create visualization
-    fig, ax = plt.subplots(figsize=(20,7))
-
-    # Plot contacts for individual selected stations
-    for idx, station_id in enumerate(selected_stations):
-        contacts = station_contacts[station_id]['contacts']
-        station_name = station_contacts[station_id]['name']
-        ax.broken_barh([(contact.t_start, contact.t_end-contact.t_start) 
-                        for contact in contacts],
-                        (idx + 1, 0.8),  # Shifted up by 1 to make room for combined view
-                        facecolors=f'C{idx}',
-                        alpha=0.6,
-                        label=f'Station {station_id}')
-
-    # Plot combined contacts at the bottom
-    selected_contacts = []
-    for station_id in selected_stations:
-        selected_contacts.extend(station_contacts[station_id]['contacts'])
-
-    # Sort contacts by start time
-    sorted_contacts = sorted(selected_contacts, key=lambda x: x.t_start)
-
-    # Plot the actual contact windows for combined view
-    ax.broken_barh([(contact.t_start, contact.t_end-contact.t_start) 
-                    for contact in sorted_contacts],
-                    (0, 0.8),  # At the bottom
-                    facecolors='tab:blue',  # Single solid color
-                    alpha=0.8,
-                    label='Combined Coverage')
-
-    # Update y-axis ticks with station ID and name
-    ax.set_yticks([0.4] + [i + 1.4 for i in range(len(selected_stations))])
-    ax.set_yticklabels(['Combined'] + [f'Station {sid} - {station_contacts[sid]["name"]}' 
-                                    for sid in selected_stations])
-
-    plt.ylabel("Ground Stations")
-    plt.xlabel("Time")
-    plt.title("Contact Windows for Selected Ground Stations")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-    plt.savefig(name)
-    return fig
-
 def plot_gap_times(satellites, ground_stations, epc_start, epc_end, plot, title="gap_times_chart.png"):
+    """
+        plot_gap_times(satellites, ground_stations, epc_start, epc_end, plot, title="gap_times_chart.png") -> str
+
+    Save a chart of contacts and coverage gaps per satellite.
+
+      - `satellites`, `ground_stations` — spacecraft and stations
+      - `epc_start`, `epc_end` — simulation window (`bh.Epoch`)
+      - `plot` — draw the chart when True
+      - `title` — output image path
+
+    Returns `title`.
+
+    NOTE: relies on `compute_gaps_per_sat`, which needs the pre-1.0 brahe API; with `plot=False`
+    it raises `NameError`.
+    """
     if plot:
         _,_,gap_secs = compute_gaps_per_sat(satellites,ground_stations,epc_start,epc_end, plot,title)
         plt.savefig(title)

@@ -1,4 +1,4 @@
-# TODO
+# TODO: NEED TO DO FULL OVERHALL
 # Standard imports
 import sys
 import os
@@ -10,7 +10,7 @@ if module_path not in sys.path:
     sys.path.append(module_path)
 
 # Required imports
-from common.sat_gen import make_tle
+from common.paths import repo_path
 from common.station_gen import teleport_json
 from common.utils import load_earth_data, gap_times_condense
 
@@ -35,7 +35,7 @@ class ILP_Model:
         self.data_rate = data_rate
         #Initialize model
         self.model = pk.block()
-        with open('data/most_diverse_100_ground_stations.json', 'r') as f:
+        with open(repo_path('data/most_diverse_100_ground_stations.json'), 'r') as f:
             self.stations_data = json.load(f)
 
         self.station_contacts = {}

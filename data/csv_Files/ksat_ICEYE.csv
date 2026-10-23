@@ -1,0 +1,10 @@
+constellation,gs_number,data_downlinked,run_id,run_name,project
+ICEYE,1,419340.8254356,r6ry6r7w,stoic-spaceship-2,loc_gsopt/KSAT_MILP_data_downlink_1_34=ICEYE=3000000
+ICEYE,2,823401.7734408,h6ixr123,glamorous-morning-1,loc_gsopt/KSAT_MILP_data_downlink_2_34=ICEYE=3000000
+ICEYE,3,1202938.382808,t1edffwc,balmy-meadow-1,loc_gsopt/KSAT_MILP_data_downlink_3_34=ICEYE=3000000
+ICEYE,4,1514610.0153948,uh05gtho,light-totem-1,loc_gsopt/KSAT_MILP_data_downlink_4_34=ICEYE=3000000
+ICEYE,5,1777966.3982052,p4nksvcu,glamorous-river-1,loc_gsopt/KSAT_MILP_data_downlink_5_34=ICEYE=3000000
+ICEYE,7,2285712.5888784,534b8iv0,stellar-deluge-1,loc_gsopt/KSAT_MILP_data_downlink_7_34=ICEYE=3000000
+ICEYE,10,2907054.505392,rm54pqwi,zany-yogurt-1,loc_gsopt/KSAT_MILP_data_downlink_10_34=ICEYE=3000000
+ICEYE,15,3831209.6462412,x70475hy,rich-silence-1,loc_gsopt/KSAT_MILP_data_downlink_15_34=ICEYE=3000000
+ICEYE,20,4662182.843238,4xyinnsv,glowing-salad-1,loc_gsopt/KSAT_MILP_data_downlink_20_34=ICEYE=3000000

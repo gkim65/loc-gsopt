@@ -1,70 +1,71 @@
 import os
+from common.paths import repo_path
 
 import logging
 import datetime
 import httpx 
 
 import numpy as np
-# import streamlit as st
-# import polars as pl
 
 # Brahe Imports
 import brahe as bh
-import brahe.data_models as bdm
 
 logger = logging.getLogger()
 
+# Commercial constellations whose satellite names appear in the CelesTrak TLE snapshot
 CONSTELLATIONS = sorted(['YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 'FLOCK', 'HAWK', 'CAPELLA', 'LEGION', 'WORLDVIEW', 'GEOEYE',
                   'NUSAT'])
 
-EPHEMERIS_PATH = './data/celestrak_tles.txt' #(pathlib.Path(__file__).parent.parent /  'data/celestrak_tles.txt').absolute()
+# TLE snapshot used for every run; see the README for its date
+EPHEMERIS_PATH = repo_path('data/celestrak_tles.txt')
 
 
-# Working with Satellite States
+def make_tle(epc0, alt, ecc, inc, raan, argp, M, norad_id=99999):
+    """
+        make_tle(epc0, alt, ecc, inc, raan, argp, M, norad_id=99999) -> (str, str)
 
-# The TLE is likely the most accessible way for you to propagate the satellite state. 
-# Brahe has a built-in TLE parser that can be used to load TLEs from lines. 
-# However to make it easier, we define a function to create a TLE from orbital elements.
-def make_tle(epc0, alt, ecc, inc, raan, argp, M, ndt2=0.0, nddt6=0.0, bstar=0.0, norad_id=99999):
-    '''Get a TLE object from the given orbital elements
+    Two-line element set for a satellite with the given mean orbital elements.
 
-    Args:
-    - epc0 (Epoch): Epoch of the orbital elements / state
-    - alt (float): Altitude of the orbit [km]
-    - ecc (float): Eccentricity of the orbit
-    - inc (float): Inclination of the orbit [deg]
-    - raan (float): Right Ascension of the Ascending Node [deg]
-    - argp (float): Argument of Perigee [deg]
-    - M (float): Mean Anomaly [deg]
+      - `epc0` — element epoch (`bh.Epoch`)
+      - `alt` — altitude above the equatorial radius (km)
+      - `ecc` — eccentricity
+      - `inc` — inclination (deg)
+      - `raan` — right ascension of the ascending node (deg)
+      - `argp` — argument of perigee (deg)
+      - `M` — mean anomaly (deg)
+      - `norad_id` — catalog number written into the TLE
 
-    Returns:
-    - tle (TLE): TLE object for the given orbital elements
-    '''
+    Returns TLE lines 1 and 2.
+    """
 
     alt *= 1e3 # Convert to meters
 
     # Get semi-major axis
     sma = bh.R_EARTH + alt
 
-    # Get mean motion
-    n = bh.mean_motion(sma)/(2*np.pi)*86400
+    line1, line2 = bh.keplerian_elements_to_tle(epc0, np.array([sma, ecc, inc, raan, argp, M]), str(norad_id))
 
-    tle_string = bh.tle_string_from_elements(epc0, np.array([n, ecc, inc, raan, argp, M, ndt2, nddt6, bstar]), norad_id)
-    tle = bh.TLE(*tle_string)
-    return tle
-
-##########################################
+    return line1, line2
 
 def get_last_modified_time(file_path):
+    """get_last_modified_time(file_path) -> float: modification time of `file_path` (s since the epoch)."""
     return os.path.getmtime(file_path)
 
 def get_last_modified_time_as_datetime(file_path):
+    """get_last_modified_time_as_datetime(file_path) -> datetime.datetime: modification time of `file_path`, local time."""
     return datetime.datetime.fromtimestamp(get_last_modified_time(file_path))
 
-# Celestrak and satellite constellations
 
-# Function for downloading celestrak tles
-def get_latest_celestrak_tles(output_dir='./data'):
+def get_latest_celestrak_tles(output_dir=repo_path('data')):
+    """
+        get_latest_celestrak_tles(output_dir=repo_path('data')) -> None
+
+    Download CelesTrak's current active-satellite TLEs to `output_dir/celestrak_tles.txt`.
+
+      - `output_dir` — directory to write to, created if missing
+
+    NOTE: this overwrites the committed snapshot, which changes every result that uses it.
+    """
     CELESTRAK_URL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=ACTIVE&FORMAT=TLE'
 
     # Create the output directory if it doesn't exist
@@ -88,7 +89,17 @@ def get_latest_celestrak_tles(output_dir='./data'):
 
 
 def parse_tle_file(filepath):
+    """
+        parse_tle_file(filepath) -> list
 
+    Parse a three-line TLE file (name line, line 1, line 2).
+
+      - `filepath` — path to the TLE file
+
+    Returns one dict per satellite: `object_name`, `satcat_id`, `epoch` (`bh.Epoch`),
+    `semi_major_axis` (m), `altitude` (km above the equatorial radius), `eccentricity`,
+    `inclination`, `right_ascension`, `arg_of_perigee`, `mean_anomaly` (deg) and the three raw lines.
+    """
     # Create an empty list to store parsed TLE records
     tle_records = []
 
@@ -108,16 +119,17 @@ def parse_tle_file(filepath):
             object_name = tle_line0.rstrip()
 
             # Extract TLE data
-            tle = bh.TLE(tle_line1, tle_line2)
+            epoch, tle = bh.keplerian_elements_from_tle(tle_line1, tle_line2)
+            
 
             satcat_id = tle_line1[2:7]
-            tle_epoch = tle.epoch.to_datetime(tsys='UTC')
-            semi_major_axis = tle.a
-            eccentricity = tle.e
-            inclination = tle.i
-            right_ascension = tle.RAAN
-            arg_of_perigee = tle.w
-            mean_anomaly = tle.M
+            tle_epoch = epoch
+            semi_major_axis = tle[0]
+            eccentricity = tle[1]
+            inclination = tle[2]
+            right_ascension = tle[3]
+            arg_of_perigee = tle[4]
+            mean_anomaly = tle[5]
 
             # Append parsed information to the list
             tle_records.append({
@@ -142,7 +154,17 @@ def parse_tle_file(filepath):
     return tle_records
 
 def get_tles(download):
+    """
+        get_tles(download) -> list
 
+    Parsed records from `EPHEMERIS_PATH`, downloading the file if it is missing.
+
+      - `download` — also re-download when the file is more than a day old
+
+    Returns the records from `parse_tle_file`.
+
+    NOTE: `download=True` (`debug.txtUpdate`) replaces the snapshot the paper used.
+    """
     if not os.path.exists(EPHEMERIS_PATH):
         get_latest_celestrak_tles()
 
@@ -164,7 +186,17 @@ def get_tles(download):
     return parse_tle_file(EPHEMERIS_PATH)
 
 def satellites_from_constellation(constellation: str, download):
+    """
+        satellites_from_constellation(constellation, download) -> list
 
+    SGP4 propagators for every satellite whose TLE name contains `constellation`.
+
+      - `constellation` — case-insensitive name fragment, e.g. "CAPELLA" or "ICEYE"
+      - `download` — passed to `get_tles`
+
+    Returns unpropagated `bh.SGPPropagator` objects in TLE-file order; callers take the first
+    `problem.sat_num`.
+    """
     # Load the TLE data
     tle_data = get_tles(download)
 
@@ -172,146 +204,63 @@ def satellites_from_constellation(constellation: str, download):
     constellation_tles = [tle for tle in tle_data if constellation.upper() in tle['object_name']]
 
     # Create a list of Satellite objects from the TLE data
-    satellites = [bdm.Spacecraft(
-                    id=int(tle['satcat_id']),
-                    name=tle['object_name'],
-                    line1=tle['tle_line1'],
-                    line2=tle['tle_line2']) for tle in constellation_tles]
+    satellites = [bh.SGPPropagator.from_tle(tle['tle_line1'], tle['tle_line2']) for tle in constellation_tles]
 
     return satellites
 
-# @st.cache_resource(ttl=3600*12) # Expire cache every 12 hours
-# def get_satcat_df():
-#     # Load the TLE data
-#     tle_data = get_tles()
+def make_walker_constellation(
+    epoch=bh.Epoch(2024, 5, 20, 0, 0, 0),
+    altitude_km=550,
+    eccentricity=0.001,
+    inclination=90,
+    num_planes=6,
+    sats_per_plane=4,
+    phase=1,
+    argp=0.0,
+    norad_start=10000,
+    star = True,
+):
+    """
+        make_walker_constellation(epoch, altitude_km=550, eccentricity=0.001, inclination=90, num_planes=6, sats_per_plane=4, phase=1, argp=0.0, norad_start=10000, star=True) -> list
 
-#     # Create a DataFrame from the TLE data
-#     satcat_df = pl.DataFrame(tle_data, schema={
-#         'object_name': str,
-#         'satcat_id': str,
-#         'epoch': datetime.datetime,
-#         'altitude': float,
-#         'semi_major_axis': float,
-#         'eccentricity': float,
-#         'inclination': float,
-#         'right_ascension': float,
-#         'arg_of_perigee': float,
-#         'mean_anomaly': float,
-#         'tle_line0': str,
-#         'tle_line1': str,
-#         'tle_line2': str
-#     })
+    Walker constellation of near-circular orbits at one altitude and inclination.
 
-#     return satcat_df
+      - `epoch` — element epoch (`bh.Epoch`)
+      - `altitude_km` — altitude (km)
+      - `eccentricity` — eccentricity
+      - `inclination` — inclination (deg)
+      - `num_planes`, `sats_per_plane` — constellation size
+      - `phase` — Walker phasing factor between adjacent planes
+      - `argp` — argument of perigee (deg)
+      - `norad_start` — catalog number of the first satellite
+      - `star` — spread planes over 180 deg of RAAN (Walker-Star) instead of 360 deg (Walker-Delta)
 
+    Returns `bh.SGPPropagator` objects, plane by plane.
+    """
+    total_sats = num_planes * sats_per_plane
+    plane_spacing = 180 if star else 360  # Key difference between Star/Delta
+    constellation = []
 
-##########################################
+    for p in range(num_planes):
+        raan = (plane_spacing * p / num_planes)
+        for s in range(sats_per_plane):
+            mean_anomaly = ( (360.0 / sats_per_plane) * s + \
+                 (phase * p * 360.0 / total_sats) ) % 360.0
+            norad_id = norad_start + p * sats_per_plane + s
+            
+            line1, line2 = make_tle(
+                epc0=epoch,
+                alt=altitude_km,
+                ecc=eccentricity,
+                inc=inclination,
+                raan=raan,
+                argp=argp,
+                M=mean_anomaly,
+                norad_id=norad_id
+            )
 
-# import os
-# import pathlib
+            sat_name = f"Sat_{p}_{s}"
+            sat_obj = bh.SGPPropagator.from_tle(line1, line2)
+            constellation.append(sat_obj)
 
-# import pathlib
-# import logging
-# import datetime
-# import httpx
-
-# import streamlit as st
-# import polars as pl
-# import brahe as bh
-
-# from gsopt.models import Satellite
-# from gsopt.utils import get_last_modified_time_as_datetime
-
-
-# def satellites_from_constellation(constellation: str, datarate: float = 2.0e9) -> list[Satellite]:
-
-#     # Load the TLE data
-#     tle_data = get_tles()
-
-#     # Filter the TLE data for the specified constellation
-#     constellation_tles = [tle for tle in tle_data if constellation.upper() in tle['object_name']]
-
-#     # Create a list of Satellite objects from the TLE data
-#     satellites = [Satellite(tle['satcat_id'], tle['object_name'], tle['tle_line1'], tle['tle_line2'], datarate=datarate) for tle in constellation_tles]
-
-#     return satellites
-
-# def satellite_from_satcat_id(satcat_id: str, datarate: float = 2.0e9) -> Satellite:
-
-#     # Load the TLE data
-#     tle_data = get_tles()
-
-#     # Filter the TLE data for the specified satcat_id
-#     tle = next((tle for tle in tle_data if tle['satcat_id'] == str(satcat_id)), None)
-
-#     if tle is None:
-#         raise ValueError(f"Satellite with satcat_id {satcat_id} not found in TLE data")
-
-#     # Create a Satellite object from the TLE data
-#     satellite = Satellite(tle['satcat_id'], tle['object_name'], tle['tle_line1'], tle['tle_line2'], datarate=datarate)
-
-#     return satellite
-
-##################################################
-
-# def add_constellation(self, name=str):
-#     """
-#     Add a constellation of satellites to the scenario generator
-
-#     Args:
-#         name: str: Name of the constellation to add. Must be one of the following:
-#             - YAM
-#             - UMBRA
-#             - SKYSAT
-#             - ICEYE
-#             - FLOCK
-#             - HAWK
-#             - CAPELLA
-#             - LEGION
-#             - WORLDVIEW
-#             - GEOEYE
-
-#     """
-#     if name.upper() not in CONSTELLATIONS:
-#         raise ValueError(f'Constellation {name} not found in {CONSTELLATIONS}')
-
-#     constellation_sats = self._satcat_df.filter(pl.col('object_name').str.contains(name.upper()))
-
-#     self.satellites.extend(satellites_from_dataframe(constellation_sats))
-
-
-    # def add_satellite(self, sat_id: str | int):
-    #     """
-    #     Add a specific satellite to the scenario generator
-
-    #     Args:
-    #         sat_id: str: NORAD ID of the satellite to add
-    #     """
-    #     sat = self._satcat_df.filter(pl.col('satcat_id') == str(sat_id))
-    #     self.satellites.extend(satellites_from_dataframe(sat))
-
-    # def add_random_satellites(self, num_satellites: int, alt_range: tuple = (300, 1000)):
-    #     """
-    #     Add a random selection of satellites to the scenario generator
-
-    #     Args:
-    #         num_satellites: int: Number of random satellites to add
-    #         sma_range: tuple: Range of altitudes to select random satellites from
-    #     """
-
-    #     # Get all satellites with altitudes within the specified range
-    #     random_sats = self._satcat_df.filter(pl.col('altitude').is_between(alt_range[0], alt_range[1]))
-
-    #     # Get all unique satellite NORAD IDs
-    #     sat_ids = list(sorted(random_sats['satcat_id'].unique().to_list()))
-
-    #     # Randomly select a subset of the satellite NORAD IDs
-    #     selected_sat_ids = self._rng.sample(sat_ids, num_satellites)
-
-    #     # Filter the satellite catalog DataFrame to only include the selected satellites
-    #     selected_sats = self._satcat_df.filter(pl.col('satcat_id').is_in(selected_sat_ids))
-
-    #     # Add the selected satellites to the scenario generator
-    #     self.satellites.extend(satellites_from_dataframe(selected_sats))
-
-        
+    return constellation
