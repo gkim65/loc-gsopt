@@ -1,4 +1,5 @@
 import os.path
+from common.paths import repo_path
 
 # Brahe Imports
 import brahe as bh
@@ -338,9 +339,9 @@ def load_earth_data(filename, download=False):
         if download:
             # Uncomment this line ONCE the data has been downloaded. Recomment it once it has been downloaded.
             print("Downloading latest earth orientation data...")
-            if not os.path.exists("data"):
-                os.makedirs("data")
-            # bh.utils.download_iers_bulletin_ab("./data")
+            if not os.path.exists(repo_path("data")):
+                os.makedirs(repo_path("data"))
+            # bh.utils.download_iers_bulletin_ab(repo_path("data"))
             print("Download complete")
 
     # Load the latest Earth Orientation Data

@@ -4,6 +4,7 @@ import shapely
 import cartopy.crs as ccrs
 import cartopy.geodesic
 import matplotlib.pyplot as plt
+from common.paths import figure_path
 from common.utils import compute_earth_interior_angle
 import brahe as bh
 import numpy as np
@@ -79,4 +80,4 @@ for (i,run) in enumerate(runs):
     plt.tight_layout()
 
 
-    plt.savefig(f"figures_final/multiStation{i}.pdf")
+    plt.savefig(figure_path(f"multiStation{i}.pdf"))

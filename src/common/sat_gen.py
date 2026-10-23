@@ -1,4 +1,5 @@
 import os
+from common.paths import repo_path
 
 import logging
 import datetime
@@ -14,7 +15,7 @@ logger = logging.getLogger()
 CONSTELLATIONS = sorted(['YAM', 'UMBRA', 'SKYSAT', 'ICEYE', 'FLOCK', 'HAWK', 'CAPELLA', 'LEGION', 'WORLDVIEW', 'GEOEYE',
                   'NUSAT'])
 
-EPHEMERIS_PATH = './data/celestrak_tles.txt' #(pathlib.Path(__file__).parent.parent /  'data/celestrak_tles.txt').absolute()
+EPHEMERIS_PATH = repo_path('data/celestrak_tles.txt') #(pathlib.Path(__file__).parent.parent /  repo_path('data/celestrak_tles.txt')).absolute()
 
 
 # Working with Satellite States
@@ -58,7 +59,7 @@ def get_last_modified_time_as_datetime(file_path):
 # Celestrak and satellite constellations
 
 # Function for downloading celestrak tles
-def get_latest_celestrak_tles(output_dir='./data'):
+def get_latest_celestrak_tles(output_dir=repo_path('data')):
     CELESTRAK_URL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=ACTIVE&FORMAT=TLE'
 
     # Create the output directory if it doesn't exist

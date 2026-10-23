@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pandas as pd
 import numpy as np
+from common.paths import repo_path, figure_path
 
 plt.figure(figsize=(16, 8))
 
@@ -14,9 +15,9 @@ mpl.rcParams.update({
     "axes.unicode_minus": False  # optional: fix minus signs in LaTeX
 })
 
-df_agg_nelder1 = pd.read_csv(f'data/csv_Files/nelder1aggregated_runs.csv')
+df_agg_nelder1 = pd.read_csv(repo_path(f'data/csv_Files/nelder1aggregated_runs.csv'))
 fig, ax = plt.subplots(figsize=(10, 5))
-combined_df = pd.read_csv('data/csv_Files/nelderAblate_wide.csv', index_col=0)
+combined_df = pd.read_csv(repo_path('data/csv_Files/nelderAblate_wide.csv'), index_col=0)
 
 
 
@@ -100,5 +101,5 @@ fig.legend(handles=legend_elements, loc="lower right",
 plt.tight_layout(rect=[0.04, 0.04, 1, 1])
 plt.subplots_adjust(hspace=0.55, wspace=0.12)
 
-plt.savefig("figures_final/SCOREsweep_grid.pdf", format="pdf",
+plt.savefig(figure_path("SCOREsweep_grid.pdf"), format="pdf",
             bbox_inches="tight", pad_inches=0.3)

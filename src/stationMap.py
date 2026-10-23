@@ -4,6 +4,7 @@ import shapely
 import cartopy.crs as ccrs
 import cartopy.geodesic
 import matplotlib.pyplot as plt
+from common.paths import figure_path
 from common.utils import compute_earth_interior_angle
 import brahe as bh
 import numpy as np
@@ -89,9 +90,9 @@ def main():
     plt.grid()
 
     if constellation == "CAPELLA Space":
-        plt.savefig("figures_final/capella_comparison.pdf")
+        plt.savefig(figure_path("capella_comparison.pdf"))
     if constellation == "ICEYE":
-        plt.savefig("figures_final/iceye_comparison.pdf")
+        plt.savefig(figure_path("iceye_comparison.pdf"))
 
 
 def KSAT_TeleportLists(constellation):

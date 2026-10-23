@@ -18,6 +18,7 @@ import omegaconf
 import wandb
 
 import brahe as bh
+from common.paths import repo_path, figure_path
 from common.sat_gen import satellites_from_constellation
 from common.utils import compute_contact_times,contactExclusion
 import os
@@ -50,7 +51,7 @@ def main(cfg: DictConfig):
                          cfg.end_epoch.second) 
     
     eop_file_custom = bh.FileEOPProvider.from_standard_file(
-        "data/iau2000A_finals_ab.txt",  # Replace with actual file path
+        repo_path("data/iau2000A_finals_ab.txt"),  # Replace with actual file path
         True,  # Interpolation
         "Hold",  # Extrapolation
     )
@@ -71,26 +72,26 @@ def main(cfg: DictConfig):
     ############################# Prepping Data ###############################
 
     try:
-        e_data_downlink_df = pd.read_csv(f'data/csv_Files/nelder_{cfg.scenario.constellations}.csv')
+        e_data_downlink_df = pd.read_csv(repo_path(f'data/csv_Files/nelder_{cfg.scenario.constellations}.csv'))
     except FileNotFoundError:
         e_data_downlink_df = df_generatorNelder("loc_gsopt/ccgs_betterfree_nelder_ccgs_data_downlink",constellation,satellites, epc_end, epc_start, cfg)
-        e_data_downlink_df.to_csv(f'data/csv_Files/nelder_{cfg.scenario.constellations}.csv', index=False)  
+        e_data_downlink_df.to_csv(repo_path(f'data/csv_Files/nelder_{cfg.scenario.constellations}.csv'), index=False)  
     idx = e_data_downlink_df.groupby("gs_number")["data_downlinked"].idxmax()
     max_data_downlink = e_data_downlink_df.groupby("gs_number")["data_downlinked"].max().reset_index()
 
     try:
-        e_lat_data_downlink_df = pd.read_csv(f'data/csv_Files/nelder_lat2_{cfg.scenario.constellations}.csv')
+        e_lat_data_downlink_df = pd.read_csv(repo_path(f'data/csv_Files/nelder_lat2_{cfg.scenario.constellations}.csv'))
     except FileNotFoundError:
         e_lat_data_downlink_df = df_generatorNelder("loc_gsopt/SCORE_LAT2free_nelder_ccgs_data_downlink",constellation,satellites, epc_end, epc_start, cfg)
-        e_lat_data_downlink_df.to_csv(f'data/csv_Files/nelder_lat2_{cfg.scenario.constellations}.csv', index=False)  
+        e_lat_data_downlink_df.to_csv(repo_path(f'data/csv_Files/nelder_lat2_{cfg.scenario.constellations}.csv'), index=False)  
     idx = e_lat_data_downlink_df.groupby("gs_number")["data_downlinked"].idxmax()
     max_lat_data_downlink = e_lat_data_downlink_df.groupby("gs_number")["data_downlinked"].max().reset_index()
 
     try:
-        e_infra_data_downlink_df = pd.read_csv(f'data/csv_Files/nelder_infra2_{cfg.scenario.constellations}.csv')
+        e_infra_data_downlink_df = pd.read_csv(repo_path(f'data/csv_Files/nelder_infra2_{cfg.scenario.constellations}.csv'))
     except FileNotFoundError:
         e_infra_data_downlink_df = df_generatorNelder("loc_gsopt/SCORE_INFRA2free_nelder_ccgs_data_downlink",constellation,satellites, epc_end, epc_start, cfg)
-        e_infra_data_downlink_df.to_csv(f'data/csv_Files/nelder_infra2_{cfg.scenario.constellations}.csv', index=False)  
+        e_infra_data_downlink_df.to_csv(repo_path(f'data/csv_Files/nelder_infra2_{cfg.scenario.constellations}.csv'), index=False)  
     idx = e_infra_data_downlink_df.groupby("gs_number")["data_downlinked"].idxmax()
     max_infra_data_downlink = e_infra_data_downlink_df.groupby("gs_number")["data_downlinked"].max().reset_index()
 
@@ -216,9 +217,9 @@ def main(cfg: DictConfig):
     # plt.xlim(0,5)
     os.makedirs("figures_final", exist_ok=True)
     if constellation == "CAPELLA Space":
-        plt.savefig("figures_final/capellaDataDownlink.pdf")
+        plt.savefig(figure_path("capellaDataDownlink.pdf"))
     if constellation == "ICEYE":
-        plt.savefig("figures_final/iceyeDataDownlink.pdf")
+        plt.savefig(figure_path("iceyeDataDownlink.pdf"))
 
     plt.show()
 
@@ -307,9 +308,9 @@ def main(cfg: DictConfig):
 
 
     if constellation == "CAPELLA Space":
-        plt.savefig("figures_final/capellaDataDownlink_zoom_GS2.pdf")
+        plt.savefig(figure_path("capellaDataDownlink_zoom_GS2.pdf"))
     if constellation == "ICEYE":
-        plt.savefig("figures_final/iceyeDataDownlink_zoom_GS2.pdf")
+        plt.savefig(figure_path("iceyeDataDownlink_zoom_GS2.pdf"))
     plt.show()
     # Print values at key network sizes for paper
     for gs_num in [1, 2, 3, 5, 7, 10, 15, 20]:

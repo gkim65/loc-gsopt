@@ -19,6 +19,7 @@ import omegaconf
 import wandb
 
 import brahe as bh
+from common.paths import repo_path, figure_path
 from common.sat_gen import make_walker_constellation
 from common.utils import compute_contact_times,contactExclusion
 import os
@@ -58,7 +59,7 @@ def main(cfg: DictConfig):
                          cfg.end_epoch.second) 
     
     eop_file_custom = bh.FileEOPProvider.from_standard_file(
-        "data/iau2000A_finals_ab.txt",  # Replace with actual file path
+        repo_path("data/iau2000A_finals_ab.txt"),  # Replace with actual file path
         True,  # Interpolation
         "Hold",  # Extrapolation
     )
@@ -72,9 +73,9 @@ def main(cfg: DictConfig):
     # # heatmap_data_DE = avg_data_downlink_df_all.pivot(index='gs_number', columns='sats', values='WallClockTime')# 'WallClockTime')
     # heatmap_data_DE = data_downlink_df_powell.pivot(index='gs_number', columns='sats', values='WallClockTime')
 
-    data_downlink_df_powell = df_generator("heatmap1free_powell_data_downlink","data/csv_Files/powell_heatmap.csv",epc_end, epc_start,cfg)
-    data_downlink_df_nelder = df_generator("heatmapfree_nelder_ccgs_data_downlink","data/csv_Files/nelder_heatmap.csv",epc_end, epc_start,cfg)
-    data_downlink_df_DE = df_generator("heatmapfree_diffEvolution_data_downlink", "data/csv_Files/DE_heatmap.csv", epc_end, epc_start,cfg)
+    data_downlink_df_powell = df_generator("heatmap1free_powell_data_downlink",repo_path("data/csv_Files/powell_heatmap.csv"),epc_end, epc_start,cfg)
+    data_downlink_df_nelder = df_generator("heatmapfree_nelder_ccgs_data_downlink",repo_path("data/csv_Files/nelder_heatmap.csv"),epc_end, epc_start,cfg)
+    data_downlink_df_DE = df_generator("heatmapfree_diffEvolution_data_downlink", repo_path("data/csv_Files/DE_heatmap.csv"), epc_end, epc_start,cfg)
     heatmap_data_SCORE = data_downlink_df_nelder.pivot(index='gs_number', columns='sats', values='eval_counter4')/1000
     heatmap_data_powell = data_downlink_df_powell.pivot(index='gs_number', columns='sats', values='eval_counter4')/1000
     heatmap_data_DE = data_downlink_df_DE.pivot(index='gs_number', columns='sats', values='eval_counter')/1000
@@ -112,7 +113,7 @@ def main(cfg: DictConfig):
     cbar.set_label(r"\# of Function Evaluations ($10^3$, log)")
 
     plt.tight_layout(rect=[0, 0, 0.9, 1])  # leave room for colorbar
-    plt.savefig("figures_final/heatmap_comparison.pdf", format='pdf', bbox_inches='tight')
+    plt.savefig(figure_path("heatmap_comparison.pdf"), format='pdf', bbox_inches='tight')
     plt.show()
 
     data_rate_bps = 1#1200000000.0  # bits per second
@@ -178,7 +179,7 @@ def main(cfg: DictConfig):
     cbar.set_label("Data Downlinked in PB over $T_{opt}$")
 
     plt.tight_layout(rect=[0, 0, 0.9, 1])
-    plt.savefig("figures_final/heatmap_comparison_vals.pdf", format='pdf', bbox_inches='tight')
+    plt.savefig(figure_path("heatmap_comparison_vals.pdf"), format='pdf', bbox_inches='tight')
     plt.show()
 
 ############################# Functions for Prepping Data ###############################

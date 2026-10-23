@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pandas as pd
 import numpy as np
+from common.paths import repo_path, figure_path
 
 plt.figure(figsize=(16, 8))
 
@@ -53,11 +54,11 @@ def readData_individual(project_name):
     return combined_df  # each column = one run
 
 try:
-    combined_df = pd.read_csv(f'data/csv_Files/DEimprovement_plot_data.csv', index_col=0)
+    combined_df = pd.read_csv(repo_path(f'data/csv_Files/DEimprovement_plot_data.csv'), index_col=0)
 except FileNotFoundError:
     project_name = f"loc_gsopt/DE4_4free_diffEvolution_data_downlink_4_4=CAPELLA=3000000"
     combined_df = readData_individual(project_name)
-    combined_df.to_csv('data/csv_Files/DEimprovement_plot_data.csv')
+    combined_df.to_csv(repo_path('data/csv_Files/DEimprovement_plot_data.csv'))
     print("Done! CSV ready for plotting.")
     
 
@@ -72,10 +73,10 @@ ax.set_ylabel(r"Data Downlinked in $T_{opt}$ (PB)")
 ax.legend(loc="lower right", fontsize=7)
 ax.grid(True, linestyle="--", alpha=0.5)
 plt.tight_layout()
-plt.savefig("figures_final/individual_runs.pdf", format="pdf", bbox_inches="tight", pad_inches=0.15)
+plt.savefig(figure_path("individual_runs.pdf"), format="pdf", bbox_inches="tight", pad_inches=0.15)
 # plt.show()
 
-df_agg_nelder1 = pd.read_csv(f'data/csv_Files/nelder1aggregated_runs.csv')
+df_agg_nelder1 = pd.read_csv(repo_path(f'data/csv_Files/nelder1aggregated_runs.csv'))
 fig, ax = plt.subplots(figsize=(10, 5))
 
 
@@ -155,7 +156,7 @@ fig.legend(handles=legend_elements, loc="lower right",
 plt.tight_layout(rect=[0.04, 0.04, 1, 1])
 plt.subplots_adjust(hspace=0.55, wspace=0.12)
 
-plt.savefig("figures_final/DEsweep_grid.pdf", format="pdf",
+plt.savefig(figure_path("DEsweep_grid.pdf"), format="pdf",
             bbox_inches="tight", pad_inches=0.3)
 
 # # --- SCORE (Nelder-Mead) ---
@@ -200,5 +201,5 @@ plt.savefig("figures_final/DEsweep_grid.pdf", format="pdf",
 # # ax.legend(loc="lower right")
 # # ax.grid(True, linestyle="--", alpha=0.5)
 # # plt.tight_layout()
-# plt.savefig("figures_final/score_de_comparison.pdf", format="pdf", bbox_inches="tight", pad_inches=0.15)
+# plt.savefig(figure_path("score_de_comparison.pdf"), format="pdf", bbox_inches="tight", pad_inches=0.15)
 # plt.show()

@@ -1,5 +1,6 @@
 import brahe as bh
 # import brahe.data_models as bdm
+from common.paths import repo_path
 from common.utils import load_earth_data,compute_contact_times,contactExclusion
 
 from common.sat_gen import satellites_from_constellation
@@ -49,7 +50,7 @@ import time
 
 # Load land boundary dataset
 # using: https://www.naturalearthdata.com/downloads/10m-cultural-vectors/
-land_data = gpd.read_file("data/ne_10m_admin_0_countries.shp")  
+land_data = gpd.read_file(repo_path("data/ne_10m_admin_0_countries.shp"))  
 
 ################################### Main Script ###################################
 
@@ -79,7 +80,7 @@ def main(cfg: DictConfig):
     np.random.seed(cfg.debug.randseed)
     
     # Make sure to load in earth inertial data every start time!
-    load_earth_data('data/iau2000A_finals_ab.txt',cfg.debug.txtUpdate)
+    load_earth_data(repo_path('data/iau2000A_finals_ab.txt'),cfg.debug.txtUpdate)
 
     if cfg.walker.custom:
         satellites = make_walker_constellation(
@@ -98,7 +99,7 @@ def main(cfg: DictConfig):
         satellites = satellites_from_constellation(cfg.scenario.constellations, cfg.debug.txtUpdate)[0:cfg.problem.sat_num]
 
     ########## Check for contacts before initializing WandB ##########
-    gs_list = gs_json('data/groundstations/ksat.json')[cfg.problem.teleport_num]
+    gs_list = gs_json(repo_path('data/groundstations/ksat.json'))[cfg.problem.teleport_num]
 
     # Compute contacts for just the initial epoch as a pre-check
     contacts, _ = compute_contact_times(satellites, [gs_list], epc_start, epc_end)
@@ -121,8 +122,8 @@ def main(cfg: DictConfig):
     ########## Solvers: ##########
 
     if cfg.debug.wandb and wandbUse:
-        gs_list = gs_json('data/groundstations/ksat.json')[cfg.problem.teleport_num]
-        gs_list_plot = gs_json_list('data/groundstations/ksat.json')[cfg.problem.teleport_num]
+        gs_list = gs_json(repo_path('data/groundstations/ksat.json'))[cfg.problem.teleport_num]
+        gs_list_plot = gs_json_list(repo_path('data/groundstations/ksat.json'))[cfg.problem.teleport_num]
         end_dt = datetime.datetime(
             cfg.end_epoch.year,
             cfg.end_epoch.month,

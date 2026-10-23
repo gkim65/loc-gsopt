@@ -1,4 +1,5 @@
 import brahe as bh
+from common.paths import repo_path
 from common.objective_functions import EvalCounter
 from common.utils import compute_contact_times,contactExclusion
 from common.sat_gen import satellites_from_constellation, make_walker_constellation
@@ -27,8 +28,8 @@ import geopandas as gpd
 
 # Load land boundary dataset
 # using: https://www.naturalearthdata.com/downloads/10m-cultural-vectors/
-land_data = gpd.read_file("data/ne_10m_admin_0_countries.shp")
-city_data = gpd.read_file("data/city_buffers.shp")
+land_data = gpd.read_file(repo_path("data/ne_10m_admin_0_countries.shp"))
+city_data = gpd.read_file(repo_path("data/city_buffers.shp"))
 
 eval_counter = EvalCounter()      # single global instance
 
@@ -103,9 +104,9 @@ def main(cfg: DictConfig):
     np.random.seed(int(cfg.debug.randseed))
     
     # Make sure to load in earth inertial data every start time!
-    # load_earth_data('data/iau2000A_finals_ab.txt',cfg.debug.txtUpdate)
+    # load_earth_data(repo_path('data/iau2000A_finals_ab.txt'),cfg.debug.txtUpdate)
     eop_file_custom = bh.FileEOPProvider.from_standard_file(
-        "data/iau2000A_finals_ab.txt",  # Replace with actual file path
+        repo_path("data/iau2000A_finals_ab.txt"),  # Replace with actual file path
         True,  # Interpolation
         "Hold",  # Extrapolation
     )
@@ -206,7 +207,7 @@ def main(cfg: DictConfig):
 
     elif cfg.problem.type == "teleport":
         #Load ground stations from JSON file
-        ground_stations = teleport_json('data/most_diverse_100_ground_stations.json')[0:cfg.problem.teleport_num]
+        ground_stations = teleport_json(repo_path('data/most_diverse_100_ground_stations.json'))[0:cfg.problem.teleport_num]
         print(f"Loaded {len(ground_stations)} ground stations")
 
         ilp_model = ILP_Model(ground_stations, satellites, epc_start, epc_end, cfg.problem.gs_num, data_rate=cfg.problem.data_rate)

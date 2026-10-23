@@ -1,5 +1,6 @@
 import brahe as bh
 # import brahe.data_models as bdm
+from common.paths import repo_path
 from common.utils import load_earth_data,compute_contact_times,contactExclusion
 
 from common.sat_gen import satellites_from_constellation
@@ -48,7 +49,7 @@ import datetime
 
 # Load land boundary dataset
 # using: https://www.naturalearthdata.com/downloads/10m-cultural-vectors/
-land_data = gpd.read_file("data/ne_10m_admin_0_countries.shp")  
+land_data = gpd.read_file(repo_path("data/ne_10m_admin_0_countries.shp"))  
 
 ################################### Main Script ###################################
 
@@ -96,13 +97,13 @@ def main(cfg: DictConfig):
     np.random.seed(cfg.debug.randseed)
     
     eop_file_custom = bh.FileEOPProvider.from_standard_file(
-        "data/iau2000A_finals_ab.txt",  # Replace with actual file path
+        repo_path("data/iau2000A_finals_ab.txt"),  # Replace with actual file path
         True,  # Interpolation
         "Hold",  # Extrapolation
     )
     bh.set_global_eop_provider(eop_file_custom)
     # Make sure to load in earth inertial data every start time!
-    # load_earth_data('data/iau2000A_finals_ab.txt',cfg.debug.txtUpdate)
+    # load_earth_data(repo_path('data/iau2000A_finals_ab.txt'),cfg.debug.txtUpdate)
 
     if cfg.walker.custom:
         satellites = make_walker_constellation(

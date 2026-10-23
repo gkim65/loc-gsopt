@@ -16,11 +16,12 @@ the rows the paper figures plot (see `figure_rows`).
 
 import argparse
 import os
+from common.paths import repo_path
 
 import pandas as pd
 import wandb
 
-OUT_DIR = "data/csv_Files"
+OUT_DIR = repo_path("data/csv_Files")
 
 GS_NUMBERS = [1, 2, 3, 4, 5, 7, 10, 15, 20]
 

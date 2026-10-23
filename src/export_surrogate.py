@@ -16,13 +16,14 @@ seconds of contact), cumulative from the start of each run.
 import os
 import pickle
 import sys
+from common.paths import repo_path
 
 import pandas as pd
 
 sys.path.insert(0, os.path.dirname(__file__))
 from surrogateOptPlot import CACHE_FILE, MAX_DAYS
 
-OUT_PATH = "data/csv_Files/surrogate_convergence.csv.gz"
+OUT_PATH = repo_path("data/csv_Files/surrogate_convergence.csv.gz")
 
 
 def figure_rows(history):

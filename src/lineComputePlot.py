@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import wandb
 import brahe as bh
 # import brahe.data_models as bdm
+from common.paths import repo_path, figure_path
 from common.utils import load_earth_data,compute_contact_times,contactExclusion
 
 from common.sat_gen import satellites_from_constellation
@@ -142,7 +143,7 @@ def main(cfg: DictConfig):
 
     
     try:
-        combined = pd.read_csv(f'data/csv_Files/{name}all_runs_combined.csv')
+        combined = pd.read_csv(repo_path(f'data/csv_Files/{name}all_runs_combined.csv'))
     except FileNotFoundError:
     
 
@@ -167,13 +168,13 @@ def main(cfg: DictConfig):
         np.random.seed(cfg.debug.randseed)
         
         eop_file_custom = bh.FileEOPProvider.from_standard_file(
-            "data/iau2000A_finals_ab.txt",  # Replace with actual file path
+            repo_path("data/iau2000A_finals_ab.txt"),  # Replace with actual file path
             True,  # Interpolation
             "Hold",  # Extrapolation
         )
         bh.set_global_eop_provider(eop_file_custom)
         # Make sure to load in earth inertial data every start time!
-        # load_earth_data('data/iau2000A_finals_ab.txt',cfg.debug.txtUpdate)
+        # load_earth_data(repo_path('data/iau2000A_finals_ab.txt'),cfg.debug.txtUpdate)
 
         if cfg.walker.custom:
             satellites = make_walker_constellation(
@@ -205,7 +206,7 @@ def main(cfg: DictConfig):
             all_dfs.append(df_run)
 
         combined = pd.concat(all_dfs, ignore_index=True)
-        combined.to_csv(f"data/csv_Files/{name}all_runs_combined.csv", index=False)
+        combined.to_csv(repo_path(f"data/csv_Files/{name}all_runs_combined.csv"), index=False)
 
     if name == "nelderAblate":
         # Instead of aggregating → pivot to wide format (one column per run)
@@ -221,9 +222,9 @@ def main(cfg: DictConfig):
             col_data = combined_wide[col].dropna()
             combined_interp[col] = np.interp(common_steps, col_data.index, col_data.values)
 
-        combined_interp.to_csv('data/csv_Files/nelderAblate_wide.csv')
+        combined_interp.to_csv(repo_path('data/csv_Files/nelderAblate_wide.csv'))
     try:
-        df_agg = pd.read_csv(f'data/csv_Files/{name}aggregated_runs.csv')
+        df_agg = pd.read_csv(repo_path(f'data/csv_Files/{name}aggregated_runs.csv'))
     except FileNotFoundError:
 
         # Define a common step grid (e.g., 0 to 4200 in 10-step increments)
@@ -244,12 +245,12 @@ def main(cfg: DictConfig):
             "min":  interp_array.min(axis=0),
             "max":  interp_array.max(axis=0),
         })
-        df_agg.to_csv(f"data/csv_Files/{name}aggregated_runs.csv", index=False)
+        df_agg.to_csv(repo_path(f"data/csv_Files/{name}aggregated_runs.csv"), index=False)
 
 
     fig, ax = plt.subplots(figsize=(10, 5))
-    df_agg_nelder1 = pd.read_csv(f'data/csv_Files/nelder1aggregated_runs.csv')
-    df_agg_de1 = pd.read_csv(f'data/csv_Files/dE1aggregated_runs.csv')
+    df_agg_nelder1 = pd.read_csv(repo_path(f'data/csv_Files/nelder1aggregated_runs.csv'))
+    df_agg_de1 = pd.read_csv(repo_path(f'data/csv_Files/dE1aggregated_runs.csv'))
 
 
     # --- Horizontal optimal ceiling line ---
@@ -339,7 +340,7 @@ def main(cfg: DictConfig):
     ax.set_ylabel(r"Data Downlinked in $T_{opt}$ (PB)")
     ax.legend(loc="lower right", fontsize=15)
 
-    plt.savefig("figures_final/score_improvement.pdf", format="pdf",
+    plt.savefig(figure_path("score_improvement.pdf"), format="pdf",
                 bbox_inches="tight", pad_inches=0.15)
     plt.show()
 

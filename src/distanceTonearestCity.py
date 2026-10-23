@@ -1,9 +1,10 @@
 import json
 import numpy as np
 from scipy.spatial import cKDTree
+from common.paths import repo_path
 
 # ── Load teleport locations ───────────────────────────────────────────────
-stations_json = json.load(open("data/teleport_locations.json", 'r'))
+stations_json = json.load(open(repo_path("data/teleport_locations.json"), 'r'))
 teleports = [(sta['longitude'], sta['latitude']) for sta in stations_json]
 
 # ── Build KD-tree ─────────────────────────────────────────────────────────

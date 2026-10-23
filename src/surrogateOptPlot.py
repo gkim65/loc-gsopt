@@ -11,13 +11,14 @@ import matplotlib.patches as mpatches
 import pickle
 import os
 import matplotlib as mpl
+from common.paths import figure_path, repo_path
 
 # ─────────────────────────────────────────────
 # CONFIG — edit these
 # ─────────────────────────────────────────────
 ENTITY      = "loc_gsopt"          # set to your W&B username/team, or None to auto-detect
 PROJECT     = "SurrogateTestsurrogate_opt"
-CACHE_FILE  = "wandb_runs_cache.pkl"   # avoids re-downloading every time
+CACHE_FILE  = repo_path("wandb_runs_cache.pkl")   # avoids re-downloading every time
 MAX_DAYS    = 100            # x-axis cutoff for plots (no need to show all 365)
 SURROGATE_DAY = 7           # the vertical line we want to justify
 EPSILON     = 0.05          # 2% tolerance for convergence threshold plot
@@ -214,7 +215,7 @@ def plot_convergence(all_data, max_days=MAX_DAYS, surrogate_day=SURROGATE_DAY, e
  
     plt.tight_layout()
     os.makedirs("figures_final", exist_ok=True)
-    out_path = "figures_final/surrogate_convergence.pdf"
+    out_path = figure_path("surrogate_convergence.pdf")
     plt.savefig(out_path, dpi=300, bbox_inches="tight")
     print(f"Saved to {out_path}")
     plt.close()
