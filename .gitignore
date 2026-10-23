@@ -15,3 +15,6 @@ figures_final/
 wandb_runs_cache.pkl
 
 .DS_Store
+
+# Unused intermediate kept locally
+data/csv_Files/SCOREablation_plot_data.csv
