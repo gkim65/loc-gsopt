@@ -5,23 +5,20 @@ code for Kim, Eddy, Srinivas and Kochenderfer, *Free-Placement Optimization of G
 Locations for Low-Earth-Orbit Satellites*, Journal of Aerospace Information Systems (2026)
 ([arXiv:2606.12667](https://arxiv.org/abs/2606.12667)).
 
-Ground station networks are usually planned by picking sites from a fixed list of existing
-teleports. Here, stations can go anywhere on land. The repository implements **SCORE** (Sequential
-Cyclic Optimization via Refinement & Evaluation):
+Ground station networks are usually built by choosing from a list of existing teleport sites. We
+let stations go anywhere on land instead, and place them with SCORE (Sequential Cyclic Optimization
+via Refinement & Evaluation). SCORE adds stations one at a time, putting each one where it most
+increases the data the constellation can downlink given the stations already placed. It then goes
+back through the network, re-optimizing one station at a time with the others fixed, and keeps a
+change only if the total improves. SCORE works with any inner optimizer; this repository includes
+Nelder-Mead and Powell's method. Penalty terms keep stations on land and apart from each other,
+and can also restrict them to a latitude band or to sites near existing infrastructure.
 
-1. **Place** stations one at a time, each at the point that most increases the data the
-   constellation can downlink given the stations already chosen.
-2. **Refine** by cycling through the stations, re-optimizing each one with the others held
-   fixed and keeping the move only if the whole network improves.
-
-Each search runs Nelder-Mead on the unit sphere, which avoids the singularities of latitude and
-longitude at the poles, or Powell's method. Penalties keep stations on land and apart from each
-other, and can also hold them within latitude limits or near existing infrastructure.
-
-Across Capella Space, ICEYE and a synthetic Walker-Star constellation, SCORE needs up to **5×
-fewer function evaluations** than differential evolution and downlinks up to **13% more**. It
-delivers up to **15% more** total downlink than choosing among fixed teleport or KSAT sites, and
-keeps over **92% of that gain** when stations must sit near existing infrastructure.
+In the paper we test SCORE on the Capella Space and ICEYE constellations and on a synthetic
+Walker-Star constellation. Compared with differential evolution, it needs up to 5× fewer function
+evaluations and downlinks up to 13% more data. Compared with choosing from fixed teleport or KSAT
+sites, it downlinks up to 15% more in total, and it keeps over 92% of that gain when stations have
+to be near existing infrastructure.
 
 ![Ground stations selected for the Capella constellation by each method](images/capella_comparison.png)
 
