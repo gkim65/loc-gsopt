@@ -15,6 +15,15 @@ from shapely.geometry import Point, Polygon
 
 
 def haversine_numba(lat1, lon1, lat2, lon2):
+    """
+        haversine_numba(lat1, lon1, lat2, lon2) -> float
+
+    Great-circle distance on a 6371 km sphere (plain NumPy; the name predates dropping Numba).
+
+      - `lat1`, `lon1`, `lat2`, `lon2` — the two points (deg)
+
+    Returns the distance (km).
+    """
     R = 6371.0
     phi1, phi2 = np.deg2rad(lat1), np.deg2rad(lat2)
     dphi  = np.deg2rad(lat2 - lat1)
@@ -23,7 +32,15 @@ def haversine_numba(lat1, lon1, lat2, lon2):
     return 2 * R * np.arcsin(np.sqrt(a))
 
 def farthest_four(points):
-    """Greedy k‑centre: select 4 widely‑spaced points from `points` (N×2)."""
+    """
+        farthest_four(points) -> numpy.ndarray
+
+    Pick 4 widely spaced points by greedy farthest-point selection from a random first point.
+
+      - `points` — N x 2 array of `[lat, lon]` rows (deg)
+
+    Returns the 4 chosen rows.
+    """
     N = len(points)
     chosen = [np.random.randint(N)]          # 1st point random
     dists  = np.full(N, np.inf)
@@ -40,8 +57,17 @@ def farthest_four(points):
 
     return points[chosen]
 
-# --- driver -------------------------------------------------
 def simplex_select(n_samples=120):
+    """
+        simplex_select(n_samples=120) -> numpy.ndarray
+
+    Initial Nelder-Mead simplex: `n_samples` points uniform on the sphere, reduced to 4 widely
+    spaced ones by `farthest_four`.
+
+      - `n_samples` — number of random points
+
+    Returns a 4 x 2 array of `[lat, lon]` rows (deg).
+    """
     lats = np.degrees(np.arcsin(np.random.uniform(-1, 1, n_samples)))
     lons = np.random.uniform(-180, 180, n_samples)
     pts  = np.column_stack((lats, lons))
@@ -51,7 +77,32 @@ def simplex_select(n_samples=120):
 
 
 def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data, rng=None):
+        """
+            nelder_mead_scipy_ccgs(cfg, land_data, epc_start, epc_end, satellites, eval_counter, city_data, rng=None) -> (list, list)
 
+        SCORE with a Nelder-Mead inner search on the unit sphere. The first pass places stations
+        one at a time; each of the remaining `cfg.experiments.ccgs - 1` passes re-optimizes every
+        station with the others fixed.
+
+          - `cfg` — the Hydra config (`problem.gs_num`, `experiments.ccgs`, `experiments.ccgs_random`,
+            `constraints`)
+          - `land_data` — GeoDataFrame of country polygons
+          - `epc_start`, `epc_end` — simulation window (`bh.Epoch`)
+          - `satellites` — propagated `bh.SGPPropagator` objects
+          - `eval_counter` — `EvalCounter`; `score_count` counts objective evaluations
+          - `city_data` — GeoDataFrame of infrastructure zones
+          - `rng` — NumPy generator that shuffles the refinement order when `ccgs_random`
+
+        Returns the stations as `bh.PointLocation` objects and as `[lon, lat]` pairs (deg).
+
+        NOTE: each search stops at 100 iterations; SciPy ignores the `xtol`/`ftol` options passed
+        here and uses its default `xatol`/`fatol` of 1e-4.
+        NOTE: the simplex rows are `[lat, lon]` but are converted with `latlon_to_xyz(p[1], p[0])`,
+        i.e. with latitude and longitude swapped.
+        NOTE: a refined location is kept when the raw contact time (before contact exclusion)
+        improves; the penalties are not re-checked.
+        NOTE: `constraints.extra_gs=True` fails with `IndexError` for `problem.gs_num` > 1.
+        """
         # Setup args for minimize function
         if cfg.constraints.extra_gs:
                 gs_list = [bh.PointLocation(cfg.constraints.extra_gs_lon,cfg.constraints.extra_gs_lat)]
@@ -81,18 +132,13 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_count
                         rng.shuffle(gs_indices)
 
                 # for every ground station
-                for i in gs_indices:#range(cfg.problem.gs_num):
+                for i in gs_indices:
                         if iterate == 0 and cfg.constraints.extra_gs:
                                 break
 
-
-                # for i in range(cfg.problem.gs_num):
-                
-
-                        # Initial guess overridden by initial simplex
+                        # Unused by Nelder-Mead when initial_simplex is given
                         initial_guess = np.array([-0.41244896,  0.6765351 ,  0.61007058])
 
-                        # initial_simplex = simplex_select(gs_list_plot,cfg.experiments.simplexExclude)
                         initial_simplex = simplex_select(n_samples=200)
                         if cfg.debug.wandb:
                                 wandb.log({"initial simplex"+str(i+1): initial_simplex})
@@ -107,7 +153,7 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_count
                                 print("lat-long simplex: ", initial_simplex)
                                 print("unit circle converted simplex: ", simplex)
 
-                        # Make faster computation
+                        # Contact time of the other stations, held fixed during this search
                         if iterate > 0:
                                 # Get all ground stations except the i-th one
                                 gs_list_others = [gs for idx, gs in enumerate(gs_list) if idx != i]
@@ -115,18 +161,15 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_count
                                 contacts_og, contacts_sec = compute_contact_times(satellites, gs_list_others ,epc_start, epc_end)
                                 gs_contacts_og = contacts_sec
 
-                        # # Perform the optimization using Nelder-Mead
                         result = minimize(cost_func, 
                                         initial_guess, 
                                         args = (gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og,eval_counter,city_data, verbose, False), 
                                         method='Nelder-Mead',
                                         options={'disp': True,
                                                 'maxiter': 100,
-                                                'xtol': 1,     # x tolerance
-                                                'ftol': 1,     # function tolerance
+                                                'xtol': 1,     # NOTE: ignored by SciPy Nelder-Mead
+                                                'ftol': 1,     # NOTE: ignored by SciPy Nelder-Mead
                                                 'initial_simplex': np.array(simplex)})
-                                                #,
-                                                # 'maxiter': 3})
 
                         
                         if cfg.debug.verbose:
@@ -144,16 +187,14 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_count
                                         gs_contacts_og = contacts_sec
                         else:
                                 coord = xyz_to_latlon(result.x)
-                                gs_list_new = gs_list.copy() #copy.deepcopy(gs_list)
+                                gs_list_new = gs_list.copy()
                                 gs_list_new[i] = bh.PointLocation(coord[1], coord[0])
 
-                                # Check if prev is better than current
+                                # Keep the move only if the network's raw contact time improves
                                 contacts_prev, contacts_sec_prev = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
-                                # _, contacts_exclusion_secs_prev = contactExclusion(contacts_prev,cfg)
                                 contacts_new, contacts_sec_new = compute_contact_times(satellites, gs_list_new ,epc_start, epc_end)
-                                # _, contacts_exclusion_secs_new = contactExclusion(contacts_new,cfg)
 
-                                if np.sum(contacts_sec_prev) < np.sum(contacts_sec_new): # or np.sum(contacts_exclusion_secs_prev) < np.sum(contacts_exclusion_secs_new):
+                                if np.sum(contacts_sec_prev) < np.sum(contacts_sec_new):
                                         print(gs_list)
                                         print(gs_list_plot)
                                         gs_list[i] = bh.PointLocation(coord[1], coord[0])
@@ -177,7 +218,26 @@ def nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_count
 
 
 def powell_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data):
+        """
+            powell_scipy(cfg, land_data, epc_start, epc_end, satellites, eval_counter, city_data) -> (list, list)
 
+        SCORE with a bounded Powell inner search in longitude and latitude, using the same
+        place-then-refine passes as `nelder_mead_scipy_ccgs`.
+
+          - `cfg` — the Hydra config (`problem.gs_num`, `experiments.ccgs`, `constraints`)
+          - `land_data` — GeoDataFrame of country polygons
+          - `epc_start`, `epc_end` — simulation window (`bh.Epoch`)
+          - `satellites` — propagated `bh.SGPPropagator` objects
+          - `eval_counter` — `EvalCounter`; `score_count` counts objective evaluations
+          - `city_data` — GeoDataFrame of infrastructure zones
+
+        Returns the stations as `bh.PointLocation` objects and as `[lon, lat]` pairs (deg).
+
+        NOTE: start points come from Python's `random`, which `debug.randseed` does not seed, so
+        runs are not reproducible from the seed.
+        NOTE: the land penalty does not force a station onto land; a short search can end over
+        the ocean.
+        """
         # Setup args for minimize function
         gs_list = []
         gs_list_plot = []
@@ -196,7 +256,6 @@ def powell_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_da
                         # Longitude: Uniform sampling between -180 and 180 degrees
                         lon = random.uniform(-180, 180)
 
-                        # Initial guess overridden by initial simplex
                         initial_guess = np.array([lon,lat])
 
                         if cfg.debug.verbose:
@@ -246,7 +305,7 @@ def powell_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_da
                                 if np.sum(contacts_sec_prev) < np.sum(contacts_sec_new):
                                         gs_list[i] = bh.PointLocation(coord[0], coord[1])
                                         gs_list_plot[i] = [coord[0], coord[1]]
-                        # try to minimize number of contacts to compute:
+                        # Contact time of the stations placed so far, for the next search
                         contacts_og, contacts_sec = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
                         gs_contacts_og = contacts_sec
 
@@ -259,20 +318,4 @@ def powell_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_da
                         wandb.summary["data_downlink"+str(iterate)] = np.sum(contacts_exclusion_secs)*cfg.scenario.datarate
                         wandb.summary["eval_counter"+str(iterate)] = eval_counter.score_count
                 
-        return gs_list, gs_list_plot 
-
-
-##### TODO EXTENSION: Powell / other minimize functions?
-                # result = minimize(
-                #                 cost_func,
-                #                 initial_guess,
-                #                 args=(gs_list, sat_list, epc_start, epc_end, land_geometries, cfg, i, gs_contacts_og, verbose, plot), 
-                #                 method='Powell',
-                #                 bounds=[(-180, 180), (-90, 90)],
-                #                 options={
-                #                         'disp': True,
-                #                         'xtol': 1e-3,     # x tolerance
-                #                         'ftol': 1e-6,     # function tolerance
-                #                         'maxiter': 100
-                #                 }
-                #                 )
+        return gs_list, gs_list_plot
