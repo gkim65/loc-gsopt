@@ -31,12 +31,37 @@ land_data = gpd.read_file("data/ne_10m_admin_0_countries.shp")
 city_data = gpd.read_file("data/city_buffers.shp")
 
 eval_counter = EvalCounter()      # single global instance
+
+# Options whose code is kept but cannot currently run, with the reason shown to the user
+UNSUPPORTED = {
+    ("objective", "gap_optimization"): "gap-time computation uses the pre-1.0 brahe access API",
+    ("objective", "max_contacts"): "contact exclusion has no contact-count objective",
+    ("type", "teleport"): "the MILP teleport-selection model uses the pre-1.0 brahe access API; "
+                          "its paper results are in data/csv_Files/milp_*.csv",
+}
+
+
+def check_supported(cfg):
+    """
+        check_supported(cfg) -> None
+
+    Raise before any computation if the config selects an option that cannot currently run.
+
+      - `cfg` — the Hydra config for this run
+
+    Raises `NotImplementedError` naming the option and the reason it is unavailable.
+    """
+    for (key, value), reason in UNSUPPORTED.items():
+        if cfg.problem[key] == value:
+            raise NotImplementedError(f'problem.{key}="{value}" is not currently supported: {reason}.')
+
 ################################### Main Script ###################################
 
 # Bringing in Hydra configuration parameters
 @hydra.main(version_base=None, config_path="../config", config_name="config")
 def main(cfg: DictConfig):
-    
+    check_supported(cfg)
+
     ########## Configuration files: ##########
     #Ensure unique project names every time
     proj_name = cfg.problem.type+"_"+cfg.problem.method+"_"+cfg.problem.objective+"_"+str(cfg.problem.gs_num)+"_"+str(cfg.problem.sat_num)

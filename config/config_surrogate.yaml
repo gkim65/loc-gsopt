@@ -20,7 +20,7 @@ problem:
   type: "free"
   # type: "teleport"
   method: "diffEvolution"  # free methods: "nelder_ccgs" (SCORE), "powell", "diffEvolution"
-  objective: "data_downlink" #data_downlink, gap_optimization, max_contacts
+  objective: "data_downlink" # data_downlink (gap_optimization, max_contacts: not currently supported)
   gs_num: 1
   teleport_num: 10
   sat_num: 5 # Start with 10, just to not overload the solver
