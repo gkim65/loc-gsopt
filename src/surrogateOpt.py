@@ -4,8 +4,6 @@ from common.utils import load_earth_data,compute_contact_times,contactExclusion
 
 from common.sat_gen import satellites_from_constellation
 from common.plotting import plot_gif,plot_img
-# from methods.free_select.nelder_mead_scipy import nelder_mead_scipyfrom methods.free_select.nelder_mead_scipy import nelder_mead_scipy
-from methods.free_select.scipy_methods import nelder_mead_scipy
 from methods.free_select.scipy_ccgs import nelder_mead_scipy_ccgs, powell_scipy
 from methods.free_select.genetic_algorithms import diffEvolution
 # from methods.teleport.ILP import ILP_Model
