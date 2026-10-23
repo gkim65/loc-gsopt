@@ -44,11 +44,12 @@ Two tools come from outside Python:
 
 ## Quick start
 
-[`examples/quickstart.ipynb`](examples/quickstart.ipynb) places one station with SCORE in a few
-minutes. From the command line:
+[`examples/quickstart.ipynb`](examples/quickstart.ipynb) places one ground station with SCORE for
+two Capella satellites over one day, which takes a few minutes. The same run from the command line:
 
 ```bash
-uv run python src/main.py problem.method=nelder_ccgs problem.gs_num=2
+uv run python src/main.py problem.method=nelder_ccgs problem.gs_num=1 problem.sat_num=2 \
+    end_epoch.day=2 experiments.ccgs=1
 ```
 
 Each run writes `results.json` (selected stations, contact count, contact seconds, data downlinked
@@ -63,9 +64,31 @@ in bits, objective evaluations) and `gs_all.png` to its Hydra output directory,
 | `powell` | SCORE with a Powell inner search |
 | `diffEvolution` | Differential evolution over all stations at once |
 
-Settings live in [`config/config.yaml`](config/config.yaml) and can be overridden on the command
-line, e.g. `problem.gs_num=5 problem.sat_num=34 scenario.constellations=ICEYE`.
 `scripts/run_sweeps.sh` runs the SCORE and Powell seed sweeps over ground station counts.
+
+## Configuration
+
+Settings live in [`config/config.yaml`](config/config.yaml), managed by
+[Hydra](https://hydra.cc). Any of them can be overridden on the command line as `key=value`, e.g.
+`problem.gs_num=5 problem.sat_num=34 scenario.constellations=ICEYE`. The ones you will most likely
+change:
+
+| Key | Default | Meaning |
+|---|---|---|
+| `problem.method` | `diffEvolution` | `nelder_ccgs`, `powell` or `diffEvolution` |
+| `problem.gs_num` | `1` | Number of ground stations to place |
+| `problem.sat_num` | `5` | Number of satellites, the first ones in the TLE file matching `scenario.constellations` |
+| `scenario.constellations` | `CAPELLA` | Satellite name to match in the TLE file, e.g. `ICEYE` |
+| `scenario.datarate` | `1.2e9` | Downlink rate (bps) used to turn contact time into data |
+| `start_epoch`, `end_epoch` | 1–8 April 2025 | Simulation window (UTC) |
+| `experiments.ccgs` | `5` | SCORE passes: one placement pass, then refinement passes |
+| `constraints.dist_other_gs` | `3000000` | Minimum station separation (m) |
+| `constraints.latitude_bot`, `latitude_top` | `-90`, `90` | Allowed latitude band (deg) |
+| `constraints.infra_weight` | `0.0` | Weight of the infrastructure penalty; 0 turns it off |
+| `DE.popsize`, `DE.F`, `DE.CR`, `DE.strategy` | `15`, `0.5`, `0.9`, `best1bin` | Differential evolution settings |
+| `walker.custom` | `False` | Use a synthetic Walker constellation (`walker.*`) instead of TLEs |
+| `debug.randseed` | `0` | NumPy random seed |
+| `debug.wandb` | `False` | Log the run to W&B |
 
 ### Weights & Biases
 
