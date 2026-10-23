@@ -14,7 +14,7 @@
 test_name: "compute_test1"
 
 wandb:
-  entity: "loc_gsopt"
+  entity: null  # W&B team or user; null uses WANDB_ENTITY or your default entity
 
 problem:
   type: "free"
@@ -84,7 +84,7 @@ end_epoch:
 debug:
   verbose: True
   plot: True
-  wandb: True
+  wandb: False  # True logs runs to W&B (needs `wandb login`); results.json is always written
   txtUpdate: False
   randseed: 0
 

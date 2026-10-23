@@ -42,6 +42,8 @@ def contactExclusion(contacts, cfg):
     """
     Solves the contact exclusion problem using a pairwise overlap constraint approach.
     """
+    if not contacts:
+        return [], []
 
     model = ConcreteModel()
 
@@ -124,13 +126,6 @@ def contactExclusion(contacts, cfg):
     print(f"Total contacts: {len(contacts)}")
     print(f"Total overlap pairs: {len(overlap_pairs)}")
     print(f"Unique overlap pairs: {len(overlap_pairs_set)}")
-    print(f"Example t_start type: {type(contacts[0].t_start)}")
-    print(f"Example duration type: {type(contacts[0].duration)}")
-    c = contacts[0]
-    print(f"duration: {c.duration}")
-    print(f"t_end - t_start: {c.t_end - c.t_start}")
-    print(f"t_start: {c.t_start}")
-    print(f"t_end: {c.t_end}")
 
     # ── Solve ─────────────────────────────────────────────────────────
     solver = SolverFactory('cbc')

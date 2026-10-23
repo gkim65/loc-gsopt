@@ -9,10 +9,14 @@ from methods.free_select.scipy_ccgs import nelder_mead_scipy_ccgs, powell_scipy
 from methods.free_select.genetic_algorithms import diffEvolution
 # from methods.teleport.ILP import ILP_Model
 
+import json
+import os
+
 import numpy as np
 
 # Hydra
 import hydra
+from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig
 import omegaconf
 
@@ -55,6 +59,63 @@ def check_supported(cfg):
     for (key, value), reason in UNSUPPORTED.items():
         if cfg.problem[key] == value:
             raise NotImplementedError(f'problem.{key}="{value}" is not currently supported: {reason}.')
+
+
+def summarize_free(cfg, satellites, gs_list, gs_list_plot, epc_start, epc_end):
+    """
+        summarize_free(cfg, satellites, gs_list, gs_list_plot, epc_start, epc_end) -> dict
+
+    Score a free-placement solution after contact exclusion (no overlapping contacts per
+    satellite or station, contacts of 180 s or less dropped).
+
+      - `cfg` — the Hydra config for this run
+      - `satellites` — propagated `bh.SGPPropagator` objects
+      - `gs_list` — selected stations as `bh.PointLocation` objects
+      - `gs_list_plot` — the same stations as `[lon, lat]` pairs (deg)
+      - `epc_start`, `epc_end` — simulation window (`bh.Epoch`)
+
+    Returns `gs_list` ([lon, lat] deg), `contact_num`, `seconds` (s of selected contact),
+    `data_downlink` (bits, `seconds` times `cfg.scenario.datarate`) and the objective
+    evaluation counts `score_evals` and `de_evals`.
+    """
+    contacts, _ = compute_contact_times(satellites, gs_list, epc_start, epc_end)
+    _, contacts_exclusion_secs = contactExclusion(contacts, cfg)
+    seconds = float(np.sum(contacts_exclusion_secs))
+    return {
+        "gs_list": [[float(lon), float(lat)] for lon, lat in gs_list_plot],
+        "contact_num": len(contacts_exclusion_secs),
+        "seconds": seconds,
+        "data_downlink": seconds * cfg.scenario.datarate,
+        "score_evals": eval_counter.score_count,
+        "de_evals": eval_counter.de_count,
+    }
+
+
+def save_results(cfg, results, run, gs_list_plot):
+    """
+        save_results(cfg, results, run, gs_list_plot) -> None
+
+    Write `results.json` (and `gs_all.png` when `cfg.debug.plot`) to this run's Hydra output
+    directory, and copy both to W&B when `run` is not None.
+
+      - `cfg` — the Hydra config for this run
+      - `results` — output of `summarize_free`
+      - `run` — the active `wandb` run, or None when W&B is off
+      - `gs_list_plot` — selected stations as `[lon, lat]` pairs (deg)
+    """
+    out_dir = HydraConfig.get().runtime.output_dir
+    with open(os.path.join(out_dir, "results.json"), "w") as f:
+        json.dump(results, f, indent=2)
+    print(f"Results written to {os.path.join(out_dir, 'results.json')}")
+
+    if run is not None:
+        for key in ["gs_list", "contact_num", "seconds", "data_downlink"]:
+            run.summary[key] = results[key]
+
+    if cfg.debug.plot:
+        fig = plot_img(gs_list_plot, os.path.join(out_dir, "gs_all.png"))
+        if run is not None:
+            run.log({"gs_all": wandb.Image(fig)})
 
 ################################### Main Script ###################################
 
@@ -132,78 +193,19 @@ def main(cfg: DictConfig):
     bh.par_propagate_to(satellites, epc_end)
     ########## Solvers: ##########
 
-    # TODO: add other methods
     if cfg.problem.type == "free":
         if cfg.problem.method == "nelder_ccgs":
-            
+            rng = np.random.default_rng(cfg.debug.randseed) if cfg.experiments.ccgs_random else None
+            gs_list, gs_list_plot = nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data, rng=rng)
+        elif cfg.problem.method == "powell":
+            gs_list, gs_list_plot = powell_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data)
+        elif cfg.problem.method == "diffEvolution":
+            gs_list, gs_list_plot = diffEvolution(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data)
+        else:
+            raise ValueError(f'unknown problem.method "{cfg.problem.method}"')
 
-            seed = cfg.debug.randseed  # e.g., 42, 123, 7, ...
-            rng = np.random.default_rng(seed) if cfg.experiments.ccgs_random else None
-
-            gs_list,  gs_list_plot = nelder_mead_scipy_ccgs(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data, rng=rng) # agg_list_of_simplexes
-            
-            if cfg.debug.wandb:
-                contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
-                _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
-                run.summary["gs_list"] = gs_list_plot 
-                run.summary["contact_num"] = len(contacts_exclusion_secs) 
-                run.summary["seconds"] = np.sum(contacts_exclusion_secs)
-                run.summary["data_downlink"] = np.sum(contacts_exclusion_secs)*cfg.scenario.datarate
-
-                wandb.save("data/*")
-
-                if cfg.debug.plot:
-                    print("##############################")
-                    print(gs_list_plot)
-                    plot_img(gs_list_plot,"gs_all.png")
-                    print(wandb.Image(plot_img(gs_list_plot,"gs_all.png")))
-                    figure = wandb.Image(plot_img(gs_list_plot,"gs_all.png"))
-                    run.log({"gs_all": figure})
-
-
-        if cfg.problem.method == "powell":
-            
-            gs_list,  gs_list_plot = powell_scipy(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data) # agg_list_of_simplexes
-            
-            if cfg.debug.wandb:
-                contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
-                _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
-                run.summary["gs_list"] = gs_list_plot 
-                run.summary["contact_num"] = len(contacts_exclusion_secs) 
-                run.summary["seconds"] = np.sum(contacts_exclusion_secs)
-                run.summary["data_downlink"] = np.sum(contacts_exclusion_secs)*cfg.scenario.datarate
-
-                wandb.save("data/*")
-
-                if cfg.debug.plot:
-                    print("##############################")
-                    print(gs_list_plot)
-                    plot_img(gs_list_plot,"gs_all.png")
-                    print(wandb.Image(plot_img(gs_list_plot,"gs_all.png")))
-                    figure = wandb.Image(plot_img(gs_list_plot,"gs_all.png"))
-                    run.log({"gs_all": figure})
-
-        if cfg.problem.method == "diffEvolution":
-
-            gs_list,  gs_list_plot = diffEvolution(cfg,land_data,epc_start,epc_end,satellites,eval_counter,city_data) # agg_list_of_simplexes
-            
-            if cfg.debug.wandb:
-                contacts, _ = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
-                _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
-                run.summary["gs_list"] = gs_list_plot 
-                run.summary["contact_num"] = len(contacts_exclusion_secs) 
-                run.summary["seconds"] = np.sum(contacts_exclusion_secs)
-                run.summary["data_downlink"] = np.sum(contacts_exclusion_secs)*cfg.scenario.datarate
-
-                wandb.save("data/*")
-
-                if cfg.debug.plot:
-                    print("##############################")
-                    print(gs_list_plot)
-                    plot_img(gs_list_plot,"gs_all.png")
-                    print(wandb.Image(plot_img(gs_list_plot,"gs_all.png")))
-                    figure = wandb.Image(plot_img(gs_list_plot,"gs_all.png"))
-                    run.log({"gs_all": figure})
+        results = summarize_free(cfg, satellites, gs_list, gs_list_plot, epc_start, epc_end)
+        save_results(cfg, results, run if cfg.debug.wandb else None, gs_list_plot)
 
     elif cfg.problem.type == "teleport":
         #Load ground stations from JSON file

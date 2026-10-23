@@ -14,7 +14,7 @@
 test_name: "SurrogateTest"
 
 wandb:
-  entity: "loc_gsopt"
+  entity: null  # W&B team or user; null uses WANDB_ENTITY or your default entity
 
 problem:
   type: "free"
@@ -70,7 +70,7 @@ end_epoch:
 debug:
   verbose: True
   plot: True
-  wandb: False
+  wandb: False  # True logs runs to W&B (needs `wandb login`)
   txtUpdate: False
   randseed: 0
 
