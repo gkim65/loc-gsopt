@@ -96,10 +96,17 @@ def main(cfg: DictConfig):
     max_infra_data_downlink = e_infra_data_downlink_df.groupby("gs_number")["data_downlinked"].max().reset_index()
 
 
-    teleport_data_downlink_df = df_generatorTeleport(constellation)
+    # MILP and KSAT baselines: exported from W&B by src/export_baselines.py
+    try:
+        teleport_data_downlink_df = pd.read_csv(repo_path(f'data/csv_Files/milp_{cfg.scenario.constellations}.csv'))
+    except FileNotFoundError:
+        teleport_data_downlink_df = df_generatorTeleport(constellation)
     tele_max_data_downlink = teleport_data_downlink_df.groupby("gs_number")["data_downlinked"].max().reset_index()
 
-    ksat_data_downlink_df = df_generatorKSAT(constellation)
+    try:
+        ksat_data_downlink_df = pd.read_csv(repo_path(f'data/csv_Files/ksat_{cfg.scenario.constellations}.csv'))
+    except FileNotFoundError:
+        ksat_data_downlink_df = df_generatorKSAT(constellation)
 
 
     ############################# Plotting Figures ###############################

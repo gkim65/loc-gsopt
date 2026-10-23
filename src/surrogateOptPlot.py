@@ -1,11 +1,13 @@
 """
 Surrogate Optimization Convergence Analysis
-Pulls all runs from W&B project and plots convergence of mean_contact_num
-and mean_seconds to their 365-day values, to justify 7-day surrogate window.
+Plots convergence of contacts per day and contact seconds per day to their 365-day values,
+to justify the 7-day surrogate window. Reads data/csv_Files/surrogate_convergence.csv.gz
+when present, otherwise the local W&B cache, otherwise the W&B project.
 """
 
 import wandb
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import pickle
@@ -19,6 +21,7 @@ from common.paths import figure_path, repo_path
 ENTITY      = "loc_gsopt"          # set to your W&B username/team, or None to auto-detect
 PROJECT     = "SurrogateTestsurrogate_opt"
 CACHE_FILE  = repo_path("wandb_runs_cache.pkl")   # avoids re-downloading every time
+CSV_FILE    = repo_path("data/csv_Files/surrogate_convergence.csv.gz")  # written by src/export_surrogate.py
 MAX_DAYS    = 100            # x-axis cutoff for plots (no need to show all 365)
 SURROGATE_DAY = 7           # the vertical line we want to justify
 EPSILON     = 0.05          # 2% tolerance for convergence threshold plot
@@ -38,6 +41,21 @@ mpl.rcParams.update({
 # 1. PULL DATA FROM W&B (with caching)
 # ─────────────────────────────────────────────
  
+def load_runs_csv(csv_file):
+    """
+        load_runs_csv(csv_file) -> dict
+
+    Load run histories exported by src/export_surrogate.py into the structure `pull_runs` returns.
+
+      - `csv_file` — path to the exported `.csv.gz`
+
+    Returns {run_id: {"num_days", "total_contact_num", "total_seconds"}} with numpy array values.
+    """
+    df = pd.read_csv(csv_file)
+    return {run_id: {key: g[key].values for key in ["num_days", "total_contact_num", "total_seconds"]}
+            for run_id, g in df.groupby("run_id", sort=False)}
+
+
 def pull_runs(entity, project, cache_file):
     if os.path.exists(cache_file):
         print(f"Loading cached data from {cache_file} ...")
@@ -226,6 +244,10 @@ def plot_convergence(all_data, max_days=MAX_DAYS, surrogate_day=SURROGATE_DAY, e
 # ─────────────────────────────────────────────
  
 if __name__ == "__main__":
-    all_data = pull_runs(ENTITY, PROJECT, CACHE_FILE)
+    if os.path.exists(CSV_FILE):
+        print(f"Loading exported runs from {CSV_FILE} ...")
+        all_data = load_runs_csv(CSV_FILE)
+    else:
+        all_data = pull_runs(ENTITY, PROJECT, CACHE_FILE)
     print(f"Total valid runs: {len(all_data)}")
     plot_convergence(all_data)

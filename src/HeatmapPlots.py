@@ -66,8 +66,6 @@ def main(cfg: DictConfig):
     bh.set_global_eop_provider(eop_file_custom)
     
     ############################# Prepping Data ###############################
-    # data_downlink_df_powell = df_generatorPowell(epc_end, epc_start,cfg)
-    # avg_data_downlink_df_score_all = df_generatorNelder(epc_end, epc_start,cfg)
 
     # heatmap_data_SCORE = avg_data_downlink_df_score_all.pivot(index='gs_number', columns='sats', values='WallClockTime')
     # # heatmap_data_DE = avg_data_downlink_df_all.pivot(index='gs_number', columns='sats', values='WallClockTime')# 'WallClockTime')
@@ -186,14 +184,13 @@ def main(cfg: DictConfig):
 
 def df_generator(name,csvName,epc_end, epc_start,cfg):
 
-    api = wandb.Api()
-
     data_downlink_list= []
 
     # Iterate through the ground station numbers and runs
     try:
         data_downlink_df= pd.read_csv(csvName)
     except FileNotFoundError:
+        api = wandb.Api()
         for gs in [1,2,3,4]:#[1, 2, 3, 4, 5]:
             for sats in [1, 2, 3, 4]:
 
@@ -269,100 +266,6 @@ def df_generator(name,csvName,epc_end, epc_start,cfg):
         data_downlink_df.to_csv(csvName, index=False)  
 
     return data_downlink_df.groupby(['gs_number', 'sats'], as_index=False).mean(numeric_only=True)
-
-def df_generatorPowell(epc_end, epc_start,cfg):
-
-    api = wandb.Api()
-
-    data_downlink_list_powell = []
-
-    # Iterate through the ground station numbers and runs
-    try:
-        data_downlink_df_powell = pd.read_csv(f'powell_heatmap.csv')
-    except FileNotFoundError:
-        for gs in [1,2,3,4]:#[1, 2, 3, 4, 5]:
-            gs_list = []
-            for sats in [1, 2, 3, 4]:
-                project_name = f"loc_gsopt/compute_test1free_powell_data_downlink_{gs}_{sats}=CAPELLA=3000000"
-                runs = api.runs(project_name)
-                
-                for run in runs:
-                    
-                    if run.state == "finished":
-                        # Append each run's data as a dictionary to the list
-                        for i, new_gs in enumerate(run.summary['gs_list']):
-                            point_loc = bh.PointLocation(new_gs[0], new_gs[1])
-                            point_loc.set_id(i)
-                            gs_list.append(point_loc)
-                        satellites = make_walker_constellation(
-                                epoch=epc_start,
-                                altitude_km=cfg.walker.altitude,
-                                eccentricity=cfg.walker.eccentricity,
-                                inclination=cfg.walker.inclination,
-                                num_planes=sats,
-                                sats_per_plane= cfg.walker.sats_perplane,
-                                phase=cfg.walker.phase,
-                                argp=cfg.walker.argp,
-                                norad_start=cfg.walker.norad_start,
-                                star =cfg.walker.star,
-                            )
-                        
-                        # Step 1: Propagate all satellites in parallel
-                        bh.par_propagate_to(satellites, epc_end)
-
-                        contacts, contact_secs = compute_contact_times(satellites, gs_list ,epc_start, epc_end)
-                        _, contacts_exclusion_secs = contactExclusion(contacts,cfg)
-
-                        data_downlink_list_powell.append({
-                            "gs_number": gs,
-                            'sats': run.config['walker']['num_planes'],
-                            'WallClockTime': run.summary['_runtime']/60/60,
-                            # "sat_number": sats,
-                            "Obj_func": run.history()['Obj_func_value'].dropna().values.min(),
-                            "data_downlinked": np.sum(contacts_exclusion_secs)*cfg.scenario.datarate/1000000000
-                        })
-
-        # Convert the list of dictionaries into a pandas DataFrame
-        data_downlink_df_powell = pd.DataFrame(data_downlink_list_powell)
-        data_downlink_df_powell.to_csv(f'powell_heatmap.csv', index=False)  
-
-    return data_downlink_df_powell.groupby(['gs_number', 'sats'], as_index=False).mean(numeric_only=True)
-
-
-
-def df_generatorNelder(epc_end, epc_start,cfg):
-
-    api = wandb.Api()
-
-    data_downlink_list_score = []
-
-    # Iterate through the ground station numbers and runs
-    try:
-        data_downlink_df_score = pd.read_csv(f'nelder_heatmap.csv')
-    except FileNotFoundError:
-        for gs in [1,2,3,4]:#[1, 2, 3, 4, 5]:
-            # for sats in [1, 2, 3, 4, 5]:
-            project_name = f"loc_gsopt/compute_test1free_nelder_ccgs_data_downlink_{gs}_5=CAPELLA=3000000"
-            runs = api.runs(project_name)
-            for run in runs:
-                if run.state == "finished":
-
-                    data_downlink_list_score.append({
-                        "gs_number": gs,
-                        'sats': run.config['walker']['num_planes'],
-                        'WallClockTime': run.summary['_runtime']/60/60,
-                        # "sat_number": sats,
-                        "Obj_func": run.history()['Obj_func_value'].dropna().values.min(),
-                        "data_downlinked": run.summary.data_downlink/1000000000
-                    })
-
-        # Convert the list of dictionaries into a pandas DataFrame
-        data_downlink_df_score = pd.DataFrame(data_downlink_list_score)
-        data_downlink_df_score.to_csv(f'nelder_heatmap.csv', index=False)  
-
-    avg_data_downlink_df_score_all = data_downlink_df_score.groupby(['gs_number', 'sats'], as_index=False).mean(numeric_only=True)
-    return avg_data_downlink_df_score_all
-
 
 if __name__ == "__main__":
     main()
