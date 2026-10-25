@@ -155,15 +155,16 @@ If you use this repository, or build on this work in general, please cite:
 
 ```bibtex
 @article{kim2026free,
-  title={Free-Placement Optimization of Ground Station Locations for Low-Earth-Orbit Satellites},
-  author={Kim, Grace Ra and Eddy, Duncan and Srinivas, Vedant and Kochenderfer, Mykel J},
-  journal={Journal of Aerospace Information Systems},
-  volume={23},
-  number={10},
-  pages={975--994},
-  year={2026},
-  publisher={American Institute of Aeronautics and Astronautics}
+  title = {Free-Placement Optimization of Ground Station Locations for Low-Earth-Orbit Satellites},
+  author = {Kim, Grace Ra and Eddy, Duncan and Srinivas, Vedant and Kochenderfer, Mykel J.},
+  year = 2026,
+  journal = {Journal of Aerospace Information Systems},
+  volume = {23},
+  number = {10},
+  pages = {975--994},
+  doi = {10.2514/1.I011804}
 }
+
 ```
 
 ## License
