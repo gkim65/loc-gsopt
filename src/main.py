@@ -4,10 +4,10 @@ from common.objective_functions import EvalCounter
 from common.utils import compute_contact_times,contactExclusion
 from common.sat_gen import satellites_from_constellation, make_walker_constellation
 from common.station_gen import teleport_json
-from common.plotting import plot_img, plot_gap_times
+from common.plotting import plot_img
 from methods.free_select.scipy_ccgs import nelder_mead_scipy_ccgs, powell_scipy
 from methods.free_select.genetic_algorithms import diffEvolution
-# from methods.teleport.ILP import ILP_Model
+from methods.teleport.ILP import ILP_Model
 
 import json
 import os
@@ -41,8 +41,6 @@ eval_counter = EvalCounter()      # single global instance
 UNSUPPORTED = {
     ("objective", "gap_optimization"): "gap-time computation uses the pre-1.0 brahe access API",
     ("objective", "max_contacts"): "contact exclusion has no contact-count objective",
-    ("type", "teleport"): "the MILP teleport-selection model uses the pre-1.0 brahe access API; "
-                          "its paper results are in data/csv_Files/milp_*.csv",
 }
 
 
@@ -147,17 +145,18 @@ def summarize_free(cfg, satellites, gs_list, gs_list_plot, epc_start, epc_end):
     }
 
 
-def save_results(cfg, results, run, gs_list_plot):
+def save_results(cfg, results, run, gs_list_plot, summary=None):
     """
-        save_results(cfg, results, run, gs_list_plot) -> None
+        save_results(cfg, results, run, gs_list_plot, summary=None) -> None
 
     Write `results.json` (and `gs_all.png` when `cfg.debug.plot`) to this run's Hydra output
     directory, and copy both to W&B when `run` is not None.
 
       - `cfg` — the Hydra config for this run
-      - `results` — output of `summarize_free`
+      - `results` — JSON-serializable run results, e.g. the output of `summarize_free`
       - `run` — the active `wandb` run, or None when W&B is off
       - `gs_list_plot` — selected stations as `[lon, lat]` pairs (deg)
+      - `summary` — W&B summary entries; defaults to the free-placement keys of `results`
     """
     out_dir = HydraConfig.get().runtime.output_dir
     with open(os.path.join(out_dir, "results.json"), "w") as f:
@@ -165,8 +164,10 @@ def save_results(cfg, results, run, gs_list_plot):
     print(f"Results written to {os.path.join(out_dir, 'results.json')}")
 
     if run is not None:
-        for key in ["gs_list", "contact_num", "seconds", "data_downlink"]:
-            run.summary[key] = results[key]
+        if summary is None:
+            summary = {key: results[key] for key in ["gs_list", "contact_num", "seconds", "data_downlink"]}
+        for key, value in summary.items():
+            run.summary[key] = value
 
     if cfg.debug.plot:
         fig = plot_img(gs_list_plot, os.path.join(out_dir, "gs_all.png"))
@@ -220,38 +221,27 @@ def main(cfg: DictConfig):
         save_results(cfg, results, run if cfg.debug.wandb else None, gs_list_plot)
 
     elif cfg.problem.type == "teleport":
-        #Load ground stations from JSON file
         ground_stations = teleport_json(repo_path('data/most_diverse_100_ground_stations.json'))[0:cfg.problem.teleport_num]
-        print(f"Loaded {len(ground_stations)} ground stations")
+        print(f"Loaded {len(ground_stations)} candidate sites")
 
-        ilp_model = ILP_Model(ground_stations, satellites, epc_start, epc_end, cfg.problem.gs_num, data_rate=cfg.problem.data_rate)
-        
-        if cfg.problem.objective == "data_downlink":
-            selected_stations, station_contacts, output_data = ilp_model.data_downlink_ilp()
-            #output data is total data downlinked
-        
-        if cfg.problem.objective == "gap_optimization":
-            selected_stations, station_contacts, output_data = ilp_model.gap_time_ilp()
-            #output data is gap times
-        
-        if cfg.problem.objective == "max_contacts":
-            selected_stations, station_contacts, output_data = ilp_model.max_contact_ilp()
-            #output data is contact count
-        
-        if cfg.debug.wandb:
-            run.summary["selected_stations"] = selected_stations
-            run.summary["output_data"] = output_data
-            run.summary["lat_long"] = [[gs.geometry.coordinates[0], gs.geometry.coordinates[1]] for gs in [ground_stations[i] for i in selected_stations]]
-            run.summary["gs_list"] = [station_contacts[i]['name'] for i in selected_stations]
-            artifact = wandb.Artifact("station_contacts", type="json")     
-            run.log_artifact(artifact)  
-        
-        if cfg.debug.plot == True:
-            # Get the actual ground station objects for the selected stations
-            selected_gs = [ground_stations[i] for i in selected_stations]
-            
-            figure = wandb.Image(plot_gap_times(satellites, selected_gs, epc_start, epc_end, cfg.debug.plot))
-            run.log({"gap_times": figure})
+        ilp_model = ILP_Model(ground_stations, satellites, epc_start, epc_end, cfg.problem.gs_num,
+                              data_rate=cfg.problem.data_rate, solver=cfg.problem.solver)
+        selected_stations, station_contacts, output_data = ilp_model.data_downlink_ilp()
+
+        gs_list_plot = [[ground_stations[i].lon, ground_stations[i].lat] for i in selected_stations]
+        names = [station_contacts[i]['name'] for i in selected_stations]
+        results = {
+            "gs_list": gs_list_plot,
+            "gs_names": names,
+            "data_downlink": output_data,
+        }
+        summary = {
+            "selected_stations": selected_stations,
+            "output_data": output_data,
+            "lat_long": gs_list_plot,
+            "gs_list": names,
+        }
+        save_results(cfg, results, run if cfg.debug.wandb else None, gs_list_plot, summary)
 
     if cfg.debug.wandb:
         run.finish()
